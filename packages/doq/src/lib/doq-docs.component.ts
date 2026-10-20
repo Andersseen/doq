@@ -170,7 +170,7 @@ export class DoqDocsComponent {
   private enhanceRenderedDocument(): boolean {
     const root = this.hostElement.querySelector<HTMLElement>('.doq-root');
     const markdown = root?.querySelector<HTMLElement>('.doq-markdown');
-    if (!root || !markdown) return false;
+    if (!root || !markdown?.childElementCount) return false;
     for (const pre of Array.from(markdown.querySelectorAll<HTMLElement>('pre:not([data-doq-copy])'))) {
       pre.dataset['doqCopy'] = 'true';
       const button = this.documentRef.createElement('button');
@@ -187,7 +187,6 @@ export class DoqDocsComponent {
     }
     const headings = this.headings();
     const nodes = headings.map(heading => this.documentRef.getElementById(heading.id)).filter((node): node is HTMLElement => !!node && markdown.contains(node));
-    if (nodes.length < headings.length) return false;
     // The enhancement may run from both the mutation observer and the timer; replacing the
     // previous observer and resize listener keeps a single active set per rendered document.
     this.disconnectHeadingObserver();
