@@ -3,6 +3,7 @@ title: Getting started
 description: Connect your first application to the ForgeCMS content platform.
 group: First steps
 order: 1
+demo: forge-schema
 ---
 
 ## Create a workspace

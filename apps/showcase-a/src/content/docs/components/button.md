@@ -3,14 +3,14 @@ title: Button
 description: A small action component with explicit styles, clear states, and keyboard support.
 group: Components
 order: 3
-demo: button
+demo: vanta-button
 ---
 
 ## Choose a style
 
 Use a filled button for the primary action, an outline for secondary actions, and a quiet style for low-emphasis controls.
 
-The live control below is an Angular component using signal state. Change the variant and interact with it; the preview is rendered by the shared Doq package based on this document's `demo` frontmatter.
+The live control below is a Vanta-owned Angular component using signal state. The application registers it with Doq under the `vanta-button` ID, then this page refers to that ID in its `demo` frontmatter.
 
 ## Example
 

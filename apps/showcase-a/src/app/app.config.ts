@@ -4,8 +4,9 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { doqRoutes, provideDoq } from '@getdoq/analog';
+import { VantaButtonDemoComponent } from './demos/button-demo';
 
-const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '43rem', sidebar: 'left' as const, sidebarWidth: '14rem', showTableOfContents: true };
+const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '43rem', sidebar: 'left' as const, sidebarWidth: '14rem', showTableOfContents: true, demos: { 'vanta-button': VantaButtonDemoComponent } };
 
 export const appConfig: ApplicationConfig = {
   providers: [
