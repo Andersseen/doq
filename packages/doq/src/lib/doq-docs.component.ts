@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, PendingTasks, signal, PLATFORM_ID, Type } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, finalize, from, map, of, startWith, switchMap } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFiles, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
 import { Meta, Title } from '@angular/platform-browser';
 import { DOQ_CONFIG } from './doq-config';
@@ -24,6 +24,7 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
         @if (config.sidebar !== 'hidden') {
         <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">Documentation menu</button>
         <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" aria-label="Documentation" (keydown.escape)="closeMobileNavigation()">
+          <button class="doq-mobile-close" type="button" (click)="closeMobileNavigation()">Close navigation</button>
           <a class="doq-overview" [routerLink]="config.basePath" (click)="closeMobileNavigation()">Overview</a>
           <doq-nav-tree [nodes]="navigationTree()" (navigate)="closeMobileNavigation()" />
         </nav>
@@ -55,7 +56,14 @@ export class DoqDocsComponent {
   readonly activeHeading = signal('');
   readonly mobileNavigationOpen = signal(false);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   readonly routeSlug = toSignal(this.route.paramMap.pipe(map(params => params.get(this.config.routeParam ?? 'slug') ?? '')), { initialValue: '' });
+  private readonly closeMobileNavigationAfterRouteChange = this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed()).subscribe(() => {
+    const navigation = this.hostElement.querySelector<HTMLElement>('.doq-sidebar');
+    const focusWasInNavigation = !!navigation?.contains(this.documentRef.activeElement);
+    this.mobileNavigationOpen.set(false);
+    if (focusWasInNavigation) this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
+  });
   private readonly files = injectContentFiles<DocAttributes>(file => file.filename.includes(`/content/${this.config.contentDirectory}/`));
   readonly documents = sortDoqDocuments(this.files.map(file => normalizeDoqDocument(file, this.config.contentDirectory, this.config.basePath ?? '/docs')).filter((doc): doc is NonNullable<typeof doc> => !!doc));
   private readonly contentMap = injectContentFilesMap();
@@ -128,10 +136,19 @@ export class DoqDocsComponent {
   private readonly enhancementEffect = effect(onCleanup => {
     const doc = this.document();
     this.activeHeading.set('');
-    onCleanup(() => this.enhancementObserver?.disconnect());
+    onCleanup(() => this.disconnectHeadingObserver());
     if (!doc || !isPlatformBrowser(this.platformId)) return;
-    const timer = globalThis.setTimeout(() => this.enhanceRenderedDocument(), 0);
-    onCleanup(() => globalThis.clearTimeout(timer));
+    const observer = new MutationObserver(() => {
+      if (this.enhanceRenderedDocument()) observer.disconnect();
+    });
+    observer.observe(this.hostElement, { childList: true, subtree: true });
+    const timer = globalThis.setTimeout(() => {
+      if (this.enhanceRenderedDocument()) observer.disconnect();
+    }, 0);
+    onCleanup(() => {
+      globalThis.clearTimeout(timer);
+      observer.disconnect();
+    });
   });
   toggleMobileNavigation(): void {
     this.mobileNavigationOpen.update(open => !open);
@@ -150,10 +167,10 @@ export class DoqDocsComponent {
     return index < 0 ? normalized : normalized.slice(index);
   }
   private get hostElement(): HTMLElement { return this.host.nativeElement as HTMLElement; }
-  private enhanceRenderedDocument(): void {
+  private enhanceRenderedDocument(): boolean {
     const root = this.hostElement.querySelector<HTMLElement>('.doq-root');
     const markdown = root?.querySelector<HTMLElement>('.doq-markdown');
-    if (!root || !markdown) return;
+    if (!root || !markdown) return false;
     for (const pre of Array.from(markdown.querySelectorAll<HTMLElement>('pre:not([data-doq-copy])'))) {
       pre.dataset['doqCopy'] = 'true';
       const button = this.documentRef.createElement('button');
@@ -170,15 +187,32 @@ export class DoqDocsComponent {
     }
     const headings = this.headings();
     const nodes = headings.map(heading => this.documentRef.getElementById(heading.id)).filter((node): node is HTMLElement => !!node && markdown.contains(node));
-    if (!('IntersectionObserver' in globalThis) || !nodes.length) return;
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (visible?.target instanceof HTMLElement) this.activeHeading.set(visible.target.id);
-    }, { rootMargin: '0px 0px -70% 0px' });
-    nodes.forEach(node => observer.observe(node));
-    this.enhancementObserver?.disconnect();
-    this.enhancementObserver = observer;
+    if (nodes.length < headings.length) return false;
+    // The enhancement may run from both the mutation observer and the timer; replacing the
+    // previous observer and resize listener keeps a single active set per rendered document.
+    this.disconnectHeadingObserver();
+    if (!('IntersectionObserver' in globalThis) || !nodes.length) return true;
+    const observeHeadings = () => {
+      this.enhancementObserver?.disconnect();
+      const viewportHeight = this.documentRef.defaultView?.innerHeight ?? 0;
+      this.enhancementObserver = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible?.target instanceof HTMLElement) this.activeHeading.set(visible.target.id);
+      }, { rootMargin: `0px 0px -${Math.round(viewportHeight * 0.7)}px 0px` });
+      nodes.forEach(node => this.enhancementObserver!.observe(node));
+    };
+    observeHeadings();
+    this.headingResizeHandler = observeHeadings;
+    this.documentRef.defaultView?.addEventListener('resize', this.headingResizeHandler, { passive: true });
+    return true;
   }
   private enhancementObserver?: IntersectionObserver;
+  private headingResizeHandler?: () => void;
+  private disconnectHeadingObserver(): void {
+    this.enhancementObserver?.disconnect();
+    this.enhancementObserver = undefined;
+    if (this.headingResizeHandler) this.documentRef.defaultView?.removeEventListener('resize', this.headingResizeHandler);
+    this.headingResizeHandler = undefined;
+  }
   private adjacent(offset: number) { const items = this.navigation(); const i = items.findIndex(item => item.slug === this.routeSlug()); return items[i + offset]; }
 }
