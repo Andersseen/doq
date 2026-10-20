@@ -1,4 +1,6 @@
-import { InjectionToken, Provider } from '@angular/core';
+import { InjectionToken, Provider, Type } from '@angular/core';
+
+export type DoqDemoRegistry = Readonly<Record<string, Type<unknown>>>;
 
 export interface DoqConfig {
   /** Analog content subdirectory; docs are read from src/content/<directory>. */
@@ -14,6 +16,8 @@ export interface DoqConfig {
   /** Side navigation layout and width. */
   sidebar?: 'left' | 'right' | 'hidden';
   sidebarWidth?: string;
+  /** Consumer-owned standalone Angular demos, keyed by stable Markdown frontmatter IDs. */
+  demos?: DoqDemoRegistry;
 }
 
 export const DOQ_CONFIG = new InjectionToken<DoqConfig>('DOQ_CONFIG');

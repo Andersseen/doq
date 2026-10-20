@@ -1,22 +1,13 @@
-# apps/showcase-b
+# Showcase B — ForgeCMS
 
-This project was generated with [Analog](https://analogjs.org), the fullstack meta-framework for Angular.
+The light-first developer-platform host for the Doq pilot. It keeps a separate utility bar, ForgeCMS header and footer, theme tokens, typography, right docs sidebar, and app-owned `forge-schema` Angular demo.
 
-## Setup
+Run from the monorepo root:
 
-Run `npm install` to install the application dependencies.
+```sh
+pnpm --filter showcase-b dev
+pnpm --filter showcase-b build
+pnpm --filter showcase-b preview
+```
 
-## Development
-
-Run `npm start` for a dev server. Navigate to `http://localhost:5173/`. The application automatically reloads if you change any of the source files.
-
-## Build
-
-Run `npm run build` to build the client/server project. The client build artifacts are located in the `dist/analog/public` directory. The server for the API build artifacts are located in the `dist/analog/server` directory.
-
-## Community
-
-- Visit and Star the [GitHub Repo](https://github.com/analogjs/analog)
-- Join the [Discord](https://chat.analogjs.org)
-- Follow us on [Twitter](https://twitter.com/analogjs)
-- Become a [Sponsor](https://github.com/sponsors/brandonroberts)
+Markdown lives in `src/content/docs`. Analog prerenders the docs index and nested Markdown routes to `dist/analog/public`; the preview command serves those static files.

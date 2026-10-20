@@ -1,56 +1,34 @@
 # Doq pilot
 
-Doq is an Angular documentation UI and Analog.js integration for teams that want Markdown documentation inside an existing product. The host keeps its routes, header, footer, typography, theme state, and global design tokens. Doq supplies document navigation and reusable docs page components.
+Doq is an experimental Angular documentation package for Analog.js. It provides Markdown document layouts and navigation while the host application keeps its own routes, header, footer, visual identity, typography, and theme state. The implementation is a pilot, not a 1.0 release.
 
-This is an experimental architecture pilot. The package name `@getdoq/analog` is provisional and is not published.
+## Architecture and verified runtime
 
-## Workspace
+- `packages/doq` is the single Angular library, built in partial compilation mode with ng-packagr. It consumes Analog's content APIs and exports Angular standalone components, route helpers, config providers, and scoped CSS.
+- `apps/showcase-a` is a dark-first component-library-style host with a left documentation sidebar, TOC, and a consumer-owned button demo.
+- `apps/showcase-b` is a light-first developer-platform-style host with its own typography, shell, right sidebar, and a different consumer-owned schema demo.
+- The showcases keep separate layouts, styles, demos, and Markdown sources. Both use the same package.
 
-```text
-apps/showcase-a/   Vanta UI: dark-first component library
-apps/showcase-b/   ForgeCMS: light-first developer platform
-packages/doq/      The single reusable Angular package
-```
+Verified here with Node 22.23.1, pnpm 10.18.3, Analog 2.9.0, Angular 21.2.x, TypeScript 5.9.3, and Vite 8.3.x. Package peer ranges currently allow Angular 21.2 or 22, but this pilot has only been built against Angular 21.2. Analog 2.9 is the integration version exercised here.
 
-Both apps use Analog 2.9, Angular 21.2, Tailwind CSS 4, the same Doq package, and their own `src/content/docs` tree. Showcase A also uses the published Volt button API. Both use Lumen Icons through a tree-shakable per-icon entry point. No copy of these libraries is included in Doq.
+## Workspace setup
 
-## Install and run
-
-Requires Node 22+ and pnpm 10+.
-
-```bash
+```sh
 pnpm install
-pnpm dev:a   # http://localhost:5173
-pnpm dev:b   # http://localhost:5173 (run one at a time)
-```
-
-Each app can run on its own port:
-
-```bash
-pnpm --filter showcase-a dev -- --port 5173
-pnpm --filter showcase-b dev -- --port 5174
-```
-
-Build each app or the whole Turbo pipeline:
-
-```bash
-pnpm --filter @getdoq/analog build
-pnpm --filter showcase-a build
-pnpm --filter showcase-b build
+pnpm dev:a
+pnpm dev:b
 pnpm build
+pnpm --filter @getdoq/analog build
+pnpm pack:doq
 ```
 
-Create a local package artifact with `pnpm pack:doq`. It writes a `.tgz` file to `artifacts/`; no publish is performed. The package exports its Angular entry at `@getdoq/analog` and scoped CSS at `@getdoq/analog/styles.css`.
+Both dev scripts use port 5173 by default; run only one at a time or pass a Vite port argument. `pnpm build` runs the Turbo graph: package build followed by both app builds. `pnpm pack:doq` creates `artifacts/getdoq-analog-0.0.0-pilot.tgz`; it does not publish.
 
-## Integrate in another Analog app
+For a production static preview, run `pnpm --filter showcase-a preview` or `pnpm --filter showcase-b preview` after building. The preview serves Analog's generated `dist/analog/public` directory and returns 404 for missing files.
 
-Install the package and keep Analog's content integration enabled:
+## Install into an Analog application
 
-```bash
-pnpm add @getdoq/analog @analogjs/content
-```
-
-Provide Analog's content integration and Doq once in `src/app/app.config.ts`. Analog also registers direct Markdown routes, so `withExtraRoutes` puts the Doq route ahead of those generated routes under `/docs/**` while leaving other app routes intact. The folder path is relative to `src/content`:
+Install `@getdoq/analog` from a package tarball (or a future published version), plus Analog's content and router packages. This pilot package is not published to npm. A consumer must import the distributed stylesheet, provide Analog content rendering, mount Doq routes, and provide matching Doq config:
 
 ```ts
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
@@ -58,9 +36,13 @@ import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
 import { doqRoutes, provideDoq } from '@getdoq/analog';
 
 const doqConfig = {
-  contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug',
-  contentWidth: '48rem', sidebar: 'left' as const,
-  sidebarWidth: '16rem', showTableOfContents: true,
+  contentDirectory: 'docs', // src/content/docs
+  basePath: '/docs',
+  routeParam: 'slug',
+  contentWidth: '48rem',
+  sidebar: 'left' as const,
+  sidebarWidth: '16rem',
+  showTableOfContents: true,
 };
 
 export const appConfig: ApplicationConfig = {
@@ -72,15 +54,42 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-Import the package stylesheet once from the host's global stylesheet. Tailwind utilities are not required by Doq and its styles are distributed directly, rather than relying on consumer scanning of `node_modules`:
+Add the package stylesheet once to the host global stylesheet:
 
 ```css
 @import '@getdoq/analog/styles.css';
 ```
 
-Keep the existing application shell around `<router-outlet>` to retain its header, footer, and global navigation. `doqRoutes()` uses Angular's public `UrlMatcher` API to capture a nested path as one content slug, and `withExtraRoutes` puts it before Analog's Markdown routes without one component file per document.
+Keep the host's existing shell around `<router-outlet>` to retain its header and footer. `doqRoutes()` uses Angular's public `UrlMatcher`; it mounts the docs index at `/docs` and captures arbitrarily nested paths below that base. Keep `basePath` and `routeParam` aligned between `doqRoutes()` and `provideDoq()`.
 
-Add Markdown beneath `src/content/docs`. Nested folders become nested path segments and the content file list drives the index and sidebar:
+Analog prerender route configuration remains a host responsibility. For a docs tree under `src/content/docs`, the showcases use Analog's content route expansion:
+
+```ts
+analog({
+  ssr: true,
+  static: true,
+  content: { highlighter: 'prism' },
+  prerender: {
+    routes: async () => [
+      '/',
+      '/docs',
+      {
+        contentDir: 'src/content/docs',
+        recursive: true,
+        transform: file => file.relativePath
+          ? `/docs/${file.relativePath}/${file.name}`
+          : `/docs/${file.name}`,
+      },
+    ],
+  },
+});
+```
+
+Static hosts should serve the generated `dist/analog/public` tree so a nested URL maps to its prerendered `index.html`. The `slug` override is excluded from this example because the current content lookup limitation below makes it unsafe to use.
+
+## Markdown, routes, and metadata
+
+Put Markdown under `src/content/<contentDirectory>`. Nested directories map to nested URLs, such as `src/content/docs/guides/setup.md` to `/docs/guides/setup`. Doq builds the index and sidebar from Analog's content file list and sorts by `order`, then route path. Supported frontmatter fields are `title`, `description`, `group`, `order`, `slug`, and `demo`.
 
 ```markdown
 ---
@@ -92,73 +101,54 @@ order: 4
 
 ## Defaults
 
-The page body is rendered with Analog's Markdown content renderer.
+The article body is rendered by Analog's Markdown renderer.
 ```
 
-For SSG, configure Analog prerender routes from the same content directory (as the showcases do):
+The package currently normalizes a `slug` override for navigation URLs, but Analog's `injectContent` lookup still resolves content by source filename. Do not rely on custom slug overrides until that source-to-route lookup is completed and verified. Duplicate routes are not currently diagnosed.
+
+## Consumer Angular demos
+
+Demos are standalone Angular components owned by the host. Register a component by stable ID in the same object passed to `provideDoq`, then reference the ID in Markdown. Doq creates the component through Angular's `NgComponentOutlet`; it does not compile templates from Markdown.
 
 ```ts
-analog({
-  ssr: true,
-  static: true,
-  prerender: { routes: async () => [
-    '/', '/docs',
-    {
-      contentDir: 'src/content/docs',
-      recursive: true,
-      transform: file => file.relativePath
-        ? `/docs/${file.relativePath}/${file.attributes['slug'] || file.name}`
-        : `/docs/${file.attributes['slug'] || file.name}`,
-    },
-  ] },
-});
+import { provideDoq } from '@getdoq/analog';
+import { ProductButtonDemoComponent } from './demos/product-button-demo';
+
+const doqConfig = {
+  contentDirectory: 'docs',
+  basePath: '/docs',
+  routeParam: 'slug',
+  demos: { 'product-button': ProductButtonDemoComponent },
+};
+// provideDoq(doqConfig)
 ```
 
-## Theme and host composition
+```yaml
+demo: product-button
+```
 
-The host owns its top-level shell and theme state. Put the header/footer around `<router-outlet>` (as the showcases do), then switch host variables on that shell. Doq reads these inherited semantic values:
+The pilot showcases use separate consumer-owned demo components. The old package-owned `button` demo remains as a small compatibility example. Demo components currently load eagerly; asynchronous lazy demo loading has not been implemented.
 
-| Doq role | CSS variable |
+## Theme and layout composition
+
+The host owns theme switching and provides semantic tokens on an ancestor of the routed docs. Doq uses scoped defaults when optional tokens are absent and does not set global `html` or `body` styles.
+
+| Doq role | Host CSS custom property |
 | --- | --- |
 | Background / foreground | `--host-docs-background`, `--host-docs-foreground` |
 | Primary / secondary | `--host-docs-primary`, `--host-docs-secondary` |
 | Muted / border / surface | `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface` |
 | Focus | `--host-docs-focus` |
-| Code surface and text | `--host-docs-code-background`, `--host-docs-code-foreground` |
+| Code background / foreground | `--host-docs-code-background`, `--host-docs-code-foreground` |
 
-Doq provides scoped fallbacks when a host does not define a role. It does not set global body/html rules. Its stylesheet is limited to `.doq-root` and `.doq-index` descendants.
+`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` adjust the docs region. `sidebar` accepts `left`, `right`, or `hidden`. The host can keep any page header/footer around the outlet. `DoqShellComponent` is optional for hosts that need a neutral starter shell.
 
-The typed layout options `contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` customize the documentation region without replacing the host header or footer. `sidebar` accepts `left`, `right`, or `hidden`. Showcase A uses a compact left rail plus TOC; Showcase B uses a wider article and right rail with a different shell and type scale.
+## Current limitations
 
-For an app that does not have a site shell yet, the package also exports an optional neutral `DoqShellComponent`:
-
-```ts
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { DoqShellComponent } from '@getdoq/analog';
-
-@Component({
-  standalone: true,
-  imports: [DoqShellComponent, RouterOutlet],
-  template: `
-    <doq-shell productName="Northstar API" docsPath="/docs" brandMark="N">
-      <router-outlet />
-    </doq-shell>
-  `,
-})
-export class App {}
-```
-
-The host can project `[doq-header-extra]` and `[doq-footer]` content into this shell, or retain its own shell as both showcases do.
-
-An optional Angular preview is selected by `demo: button` frontmatter. This uses an explicit, package-owned Angular component with signal state; Markdown does not compile Angular tags and Doq does not claim MDX support.
-
-## Known pilot boundaries
-
-- Navigation and document metadata come from Analog's content file list. This pilot expects the content root to be `src/content/<contentDirectory>`.
-- Markdown heading extraction for the TOC uses the source heading text and Analog/Marked-generated anchor IDs. Unusual heading plugins or custom slug rules may require a future adapter contract.
-- Pagefind is deferred; the pilot does not show a pretend search control.
-- Syntax highlighting comes from Analog's Prism integration. Code blocks receive a browser-only copy button after hydration.
-- The navigation presentation is intentionally minimal and does not yet implement nested collapsible groups.
-- `angular-movement` is not included; the layouts use restrained CSS and honor reduced-motion preferences.
-- `doqRoutes()` and `provideDoq()` should use the same `basePath` and `routeParam` settings.
+- External pnpm installation of the tarball was not completed in the validation environment because the configured pnpm store was not writable and the npm registry was unreachable. The artifact was unpacked into an isolated consumer and built using the already installed dependency tree; this does not count as a clean package-manager install.
+- Custom frontmatter slugs are normalized in navigation, but content lookup still uses source filename slugs; this mismatch must be fixed before relying on overrides.
+- Navigation groups are labels, not collapsible groups. The sidebar collapses to a horizontally scrollable rail on small screens; no mobile drawer is provided.
+- TOC entries use Analog's generated IDs, but active heading tracking and observer cleanup are not implemented. TOC behavior has not been visually checked on mobile.
+- Copy controls are added to rendered code blocks in a browser-only post-render scan. Clipboard success and failure are exposed, but no Prism theme is bundled by Doq.
+- Doq does not currently validate duplicate routes or invalid frontmatter beyond skipping unsafe source paths.
+- Search is deferred; no placeholder search field is included.

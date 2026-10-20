@@ -4,8 +4,9 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { doqRoutes, provideDoq } from '@getdoq/analog';
+import { ForgeSchemaDemoComponent } from './demos/schema-demo';
 
-const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '49rem', sidebar: 'right' as const, sidebarWidth: '13rem', showTableOfContents: false };
+const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '49rem', sidebar: 'right' as const, sidebarWidth: '13rem', showTableOfContents: false, demos: { 'forge-schema': ForgeSchemaDemoComponent } };
 
 export const appConfig: ApplicationConfig = {
   providers: [
