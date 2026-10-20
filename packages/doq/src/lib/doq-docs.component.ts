@@ -21,12 +21,13 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
     @if (document(); as doc) {
       @if (doc.attributes.title) {
       <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar">
+        @if (config.sidebar !== 'hidden') {
         <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">Documentation menu</button>
-        @if (mobileNavigationOpen()) { <button class="doq-mobile-backdrop" type="button" aria-label="Close documentation menu" (click)="closeMobileNavigation()"></button> }
-        <nav id="doq-mobile-navigation" class="doq-sidebar" [attr.role]="mobileNavigationOpen() ? 'dialog' : 'navigation'" [class.is-open]="mobileNavigationOpen()" aria-label="Documentation" [attr.aria-modal]="mobileNavigationOpen() ? 'true' : null" [attr.inert]="mobileNavigationOpen() ? null : ''" (keydown)="onNavigationKeydown($event)">
+        <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" aria-label="Documentation" (keydown.escape)="closeMobileNavigation()">
           <a class="doq-overview" [routerLink]="config.basePath" (click)="closeMobileNavigation()">Overview</a>
           <doq-nav-tree [nodes]="navigationTree()" (navigate)="closeMobileNavigation()" />
         </nav>
+        }
         <article class="doq-article">
           <div class="doq-breadcrumb"><a [routerLink]="config.basePath">Docs</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
           <header class="doq-doc-header"><p class="doq-eyebrow">{{ doc.attributes.group || 'Documentation' }}</p><h1>{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
@@ -94,6 +95,9 @@ export class DoqDocsComponent {
     switchMap(slug => {
       const entry = this.documents.find(doc => doc.slug === slug);
       if (!slug || !entry) return of(null);
+      // Analog's injectContentFilesMap intentionally re-keys loaders by the
+      // frontmatter slug. The canonical catalog resolves that public slug to
+      // its source entry; use the matching Analog alias to load its module.
       const contentBase = `src/content/${this.config.contentDirectory.replace(/^\/+|\/+$/g, '')}/${entry.slug}`;
       const candidates = new Set([`${contentBase}.md`, `${contentBase}/index.md`]);
       const key = Object.keys(this.contentMap).find(candidate => candidates.has(this.canonicalFilename(candidate)));
@@ -138,14 +142,6 @@ export class DoqDocsComponent {
     if (!this.mobileNavigationOpen()) return;
     this.mobileNavigationOpen.set(false);
     this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
-  }
-  onNavigationKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Escape') { this.closeMobileNavigation(); return; }
-    if (event.key !== 'Tab') return;
-    const links = this.hostElement.querySelectorAll<HTMLElement>('.doq-sidebar a');
-    const first = links.item(0), last = links.item(links.length - 1);
-    if (event.shiftKey && this.documentRef.activeElement === first) { event.preventDefault(); last?.focus(); }
-    else if (!event.shiftKey && this.documentRef.activeElement === last) { event.preventDefault(); first?.focus(); }
   }
   private canonicalFilename(filename: string): string {
     const normalized = filename.replace(/\\/g, '/');

@@ -55,7 +55,7 @@ The host's Analog Vite configuration must enable its content integration. The sh
 
 ## UI, theming, and demos
 
-`DoqConfig` options are `contentDirectory`, `basePath`, `routeParam`, `contentWidth`, `sidebar` (`left`, `right`, or `hidden`), `sidebarWidth`, `showTableOfContents`, and `demos`. Documents support `title`, `description`, `group`, `order`, `slug`, and `demo` metadata. `group` creates a collapsible navigation section; navigation order is `order` then public route.
+`DoqConfig` options are `contentDirectory`, `basePath`, `routeParam`, `contentWidth`, `sidebar` (`left`, `right`, or `hidden`), `sidebarWidth`, `showTableOfContents`, and `demos`. Documents support `title`, `description`, `group`, `order`, `slug`, and `demo` metadata. `group` creates a collapsible navigation section; navigation order is `order` then public route. Analog's content loader map is keyed by the document's public slug, including frontmatter overrides, while the selected loader still returns the original Markdown file.
 
 Optional host CSS properties include `--host-docs-background`, `--host-docs-foreground`, `--host-docs-primary`, `--host-docs-secondary`, `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface`, `--host-docs-focus`, `--host-docs-code-background`, and `--host-docs-code-foreground`. Missing values use scoped defaults.
 

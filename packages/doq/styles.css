@@ -28,10 +28,11 @@
 .doq-root a:focus-visible,.doq-index a:focus-visible,.doq-root button:focus-visible,.doq-root select:focus-visible { outline: 3px solid var(--doq-focus); outline-offset: 3px; }
 .doq-root { display: grid; grid-template-columns: var(--doq-sidebar-width) minmax(0,1fr); gap: clamp(2rem,5vw,5rem); padding: 2rem clamp(1.25rem,4vw,4rem) 5rem; }
 .doq-root[data-sidebar="hidden"] { grid-template-columns: minmax(0,1fr); }
+.doq-root[data-sidebar="hidden"] .doq-sidebar,.doq-root[data-sidebar="hidden"] .doq-mobile-trigger { display: none; }
 .doq-root[data-sidebar="right"] { grid-template-columns: minmax(0,1fr) var(--doq-sidebar-width); }
 .doq-root[data-sidebar="right"] .doq-sidebar { grid-column:2; grid-row:1; }
 .doq-sidebar { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: .5rem .75rem .5rem 0; font-size: .875rem; }
-.doq-mobile-trigger,.doq-mobile-backdrop { display: none; }
+.doq-mobile-trigger { display: none; }
 .doq-overview { display: block; padding: .7rem .8rem; border-radius: .55rem; font-weight: 700; }
 .doq-nav-tree { list-style: none; margin: 0; padding: 0; }
 .doq-nav-tree .doq-nav-tree { margin-left: .65rem; padding-left: .25rem; border-left: 1px solid var(--doq-border); }
@@ -102,10 +103,9 @@
 @media (max-width: 720px) {
   .doq-root { display: block; padding: 1rem 1rem 3rem; }
   .doq-mobile-trigger { display: inline-flex; min-height: 2.75rem; align-items: center; margin: 0 0 1rem; padding: .55rem .85rem; border: 1px solid var(--doq-border); border-radius: .55rem; background: var(--doq-surface); color: var(--doq-foreground); font: inherit; font-size: .875rem; font-weight: 650; cursor: pointer; }
-  .doq-mobile-backdrop { display: block; position: fixed; inset: 0; z-index: 19; border: 0; background: rgb(0 0 0 / .52); }
-  .doq-sidebar,.doq-root[data-sidebar="right"] .doq-sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: min(20rem, calc(100vw - 2.5rem)); max-height: none; display: block; overflow: auto; margin: 0; padding: max(1.25rem, env(safe-area-inset-top)) 1rem 1.5rem; border: 0; background: var(--doq-background); box-shadow: 0 0 2rem rgb(0 0 0 / .2); transform: translateX(-105%); transition: transform .2s ease; white-space: normal; }
-  .doq-root[data-sidebar="right"] .doq-sidebar { left: auto; right: 0; transform: translateX(105%); }
-  .doq-sidebar.is-open,.doq-root[data-sidebar="right"] .doq-sidebar.is-open { transform: translateX(0); }
+  .doq-sidebar,.doq-root[data-sidebar="right"] .doq-sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: min(20rem, calc(100vw - 2.5rem)); max-height: none; display: none; overflow: auto; margin: 0; padding: max(1.25rem, env(safe-area-inset-top)) 1rem 1.5rem; border: 0; background: var(--doq-background); box-shadow: 0 0 2rem rgb(0 0 0 / .2); white-space: normal; }
+  .doq-root[data-sidebar="right"] .doq-sidebar { left: auto; right: 0; }
+  .doq-sidebar.is-open,.doq-root[data-sidebar="right"] .doq-sidebar.is-open { display: block; }
   .doq-overview,.doq-nav-link { padding: .65rem .75rem; }
   .doq-breadcrumb { margin: 1rem 0 2rem; }
   .doq-doc-header h1,.doq-index h1 { font-size: clamp(2rem, 10vw, 3rem); }
