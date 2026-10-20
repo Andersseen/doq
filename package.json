@@ -7,7 +7,8 @@
     "dev:a": "pnpm --filter showcase-a dev",
     "dev:b": "pnpm --filter showcase-b dev",
     "pack:doq": "pnpm --filter @getdoq/analog run pack",
-    "build:doq": "pnpm --filter @getdoq/analog build"
+    "build:doq": "pnpm --filter @getdoq/analog build",
+    "verify:mvp": "node scripts/verification/mvp.mjs"
   },
   "devDependencies": { "turbo": "^2.5.6" }
 }
