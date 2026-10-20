@@ -1,0 +1,8 @@
+node_modules
+dist
+.turbo
+*.tgz
+artifacts/
+turbo-build.log
+.angular/
+.DS_Store

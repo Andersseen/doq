@@ -1,0 +1,91 @@
+/* Import this file once in the Analog app's global stylesheet. All selectors are scoped. */
+.doq-root,.doq-index,.doq-shell {
+  --doq-background: var(--host-docs-background, var(--color-background, #fff));
+  --doq-foreground: var(--host-docs-foreground, var(--color-foreground, #222));
+  --doq-primary: var(--host-docs-primary, var(--color-primary, #176b52));
+  --doq-secondary: var(--host-docs-secondary, var(--color-secondary, #647067));
+  --doq-muted: var(--host-docs-muted, var(--color-muted, #69746e));
+  --doq-border: var(--host-docs-border, var(--color-border, #dfe5e1));
+  --doq-surface: var(--host-docs-surface, var(--color-surface, #f6f8f6));
+  --doq-focus: var(--host-docs-focus, var(--color-focus, #3b82f6));
+  --doq-code-background: var(--host-docs-code-background, #f1f4f2);
+  --doq-code-foreground: var(--host-docs-code-foreground, #202923);
+  color: var(--doq-foreground); background: var(--doq-background); min-height: 68vh;
+  font: inherit; isolation: isolate;
+}
+.doq-root *,.doq-index * { box-sizing: border-box; }
+.doq-shell * { box-sizing: border-box; }
+.doq-shell { min-height: 100vh; color: var(--doq-foreground); background: var(--doq-background); display: flex; flex-direction: column; font: inherit; isolation: isolate; }
+.doq-shell a { color: inherit; text-decoration: none; }
+.doq-shell-header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; min-height: 4rem; padding: 0 clamp(1.25rem,4vw,3.5rem); border-bottom: 1px solid var(--doq-border); background: var(--doq-background); }
+.doq-shell-brand { display: inline-flex; align-items: center; gap: .65rem; font-weight: 750; }
+.doq-shell-mark { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: .45rem; color: var(--doq-background); background: var(--doq-primary); }
+.doq-shell-header nav { display: flex; align-items: center; gap: 1.25rem; color: var(--doq-muted); font-size: .875rem; }
+.doq-shell-header nav a:hover { color: var(--doq-primary); }
+.doq-shell-main { flex: 1; }
+.doq-shell-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1.4rem clamp(1.25rem,4vw,3.5rem); border-top: 1px solid var(--doq-border); color: var(--doq-muted); font-size: .8rem; }
+.doq-root a,.doq-index a { color: inherit; text-decoration: none; }
+.doq-root a:focus-visible,.doq-index a:focus-visible,.doq-root button:focus-visible,.doq-root select:focus-visible { outline: 3px solid var(--doq-focus); outline-offset: 3px; }
+.doq-root { display: grid; grid-template-columns: var(--doq-sidebar-width) minmax(0,1fr); gap: clamp(2rem,5vw,5rem); padding: 2rem clamp(1.25rem,4vw,4rem) 5rem; }
+.doq-root[data-sidebar="hidden"] { grid-template-columns: minmax(0,1fr); }
+.doq-root[data-sidebar="right"] { grid-template-columns: minmax(0,1fr) var(--doq-sidebar-width); }
+.doq-root[data-sidebar="right"] .doq-sidebar { grid-column:2; grid-row:1; }
+.doq-sidebar { position: sticky; top: 1rem; align-self: start; max-height: calc(100vh - 2rem); overflow: auto; padding: .5rem .75rem .5rem 0; font-size: .875rem; }
+.doq-overview { display: block; padding: .7rem .8rem; border-radius: .55rem; font-weight: 700; }
+.doq-nav-group { margin: 1.3rem .8rem .35rem; color: var(--doq-muted); font-size: .68rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.doq-nav-link { display: block; padding: .55rem .8rem; color: var(--doq-muted)!important; border-radius: .5rem; transition: background-color .15s ease,color .15s ease; }
+.doq-nav-link:hover,.doq-overview:hover { background: var(--doq-surface); color: var(--doq-foreground)!important; }
+.doq-nav-link.is-active { background: color-mix(in srgb,var(--doq-primary) 11%,transparent); color: var(--doq-primary)!important; font-weight: 650; }
+.doq-article { position: relative; min-width: 0; width: min(100%,calc(var(--doq-content-width) + 14rem)); margin: 0 auto; }
+.doq-breadcrumb { display: flex; gap: .55rem; align-items: center; color: var(--doq-muted); font-size: .8rem; margin: .5rem 0 2.5rem; }
+.doq-doc-header { max-width: var(--doq-content-width); }
+.doq-eyebrow { color: var(--doq-primary); text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 750; }
+.doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; }
+.doq-description { color: var(--doq-muted); font-size: 1.15rem; line-height: 1.7; }
+.doq-markdown { display: block; max-width: var(--doq-content-width); line-height: 1.78; }
+.doq-markdown h2 { margin: 3rem 0 1rem; padding-top: .5rem; font-size: 1.55rem; letter-spacing: -.025em; line-height: 1.3; scroll-margin-top: 2rem; }
+.doq-markdown h3 { margin: 2rem 0 .75rem; font-size: 1.15rem; scroll-margin-top: 2rem; }
+.doq-markdown p,.doq-markdown ul,.doq-markdown ol { margin: 1rem 0; }
+.doq-markdown li { margin: .4rem 0; padding-left: .2rem; }
+.doq-markdown a { color: var(--doq-primary); text-decoration: underline; text-underline-offset: 3px; }
+.doq-markdown blockquote { border-left: 3px solid var(--doq-primary); background: var(--doq-surface); margin: 1.5rem 0; padding: .8rem 1rem; border-radius: 0 .6rem .6rem 0; }
+.doq-markdown pre { position: relative; background: var(--doq-code-background); color: var(--doq-code-foreground); border: 1px solid var(--doq-border); border-radius: .75rem; padding: 2.9rem 1.2rem 1.1rem; overflow: auto; font-size: .875rem; line-height: 1.7; }
+.doq-code-copy { position: absolute; right: .55rem; top: .5rem; border: 1px solid var(--doq-border); border-radius: .4rem; padding: .25rem .55rem; background: var(--doq-background); color: var(--doq-muted); font: inherit; font-size: .72rem; cursor: pointer; }
+.doq-code-copy:hover { color: var(--doq-primary); border-color: var(--doq-primary); }
+.doq-markdown :not(pre)>code { background: var(--doq-code-background); border-radius: .25rem; padding: .12rem .35rem; font-size: .9em; }
+.doq-markdown table { border-collapse: collapse; display: block; overflow: auto; width: 100%; }
+.doq-markdown th,.doq-markdown td { border: 1px solid var(--doq-border); padding: .65rem .8rem; text-align: left; }
+.doq-markdown th { background: var(--doq-surface); }
+.doq-toc { position: absolute; left: calc(100% + 2rem); top: 8rem; display: grid; gap: .7rem; width: 11rem; font-size: .78rem; color: var(--doq-muted); }
+.doq-toc p { margin: 0 0 .2rem; color: var(--doq-foreground); font-weight: 700; }
+.doq-toc a { line-height: 1.35; }
+.doq-toc a.level-three { padding-left: .7rem; }
+.doq-toc a:hover { color: var(--doq-primary); }
+.doq-toc a.is-active { color: var(--doq-primary); font-weight: 700; }
+.doq-pagination { display: flex; justify-content: space-between; gap: 1rem; max-width: var(--doq-content-width); margin: 3rem 0 0; padding-top: 1.2rem; border-top: 1px solid var(--doq-border); }
+.doq-pagination a { display: grid; gap: .35rem; color: var(--doq-muted); }
+.doq-pagination a.next { text-align: right; margin-left: auto; }
+.doq-pagination strong { color: var(--doq-primary); }
+.doq-index { padding: clamp(2rem,7vw,6rem) clamp(1.25rem,8vw,8rem); }
+.doq-index h1 { max-width: 45rem; }
+.doq-index-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; max-width: 65rem; margin-top: 3rem; }
+.doq-index-card { display: grid; gap: .65rem; padding: 1.3rem; border: 1px solid var(--doq-border); border-radius: .9rem; background: var(--doq-surface); transition: border-color .15s ease,transform .15s ease; }
+.doq-index-card:hover { border-color: var(--doq-primary); transform: translateY(-2px); }
+.doq-index-card span { color: var(--doq-muted); font-size: .75rem; }
+.doq-index-card strong { font-size: 1.1rem; }
+.doq-index-card p { margin: 0; color: var(--doq-muted); line-height: 1.5; }
+.doq-index-card .doq-index-arrow { color: var(--doq-primary); font-weight: 650; }
+.doq-demo { display: grid; gap: 1rem; margin: 1.5rem 0; padding: 1.2rem; border: 1px solid var(--doq-border); border-radius: .85rem; background: var(--doq-surface); }
+.doq-demo-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; color: var(--doq-muted); font-size: .875rem; }
+.doq-demo-controls label { display: inline-flex; align-items: center; gap: .5rem; }
+.doq-demo-controls select { color: var(--doq-foreground); border: 1px solid var(--doq-border); border-radius: .45rem; background: var(--doq-background); padding: .4rem .6rem; }
+.doq-demo-button { justify-self: start; border: 1px solid transparent; border-radius: .55rem; padding: .65rem 1rem; font: inherit; font-weight: 650; cursor: pointer; }
+.doq-demo-button--solid { background: var(--doq-primary); color: white; }
+.doq-demo-button--outline { background: transparent; border-color: var(--doq-primary); color: var(--doq-primary); }
+.doq-demo-button--quiet { background: transparent; color: var(--doq-primary); }
+.doq-demo-button:disabled { opacity: .5; cursor: not-allowed; }
+.doq-demo-count { color: var(--doq-muted); font-size: .85rem; }
+.doq-loading { padding: 2rem; }
+@media (max-width: 1100px) { .doq-root { gap: 2rem; } .doq-toc { position: static; width: auto; margin: 2rem 0; padding: 1rem; border: 1px solid var(--doq-border); border-radius: .7rem; } }
+@media (max-width: 720px) { .doq-root { display: block; padding-inline: 1rem; } .doq-sidebar { position: static; max-height: none; display: flex; gap: .2rem; overflow: auto; white-space: nowrap; margin: 0 -1rem 2rem; padding: .35rem 1rem; border-bottom: 1px solid var(--doq-border); } .doq-overview,.doq-nav-link { padding: .5rem .65rem; } .doq-breadcrumb { margin: 1rem 0 2rem; } .doq-index-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .doq-root *, .doq-index *, .doq-shell * { scroll-behavior: auto!important; transition-duration: .01ms!important; animation-duration: .01ms!important; } }

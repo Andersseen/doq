@@ -1,0 +1,5 @@
+{
+  "extends": "../../node_modules/ng-packagr/lib/tsconfig.ngc.json",
+  "compilerOptions": { "strict": true, "declaration": true, "noImplicitOverride": true, "lib": ["ES2022", "DOM"] },
+  "angularCompilerOptions": { "strictTemplates": true, "strictInjectionParameters": true }
+}

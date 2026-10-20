@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+@import '@getdoq/analog/styles.css';
+
+* { box-sizing:border-box; }
+body { margin:0; min-width:320px; background:#f7f5f2; color:#29252b; font-family:ui-sans-serif,system-ui,-apple-system,sans-serif; }
+a { color:inherit; text-decoration:none; }
+button { font:inherit; }
+.forge-site { --host-docs-background:#fffefa; --host-docs-foreground:#302a32; --host-docs-primary:#7952c8; --host-docs-secondary:#625a68; --host-docs-muted:#77717b; --host-docs-border:#e8e2eb; --host-docs-surface:#f8f5fb; --host-docs-focus:#2c63ce; --host-docs-code-background:#f3eff8; --host-docs-code-foreground:#37294a; min-height:100vh; display:flex; flex-direction:column; background:#f7f5f2; color:#29252b; }
+.forge-site[data-theme="dark"] { color-scheme:dark; --host-docs-background:#19171c; --host-docs-foreground:#eee9f1; --host-docs-primary:#c0a1ff; --host-docs-secondary:#c3b9c9; --host-docs-muted:#a69baa; --host-docs-border:#39323f; --host-docs-surface:#211e25; --host-docs-focus:#8cb8ff; --host-docs-code-background:#211c28; --host-docs-code-foreground:#e6d7ff; background:#151318; color:#eee9f1; }
+.forge-utility { display:flex; align-items:center; gap:1.4rem; min-height:2rem; padding:0 clamp(1rem,5vw,5rem); background:#24202a; color:#c9becf; font-size:.67rem; letter-spacing:.06em; }
+.forge-utility span:first-child { color:#d2bbff; font-weight:750; letter-spacing:.12em; }
+.forge-utility span:nth-child(2) { display:flex; align-items:center; gap:.5rem; margin-left:auto; }
+.forge-utility b { width:.4rem; height:.4rem; border-radius:50%; background:#58c78d; }
+.forge-utility a { color:#e0d5e8; }
+.forge-header { display:flex; align-items:center; gap:2rem; min-height:5.2rem; padding:0 clamp(1rem,5vw,5rem); border-bottom:1px solid #e4dfe6; background:#fffefa; }
+.forge-site[data-theme="dark"] .forge-header { background:#1b191e; border-color:#39323f; }
+.forge-brand { display:flex; align-items:center; gap:.7rem; font-size:1.05rem; font-weight:800; letter-spacing:-.04em; }
+.forge-brand span span { color:#8b7e8e; font-weight:450; }
+.forge-symbol { display:grid; place-items:center; width:2rem; height:2rem; color:white; background:#7650c4; border-radius:.45rem  .45rem .85rem .45rem; font:700 1rem Georgia,serif; }
+.forge-header nav { display:flex; gap:1.6rem; align-items:center; margin-left:2rem; color:#756e79; font-size:.86rem; }
+.forge-site[data-theme="dark"] .forge-header nav { color:#c6bbc9; }
+.forge-header nav a.selected { color:#7150b2; font-weight:700; }
+.forge-actions { display:flex; align-items:center; gap:1rem; margin-left:auto; font-size:.82rem; }
+.forge-actions button { width:2rem; height:2rem; border:1px solid #ddd6e0; border-radius:.55rem; background:transparent; color:inherit; cursor:pointer; }
+.forge-actions .get-started { padding:.65rem .9rem; border-radius:.45rem; color:white; background:#7650c4; font-weight:700; }
+.forge-footer { display:flex; align-items:center; gap:2rem; margin-top:auto; border-top:1px solid #e5dfe7; padding:2.2rem clamp(1rem,5vw,5rem); color:#77717b; font-size:.79rem; }
+.forge-site[data-theme="dark"] .forge-footer { border-color:#39323f; }
+.forge-footer div { display:grid; gap:.3rem; }
+.forge-footer strong { color:#7952c8; font-size:1rem; }
+.forge-footer nav { display:flex; gap:1.3rem; margin-left:auto; }
+.forge-footer small { font-size:.72rem; }
+.landing-b { width:min(100%,82rem); margin:0 auto; padding:4.2rem clamp(1.25rem,5vw,4rem) 6rem; }
+.landing-b .hero { display:grid; grid-template-columns:1.2fr .8fr; gap:4rem; align-items:center; padding:2rem 0 4.3rem; }
+.platform-tag { display:inline-flex; gap:.55rem; align-items:center; color:#7650c4; font-size:.72rem; letter-spacing:.12em; font-weight:800; text-transform:uppercase; }
+.landing-b h1 { max-width:45rem; margin:1rem 0; font:500 clamp(3.1rem,7vw,5.6rem)/1.04 Georgia,serif; letter-spacing:-.06em; }
+.landing-b h1 em { color:#7650c4; font-style:normal; }
+.landing-b .hero p { max-width:38rem; color:#746d77; font-size:1.08rem; line-height:1.75; }
+.forge-site[data-theme="dark"] .landing-b .hero p { color:#bcb2c1; }
+.hero-links { display:flex; gap:1.1rem; align-items:center; margin-top:1.6rem; font-size:.85rem; font-weight:700; }
+.hero-links a:first-child { padding:.8rem 1rem; color:white; border-radius:.45rem; background:#7650c4; }
+.hero-panel { padding:1.35rem; border:1px solid #e6dfea; border-radius:1.2rem; background:#fffefa; box-shadow:0 25px 70px #3a1f4d12; }
+.forge-site[data-theme="dark"] .hero-panel { background:#211e25; border-color:#39323f; box-shadow:none; }
+.hero-panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; color:#746b7a; font-size:.75rem; }
+.hero-panel-header span:first-child { color:#60438f; font-weight:750; }
+.schema-card { padding:1rem; border:1px solid #e9e2ec; border-radius:.75rem; margin:.65rem 0; }
+.forge-site[data-theme="dark"] .schema-card { border-color:#403744; }
+.schema-card small { display:block; margin-bottom:.4rem; color:#8b7b91; font-size:.67rem; text-transform:uppercase; letter-spacing:.1em; }
+.schema-card strong { font:500 1.25rem Georgia,serif; }
+.schema-card p { margin:.4rem 0 0; color:#7f7782; font-size:.78rem; }
+.platform-stats { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid #e8e1e9; padding-top:1rem; margin-top:1rem; }
+.platform-stats strong { display:block; font:500 1.2rem Georgia,serif; }
+.platform-stats span { color:#827a86; font-size:.66rem; }
+.capabilities { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; padding-top:2.3rem; border-top:1px solid #e5dfe7; }
+.capabilities article { max-width:19rem; }
+.capabilities span { color:#7650c4; font-size:.72rem; font-weight:800; }
+.capabilities h2 { margin:.6rem 0; font:500 1.35rem Georgia,serif; }
+.capabilities p { color:#77717b; font-size:.85rem; line-height:1.65; }
+@media(max-width:760px){.forge-utility span:nth-child(2),.forge-utility a,.forge-header nav,.forge-actions .sign-in{display:none}.forge-header{gap:1rem}.landing-b .hero{grid-template-columns:1fr;gap:2rem}.capabilities{grid-template-columns:1fr}.forge-footer{flex-wrap:wrap}.forge-footer nav{margin-left:0;order:1}.forge-footer small{margin-left:auto}}
