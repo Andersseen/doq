@@ -1,6 +1,7 @@
 ---
 title: Getting started
 description: Connect your first application to the ForgeCMS content platform.
+slug: onboarding/first-application
 group: First steps
 order: 1
 demo: forge-schema

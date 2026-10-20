@@ -32,9 +32,15 @@ export function normalizeDoqDocument(
   if (rootIndex < 0 || (rootIndex > 0 && filename[rootIndex - 1] !== '/') || !filename.endsWith('.md')) return null;
   const sourceSlug = filename.slice(rootIndex + root.length, -3).replace(/\/index$/, '');
   if (!sourceSlug || sourceSlug.split('/').some(part => !part || part === '.' || part === '..')) return null;
-  const rawSlug = file.attributes.slug?.trim().replace(/^\/+|\/+$/g, '');
+  const explicitSlug = file.attributes.slug;
+  if (explicitSlug !== undefined && (typeof explicitSlug !== 'string' || !explicitSlug.trim())) {
+    throw new Error(`Doq: invalid empty slug in ${filename}`);
+  }
+  const rawSlug = explicitSlug?.trim().replace(/^\/+|\/+$/g, '');
   const slug = rawSlug || sourceSlug;
-  if (slug.split('/').some(part => !part || part === '.' || part === '..')) return null;
+  if (slug.split('/').some(part => !/^[\p{L}\p{N}_~-]+$/u.test(part))) {
+    throw new Error(`Doq: invalid slug "${slug}" in ${filename}; use non-empty path segments containing letters, numbers, "_", "-", or "~".`);
+  }
   const sourceParts = sourceSlug.split('/');
   const title = file.attributes.title?.trim() || sourceParts[sourceParts.length - 1] || 'Untitled';
   const prefix = `/${basePath.split('/').filter(Boolean).join('/')}`;
@@ -54,5 +60,34 @@ export function normalizeDoqDocument(
 }
 
 export function sortDoqDocuments(documents: readonly DoqDocument[]): DoqDocument[] {
-  return [...documents].sort((a, b) => a.order - b.order || a.routePath.localeCompare(b.routePath));
+  const sorted = [...documents].sort((a, b) => a.order - b.order || a.routePath.localeCompare(b.routePath));
+  const routes = new Map<string, DoqDocument>();
+  for (const document of sorted) {
+    const previous = routes.get(document.routePath);
+    if (previous) {
+      throw new Error(`Doq: duplicate public route "${document.routePath}" from ${previous.sourceFilename} and ${document.sourceFilename}.`);
+    }
+    routes.set(document.routePath, document);
+  }
+  return sorted;
+}
+
+/** Build the static URL for one file supplied by Analog's recursive content prerender route. */
+export function doqPrerenderRoute(
+  file: { name: string; relativePath?: string; attributes?: { slug?: unknown } },
+  basePath = '/docs',
+): string {
+  const customSlug = file.attributes?.slug;
+  let slug: string;
+  if (customSlug !== undefined) {
+    if (typeof customSlug !== 'string' || !customSlug.trim()) throw new Error(`Doq: invalid empty slug in prerender entry "${file.name}".`);
+    slug = customSlug.trim().replace(/^\/+|\/+$/g, '');
+  } else {
+    slug = [file.relativePath, file.name].filter(Boolean).join('/').replace(/\/index$/, '');
+  }
+  if (!slug || slug.split('/').some(part => !/^[\p{L}\p{N}_~-]+$/u.test(part))) {
+    throw new Error(`Doq: invalid prerender slug "${slug}" for "${file.name}".`);
+  }
+  const prefix = `/${basePath.split('/').filter(Boolean).join('/')}`;
+  return `${prefix}/${slug}`;
 }

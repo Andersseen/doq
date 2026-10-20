@@ -1,23 +1,23 @@
 # @getdoq/analog
 
-Experimental Angular documentation components and routing integration for Analog.js. This package is a pilot and is not published to npm.
+Experimental Angular documentation infrastructure for Analog.js. Doq is an architecture pilot, is not published, and has only been built with Angular 21.2.x and Analog 2.9.0.
 
-## Requirements
+## Install and configure
 
-Verified with Node 22.23.1, Analog 2.9, Angular 21.2, TypeScript 5.9, and Vite 8.3. Angular 22 is included in the declared peer range but has not been validated in this pilot.
+Install the generated tarball together with Analog content and routing:
 
-Peer dependencies: `@analogjs/content`, `@angular/common`, `@angular/core`, `@angular/platform-browser`, `@angular/router`, and RxJS.
+```sh
+pnpm add /path/to/getdoq-analog-0.0.0-pilot.tgz @analogjs/content @analogjs/router prismjs
+```
 
-## Setup
-
-Install this tarball in an Analog app, along with `@analogjs/content` and `@analogjs/router`. Add these providers in the app configuration:
+Import `@getdoq/analog/styles.css` once in the host stylesheet. Provide Analog's Markdown renderer, mount the Doq routes, and pass the same route configuration to `doqRoutes()` and `provideDoq()`:
 
 ```ts
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
 import { doqRoutes, provideDoq } from '@getdoq/analog';
 
-const doqConfig = {
+const config = {
   contentDirectory: 'docs',
   basePath: '/docs',
   routeParam: 'slug',
@@ -25,15 +25,42 @@ const doqConfig = {
   showTableOfContents: true,
 };
 
-provideFileRouter(withExtraRoutes(doqRoutes(doqConfig)));
+provideFileRouter(withExtraRoutes(doqRoutes(config)));
 provideContent(withMarkdownRenderer());
-provideDoq(doqConfig);
+provideDoq(config);
 ```
 
-Import `@getdoq/analog/styles.css` once in the application's global stylesheet. Keep the host's header and footer around `<router-outlet>`.
+`contentDirectory: 'docs'` reads Markdown from `src/content/docs`. `basePath` defaults to `/docs`, and `routeParam` defaults to `slug`. Keep the host's own header/footer around its Router outlet. Import Doq's stylesheet once; the host keeps responsibility for the brand, theme state, and global typography.
 
-Markdown lives under `src/content/docs`. Nested source paths become nested routes. Supported metadata fields are `title`, `description`, `group`, `order`, `slug`, and `demo`. Custom `slug` overrides are listed in navigation but content lookup still follows the source filename; avoid overrides until that limitation is fixed.
+## Canonical routes and prerendering
 
-Consumer demos are standalone Angular components registered by ID in `DoqConfig.demos` and referenced using `demo: <id>` frontmatter. Doq uses `NgComponentOutlet` and does not compile arbitrary Angular templates from Markdown. Components load eagerly in this pilot.
+A Markdown file at `src/content/docs/guides/setup.md` defaults to `/docs/guides/setup`. Frontmatter `slug` replaces the whole path below the base path: `slug: getting-started` gives `/docs/getting-started`; `slug: quickstart/setup` gives `/docs/quickstart/setup`. Segments support letters, numbers, `_`, `-`, and `~`. Invalid slugs and duplicate public routes produce an error with source filenames.
 
-Analog prerendering remains a consumer responsibility. Add every desired docs URL to the Analog prerender route list. See the repository README for host theming, workspace commands, and full pilot limitations.
+The same normalized catalog drives content lookup, index cards, navigation, breadcrumbs, and previous/next links. Analog's public content-file map is used to locate the source document and Analog's public Markdown renderer provides heading metadata and the rendered body. For static output, configure Analog in the host Vite file:
+
+```ts
+import { doqPrerenderRoute } from '@getdoq/analog';
+
+// Add to Analog's `prerender.routes` array:
+{
+  contentDir: 'src/content/docs',
+  recursive: true,
+  transform: file => doqPrerenderRoute(file, '/docs'),
+}
+```
+
+The host should list additional app routes to prerender. Configure the static host to resolve directories to their generated `index.html` and to serve an appropriate 404 document for missing paths.
+
+The host's Analog Vite configuration must enable its content integration. The showcase and external-consumer examples use Analog's Prism highlighter, so install the host-side `prismjs` dependency and configure `content: { highlighter: 'prism' }` as shown in the root README.
+
+## UI, theming, and demos
+
+`DoqConfig` options are `contentDirectory`, `basePath`, `routeParam`, `contentWidth`, `sidebar` (`left`, `right`, or `hidden`), `sidebarWidth`, `showTableOfContents`, and `demos`. Documents support `title`, `description`, `group`, `order`, `slug`, and `demo` metadata. `group` creates a collapsible navigation section; navigation order is `order` then public route.
+
+Optional host CSS properties include `--host-docs-background`, `--host-docs-foreground`, `--host-docs-primary`, `--host-docs-secondary`, `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface`, `--host-docs-focus`, `--host-docs-code-background`, and `--host-docs-code-foreground`. Missing values use scoped defaults.
+
+Register consumer-owned standalone components in `demos`, keyed by the Markdown `demo` value. Doq renders them with `NgComponentOutlet`, with no arbitrary template compilation. The pilot registry is eager. `DoqShellComponent` and the built-in `DoqButtonDemoComponent` are optional helpers; hosts can retain their own complete site shell and demos.
+
+## Build and verify
+
+In this repository, use `pnpm --filter @getdoq/analog build` to build the library and `pnpm pack:doq` to produce the unpublished local tarball. See the root README for showcase builds, static preview, package exports, and the current external installation verification status.
