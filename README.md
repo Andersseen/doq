@@ -125,7 +125,7 @@ The host owns its theme switch and can expose semantic CSS custom properties on 
 | Focus | `--host-docs-focus` |
 | Code background / foreground | `--host-docs-code-background`, `--host-docs-code-foreground` |
 
-`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` configure the docs region. On desktop the sidebar is regular interactive navigation. At the mobile breakpoint it becomes a non-modal drawer that is removed from layout and keyboard navigation while closed; opening moves focus to the overview link, Escape or navigation closes it, and focus returns to the menu trigger. The TOC moves into the article when the viewport does not have room for a side rail and tracks visible headings in the browser. `DoqShellComponent` is optional for a new host that wants a neutral starter shell.
+`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` configure the docs region. On desktop the sidebar is regular interactive navigation. At the mobile breakpoint it becomes a non-modal drawer that is removed from layout and keyboard navigation while closed; opening moves focus to the overview link; the drawer's Close navigation control, Escape, or selecting a documentation link closes it, and focus returns to the menu trigger. The browser behavior of this drawer is tracked as M15 in `docs/verification/mvp-final-validation.md`. The TOC moves into the article when the viewport does not have room for a side rail and tracks visible headings in the browser. `DoqShellComponent` is optional for a new host that wants a neutral starter shell.
 
 ## Consumer-owned Angular demos
 
@@ -147,3 +147,5 @@ The package tarball contains `fesm2022/getdoq-analog.mjs`, `types/getdoq-analog.
 Build both showcase production apps with `pnpm build`, inspect the generated HTML under each app's `dist/analog/public`, then use the app's `preview` script to check direct routes and status codes. The generated pages should include Markdown content, metadata, headings, TOC links, host shell, and navigation. Do not treat an output file's existence alone as proof of successful rendering.
 
 The tarball was installed into a separate Analog consumer at `/private/tmp/doq-external-consumer` using its own manifest and lockfile, then built successfully with `pnpm build`. The consumer resolved `@getdoq/analog` from the packed `0.0.0-pilot` archive, not from the workspace. Its pages verified custom nested slugs, ordinary nested routes, static rendering, and the host shell. No package was published.
+
+The reusable acceptance harness and browser instructions are in [scripts/verification](scripts/verification/README.md). Run `pnpm verify:mvp` after building; it uses isolated headless Chrome/CDP and returns nonzero on failed mandatory checks.
