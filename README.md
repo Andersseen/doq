@@ -70,7 +70,7 @@ Keep the host's existing shell around `<router-outlet>`; Doq supplies the docs r
 
 Add Markdown under `src/content/<contentDirectory>`. A source file such as `src/content/docs/guides/setup.md` defaults to `/docs/guides/setup`. A frontmatter `slug` replaces the entire URL path below `basePath`; for example `slug: getting-started` produces `/docs/getting-started`, and `slug: quickstart/setup` produces `/docs/quickstart/setup`, regardless of the source folder. Slug segments accept letters, numbers, `_`, `-`, and `~`. Empty/invalid slugs and duplicate public routes throw a diagnostic naming the source files.
 
-The canonical document catalog drives the index, sidebar, breadcrumbs, previous/next links, content lookup, and route resolution. Doq resolves a public route back to its discovered Analog source file, then passes the Markdown body through Analog's renderer. It does not replace Analog's compiler or maintain a separate consumer slug map.
+The canonical document catalog drives the index, sidebar, breadcrumbs, previous/next links, content lookup, and route resolution. A public route first resolves to its catalog entry. Analog's `injectContentFilesMap()` rekeys the loader under the frontmatter slug, so Doq selects that loader by the catalog entry's normalized public slug; the loader still returns the Markdown body from the original source file, which is passed through Analog's renderer. Doq retains `sourceFilename` and `sourceSlug` for source identity and diagnostics and does not maintain a second consumer slug map.
 
 ```markdown
 ---
@@ -125,7 +125,7 @@ The host owns its theme switch and can expose semantic CSS custom properties on 
 | Focus | `--host-docs-focus` |
 | Code background / foreground | `--host-docs-code-background`, `--host-docs-code-foreground` |
 
-`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` configure the docs region. Mobile navigation uses a focusable drawer with Escape handling and focus return. The TOC moves into the article when the viewport does not have room for a side rail and tracks visible headings in the browser. `DoqShellComponent` is optional for a new host that wants a neutral starter shell.
+`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` configure the docs region. On desktop the sidebar is regular interactive navigation. At the mobile breakpoint it becomes a non-modal drawer that is removed from layout and keyboard navigation while closed; opening moves focus to the overview link, Escape or navigation closes it, and focus returns to the menu trigger. The TOC moves into the article when the viewport does not have room for a side rail and tracks visible headings in the browser. `DoqShellComponent` is optional for a new host that wants a neutral starter shell.
 
 ## Consumer-owned Angular demos
 
