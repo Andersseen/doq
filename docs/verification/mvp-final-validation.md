@@ -35,9 +35,9 @@ The harness drives an isolated headless Chrome over the Chrome DevTools Protocol
 On this machine every Chrome launch hangs before it writes `DevToolsActivePort`. Commands run in this iteration:
 
 1. `pnpm verify:mvp` (harness default launch, `--headless=new`) — timed out.
-2. Direct launch of `/Applications/Google Chrome.app` with `--headless=new --remote-debugging-port=0`, an isolated profile, with and without `--no-sandbox`, with `--use-mock-keychain --password-store=basic`, and with `--dump-dom` — no port file, process alive, no output.
-3. The Playwright-cached `chromium_headless_shell-1223` under `~/Library/Caches/ms-playwright` — same result.
-4. `open -n -g -a "Google Chrome" --args ...` through LaunchServices — same result.
+2. Direct launch of the Chrome binary with `--headless=new --remote-debugging-port=0`, an isolated profile and `--no-sandbox`, also with `--use-mock-keychain --password-store=basic`, and with `--dump-dom` — no port file, process alive, no output.
+3. The Playwright-cached `chromium_headless_shell-1223` under `~/Library/Caches/ms-playwright`, with `--no-sandbox` — same result.
+4. `open -n -g -a "Google Chrome" --args --headless=new ...` through LaunchServices, without `--no-sandbox` — same result.
 5. `sample` of the stuck processes: the main thread is blocked in an Objective-C `+initialize`, which in the headless shell reaches `NSApplication` → `NSPasteboard` → a synchronous XPC `mach_msg` wait for the pasteboard service.
 6. `pbpaste` does not return within 5 seconds, and retrying after a pause does not help. The owning process is `/usr/libexec/pboard` (PID 1016, user `andrii`, LaunchAgent `gui/501/com.apple.pboard`, running since 2026-10-10).
 
@@ -51,7 +51,7 @@ The earlier interactive runs in a previous session reported passing M15, M17 (bo
 - **Explicit close control.** A `Close navigation` button inside the mobile drawer closes it; it is hidden at desktop widths.
 - **Drawer stacking.** The mobile drawer `z-index` is raised from 20 to 100. In an earlier run the host header covered the drawer's close control, and a click landed on the brand link.
 - **TOC observer root margin.** The percentage `rootMargin` was replaced by a pixel margin derived from the viewport height. In an earlier run at 1440 px the percentage margin left the active region empty.
-- **Enhancement waits for rendered headings.** Copy buttons and TOC observers are attached when the rendered Markdown exists, through a `MutationObserver` with a zero-delay fallback. Earlier, a one-shot query could run before Angular inserted the headings, so no observer was attached.
+- **Enhancement waits for rendered Markdown.** Copy buttons and TOC observers are attached once the Markdown element has rendered content, through a `MutationObserver` with a zero-delay fallback. Earlier, a one-shot query could run before Angular inserted the headings, so no observer was attached. The observer covers the headings that resolve in the DOM; a TOC entry that does not resolve no longer blocks observation of the others or keeps the `MutationObserver` alive.
 - **One heading observer and resize listener per document.** Because enhancement can succeed from both the observer and the timer, a second success could register another resize listener and leave a stale observer on detached headings. Each success now disconnects the previous observer and listener first. Found by code review this iteration; not yet exercised in a browser.
 - **Removed a dead field.** The unused `enhancementDomObserver` member was removed.
 
