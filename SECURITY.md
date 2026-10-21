@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Doq (`@doqs/analog`) has not been published to npm yet. Security fixes are made on the `main` branch and the latest `0.1.x` line; older pre-release states are not supported.
+Doq (`@doqs/analog`) is published on npm. Security fixes are made on the `main` branch and the latest `0.2.x` release; older versions are not supported.
 
 | Version | Supported |
 | ------- | --------- |
