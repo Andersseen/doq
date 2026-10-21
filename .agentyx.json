@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Andersseen/agentyx/main/packages/core/schema/agentyx.schema.json",
+  "packs": [
+    "technical",
+    "typescript",
+    "angular",
+    "testing",
+    "accessibility",
+    "documentation",
+    "agentic",
+    "git",
+    "efficiency",
+    "doq-workflow"
+  ],
+  "enable": ["playwright"],
+  "exclude": {
+    "skills": ["api-design", "subagent-driven-development", "parallel-work"],
+    "hooks": ["session-doctor-bootstrap", "observe-session-start", "observe-session-end", "observe-tool-use"]
+  },
+  "targets": ["codex", "claude", "kimi"],
+  "skillDirectories": [".agentyx/skills"],
+  "localPacks": [
+    {
+      "name": "doq-workflow",
+      "category": "workflow",
+      "description": "Doq spec-driven development workflow.",
+      "skills": ["doq-sdd-development"]
+    }
+  ],
+  "project": {
+    "id": "doq",
+    "name": "Doq",
+    "description": "Composable Markdown documentation UI for Analog.js (@getdoq/analog).",
+    "repository": "https://github.com/Andersseen/doq"
+  },
+  "context": {
+    "commands": {
+      "sdd-new": { "command": "pnpm sdd:new <milestone-id> <slug>" },
+      "sdd-check": { "command": "pnpm sdd:check" },
+      "verify-change": { "command": "pnpm verify:change" },
+      "quality-gate": { "command": "pnpm quality:gate" }
+    },
+    "areas": [
+      { "path": "packages/doq", "purpose": "The published @getdoq/analog library" },
+      { "path": "apps", "purpose": "Two independent showcase hosts consuming the library" },
+      { "path": "docs/specs", "purpose": "Spec-driven development artifacts" }
+    ],
+    "constraints": ["Read AGENTS.md first", "Every behavior change needs a spec and executed test evidence"]
+  }
+}

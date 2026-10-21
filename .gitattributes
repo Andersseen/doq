@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.tgz binary
+pnpm-lock.yaml -diff linguist-generated
+.agentyx.lock.json -diff linguist-generated

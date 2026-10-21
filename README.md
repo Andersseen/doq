@@ -26,9 +26,16 @@ pnpm pack:doq     # artifacts/getdoq-analog-0.1.0.tgz; does not publish
 pnpm verify:mvp   # browser acceptance (M9, M15–M17, M23, M24) plus the 0.1 check V01
 pnpm verify:package artifacts/getdoq-analog-0.1.0.tgz [consumer-dir]
 pnpm typecheck:scripts && pnpm format:check
+pnpm test:unit && pnpm test:components   # Vitest + Angular Testing Library
+pnpm test:e2e && pnpm test:contract      # Playwright and pytest
+pnpm verify:change                       # fast local gate; pnpm quality:gate is the full pre-PR gate
 ```
 
 `pnpm --filter showcase-a preview` / `showcase-b preview` serve the generated `dist/analog/public`; the preview server maps `index.html` files to deep URLs and returns 404 for missing files. Production hosts should configure their own 404 behavior.
+
+## License and community
+
+MIT, see [LICENSE](LICENSE). [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Specifications](docs/specs/README.md).
 
 ## Verification
 

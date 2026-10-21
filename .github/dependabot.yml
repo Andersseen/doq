@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*', 'ng-packagr', '@analogjs/*', 'zone.js']
+      testing:
+        patterns: ['vitest', 'jsdom', '@vitest/*', '@testing-library/*', '@playwright/*', '@axe-core/*']
+      tooling:
+        patterns: ['prettier', 'turbo', 'typescript', '@types/*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      actions:
+        patterns: ['*']
+  - package-ecosystem: pip
+    directory: /tests/contract
+    schedule: { interval: monthly }
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
