@@ -74,7 +74,7 @@ def test_contract_030_homepage_is_prerendered_with_content_and_landmarks(site_of
 def test_contract_031_metadata_is_complete_and_never_invents_a_domain(site_official):
     """CONTRACT-031: title, description, Open Graph and Twitter tags; canonical only when an origin is configured."""
     html, page = _page(site_official)
-    assert page.title.startswith("Doq")
+    assert page.title.startswith("Doqs")
     assert 50 < len(page.meta["description"]) < 200
     for key in ("og:title", "og:description", "og:type", "twitter:card", "twitter:title"):
         assert page.meta.get(key), key

@@ -10,6 +10,7 @@ import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
 import { DoqSearchComponent } from './doq-search.component';
+import { splitDoqInlineDemos } from './doq-inline-demos';
 
 interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; demo?: string; }
 
@@ -36,8 +37,18 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
             @if (config.search?.enabled) { <doq-search /> }
           </div>
           <header class="doq-doc-header"><p class="doq-eyebrow" data-pagefind-ignore>{{ doc.attributes.group || copy.label }}</p><h1 tabindex="-1">{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
-          <analog-markdown class="doq-markdown" [content]="doc.content" />
-          @if (doc.attributes.demo; as demoId) {
+          <div class="doq-content">
+            @for (segment of segments(); track $index) {
+              @if (segment.kind === 'html') { <analog-markdown class="doq-markdown" [content]="segment.html" /> }
+              @else {
+                <div class="doq-region doq-inline-demo" data-pagefind-ignore [attr.data-doq-demo]="segment.id">
+                @if (demoComponent(segment.id); as demo) { <ng-container *ngComponentOutlet="demo" /> }
+                @else { <p class="doq-demo-fallback" role="status">Demo “{{ segment.id }}” is not registered by this application.</p> }
+                </div>
+              }
+            }
+          </div>
+          @if (trailingDemo(); as demoId) {
             <div class="doq-region" data-pagefind-ignore>
             @if (demoComponent(demoId); as demo) { <ng-container *ngComponentOutlet="demo" /> }
             @else { <p class="doq-demo-fallback" role="status">Demo “{{ demoId }}” is not registered by this application.</p> }
@@ -165,6 +176,13 @@ export class DoqDocsComponent {
     }),
   ), { initialValue: undefined });
   demoComponent(id: string): Type<unknown> | undefined { return id === 'button' ? DoqButtonDemoComponent : this.config.demos?.[id]; }
+  /** The rendered document cut at its `::demo[id]` directives; a document without directives is one HTML segment. */
+  readonly segments = computed(() => splitDoqInlineDemos(this.document()?.content ?? ''));
+  /** The frontmatter demo, unless the Markdown already places that same demo inline. */
+  readonly trailingDemo = computed(() => {
+    const id = this.document()?.attributes.demo;
+    return id && !this.segments().some(segment => segment.kind === 'demo' && segment.id === id) ? id : undefined;
+  });
   readonly headings = computed(() => this.document()?.toc ?? []);
   readonly previous = computed(() => this.adjacent(-1));
   readonly next = computed(() => this.adjacent(1));
@@ -211,7 +229,7 @@ export class DoqDocsComponent {
   }
   private reveal(fragment: string | null): void {
     const view = this.documentRef.defaultView;
-    const markdown = this.hostElement.querySelector<HTMLElement>('.doq-markdown');
+    const markdown = this.hostElement.querySelector<HTMLElement>('.doq-content');
     const target = fragment && markdown ? this.findFragmentTarget(markdown, fragment) : undefined;
     const focusTarget = this.arrival;
     this.arrival = false;
@@ -232,7 +250,7 @@ export class DoqDocsComponent {
     const candidates = [fragment];
     try { candidates.push(decodeURIComponent(fragment)); } catch { /* keep the raw fragment */ }
     for (const id of candidates) {
-      for (const node of Array.from(markdown.querySelectorAll<HTMLElement>('[id]'))) if (node.id === id) return node;
+      for (const node of Array.from(markdown.querySelectorAll<HTMLElement>('[id]'))) if (node.id === id && node.closest('.doq-markdown')) return node;
     }
     return undefined;
   }
@@ -245,9 +263,10 @@ export class DoqDocsComponent {
   private get hostElement(): HTMLElement { return this.host.nativeElement as HTMLElement; }
   private enhanceRenderedDocument(): boolean {
     const root = this.hostElement.querySelector<HTMLElement>('.doq-root');
-    const markdown = root?.querySelector<HTMLElement>('.doq-markdown');
-    if (!root || !markdown?.childElementCount) return false;
-    for (const pre of Array.from(markdown.querySelectorAll<HTMLElement>('pre:not([data-doq-copy])'))) {
+    const markdown = root?.querySelector<HTMLElement>('.doq-content');
+    if (!root || !markdown || !root.querySelector('.doq-markdown')?.childElementCount) return false;
+    // Only Markdown-rendered code gets a copy button; consumer demos keep their own markup untouched.
+    for (const pre of Array.from(markdown.querySelectorAll<HTMLElement>('.doq-markdown pre:not([data-doq-copy])'))) {
       pre.dataset['doqCopy'] = 'true';
       const button = this.documentRef.createElement('button');
       button.type = 'button'; button.className = 'doq-code-copy'; button.setAttribute('data-pagefind-ignore', ''); button.setAttribute('aria-label', 'Copy code'); button.textContent = 'Copy';
@@ -262,7 +281,7 @@ export class DoqDocsComponent {
       pre.appendChild(button);
     }
     const headings = this.headings();
-    const nodes = headings.map(heading => this.documentRef.getElementById(heading.id)).filter((node): node is HTMLElement => !!node && markdown.contains(node));
+    const nodes = headings.map(heading => this.documentRef.getElementById(heading.id)).filter((node): node is HTMLElement => !!node && !!node.closest('.doq-markdown') && markdown.contains(node));
     // The enhancement may run from both the mutation observer and the timer; replacing the
     // previous observer and resize listener keeps a single active set per rendered document.
     this.disconnectHeadingObserver();

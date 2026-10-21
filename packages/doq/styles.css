@@ -127,6 +127,8 @@
 .doq-not-found { max-width: var(--doq-content-width, 46rem); margin: 4rem auto; padding: 2rem; color: var(--doq-foreground, #222); }
 .doq-not-found a { color: var(--doq-primary, #176b52); text-decoration: underline; }
 .doq-demo-fallback { padding: 1rem; border: 1px solid var(--doq-border); border-radius: .5rem; color: var(--doq-muted); }
+.doq-content { min-width: 0; }
+.doq-inline-demo { display: block; box-sizing: border-box; min-width: 0; max-width: min(100%, var(--doq-content-width)); margin: calc(1.5rem - .2rem) -.2rem; padding: .2rem; overflow-x: auto; }
 .doq-root .consumer-demo { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--doq-border); border-radius: .75rem; background: var(--doq-surface); }
 .doq-root .consumer-demo select,.doq-root .consumer-demo button { min-height: 2.5rem; }
 @media (max-width: 1450px) { .doq-root { gap: 2rem; } .doq-toc { position: static; width: auto; margin: 2rem 0; padding: 1rem; border: 1px solid var(--doq-border); border-radius: .7rem; } }

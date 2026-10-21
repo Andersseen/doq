@@ -13,23 +13,26 @@ describe('COMP-020 landing page content', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/belongs in your app/i);
     expect(screen.getByRole('main')).toBeTruthy();
-    for (const name of ['What Doq 0.2 does', 'Getting started', 'How it works'])
+    for (const name of ['What Doqs 0.3 does', 'Getting started', 'How it works'])
       expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
   });
 
-  it('lists the real 0.2 features', async () => {
+  it('lists the real 0.3 features', async () => {
     await render(HomePage);
-    const section = screen.getByRole('region', { name: 'What Doq 0.2 does' });
+    const section = screen.getByRole('region', { name: 'What Doqs 0.3 does' });
     const names = within(section).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
     expect(names).toEqual(
-      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'Consumer-owned demos', 'SSR and SSG']),
+      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'Consumer-owned demos', 'SSR and SSG', 'Angular components inside Markdown']),
     );
   });
 
-  it('does not claim MDX or components inside Markdown', async () => {
+  it('COMP-050: explains inline components with the real directive and does not claim MDX', async () => {
     const { container } = await render(HomePage);
-    expect(container.textContent).not.toMatch(/\bmdx\b/i);
-    expect(container.textContent).toMatch(/does not embed components inside Markdown/);
+    expect(container.textContent).not.toMatch(/does not embed components inside Markdown/);
+    expect(container.textContent).toMatch(/Doqs is not MDX/);
+    const section = screen.getByRole('region', { name: 'Interactive components in Markdown' });
+    expect(section.textContent).toContain('::demo[install-command]');
+    expect(section.textContent).toContain('demos: {');
   });
 
   it('shows the three setup steps using the real public API names', async () => {

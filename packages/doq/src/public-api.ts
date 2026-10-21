@@ -8,3 +8,5 @@ export * from './lib/doq-document';
 export * from './lib/doq-paths';
 export { normalizeDoqSearchConfig, normalizeSearchResultUrl } from './lib/doq-search';
 export type { DoqSearchConfig, DoqResolvedSearchConfig, DoqSearchResult, DoqExcerptSegment } from './lib/doq-search';
+export { splitDoqInlineDemos, DOQ_INLINE_DEMO_PATTERN } from './lib/doq-inline-demos';
+export type { DoqContentSegment } from './lib/doq-inline-demos';

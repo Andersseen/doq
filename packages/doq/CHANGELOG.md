@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+Interactive Markdown. Additive: every 0.2 configuration, document, route and `demo:` frontmatter key works unchanged, and documents without a directive render the same single Markdown region as before.
+
+### Added
+- `::demo[id]` directive: a line containing only this text places a component registered in `config.demos` at that position in the Markdown. Multiple occurrences, repeated ids and different ids are supported; each is an independent Angular instance that is server-rendered, hydrated and destroyed on navigation.
+- Safe by construction: Doq cuts Analog's already-rendered HTML at top-level directive paragraphs only. Directives in code blocks, inline code, lists, blockquotes, tables or running text stay literal; heading ids, duplicate-heading suffixes, the table of contents, highlighting and search anchors are unchanged. No evaluation, no HTML injection, no template compilation.
+- Unknown ids render an accessible `role="status"` notice instead of failing the page. A frontmatter `demo:` that is also placed inline renders once.
+- Exports: `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `DoqContentSegment`.
+- Search: demo markup is `data-pagefind-ignore`; Markdown before and after a demo is indexed.
+- `docs/guides/angular-movement-migration.md` and `pnpm verify:adoption`, an opt-in proof against a disposable checkout of the real Angular Movement site (Angular 22, zoneless, Tailwind 4, `SmoothScrollService`).
+
+### Changed
+- The document body is wrapped in `.doq-content` (`min-width: 0`); inline demo wrappers are `.doq-region.doq-inline-demo` (block, `overflow-x: auto`). Markdown remains in `.doq-markdown`.
+- The copy buttons, heading observation and fragment lookup consider Markdown-rendered nodes only, so markup inside a consumer demo is never decorated or matched by id.
+
 ## 0.2.0
 
 Documentation search and navigation. Additive: configuration from 0.1 works unchanged and search is off unless enabled.

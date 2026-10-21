@@ -6,6 +6,8 @@ import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
 import { doqPaths } from '../doq.paths';
 import { VantaButtonDemoComponent } from './demos/button-demo';
+import { VantaContrastDemoComponent } from './demos/contrast-demo';
+import { VantaInstallDemoComponent } from './demos/install-demo';
 import { VantaHelpComponent } from './slots/vanta-help';
 import { VantaStartComponent } from './slots/vanta-start';
 
@@ -16,7 +18,7 @@ const doqConfig = defineDoqConfig({
   sidebarWidth: '14rem',
   showTableOfContents: true,
   search: { enabled: true },
-  demos: { 'vanta-button': VantaButtonDemoComponent },
+  demos: { 'vanta-button': VantaButtonDemoComponent, 'vanta-install': VantaInstallDemoComponent, 'vanta-contrast': VantaContrastDemoComponent },
   slots: { indexAfterIntro: VantaStartComponent, documentAfterContent: VantaHelpComponent },
   presentation: {
     documentationLabel: 'Vanta UI docs',

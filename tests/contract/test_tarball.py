@@ -14,6 +14,7 @@ PUBLIC_EXPORTS = [
     "doqRoutes",
     "doqPrerenderRoutes",
     "doqPrerenderRoute",
+    "splitDoqInlineDemos",
     "normalizeDoqPaths",
     "normalizeDoqDocument",
     "sortDoqDocuments",

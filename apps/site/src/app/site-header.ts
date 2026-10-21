@@ -8,7 +8,7 @@ import { siteLinks } from '../lib/site-config';
   template: `
     <header class="site-header">
       <div class="container bar">
-        <a class="wordmark" href="/" aria-label="Doq, home"><span aria-hidden="true">doq</span><i aria-hidden="true"></i></a>
+        <a class="wordmark" href="/" aria-label="Doqs, home"><span aria-hidden="true">doqs</span><i aria-hidden="true"></i></a>
         <button
           type="button"
           class="menu-toggle"

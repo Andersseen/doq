@@ -10,6 +10,14 @@ export const apps = {
   // Showcase B built with `vite build --mode nosearch`: the same app and content with search disabled.
   noSearch: { url: 'http://127.0.0.1:4276', root: 'apps/showcase-b/dist/analog-nosearch/public' },
   site: { url: 'http://127.0.0.1:4277', root: 'apps/site/dist/analog/public' },
+  // Angular Movement adoption proof (scripts/adoption.ts); only served when DOQ_ADOPTION_DIR points at a built checkout.
+  adoption: {
+    url: 'http://127.0.0.1:4278',
+    root: resolve(
+      process.env.DOQ_ADOPTION_DIR ?? resolve(tmpdir(), 'doq-adoption-angular-movement'),
+      'dist/analog/public',
+    ),
+  },
   consumer: {
     url: 'http://127.0.0.1:4275',
     root: resolve(process.env.DOQ_CONSUMER_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer'), 'dist/analog/public'),
@@ -18,6 +26,7 @@ export const apps = {
 
 // E2E_SKIP_CONSUMER=1 (focused local runs) skips the tarball-installed consumer and its tests.
 const withConsumer = !process.env.E2E_SKIP_CONSUMER;
+const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
 
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
   command: `node scripts/preview-static.ts ${app.root}`,
@@ -29,7 +38,7 @@ const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
 
 export default defineConfig({
   testDir: 'e2e',
-  testIgnore: withConsumer ? [] : /consumer\.spec/,
+  testIgnore: [...(withConsumer ? [] : [/consumer\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
   outputDir: 'test-results',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -48,5 +57,6 @@ export default defineConfig({
     server(apps.noSearch, 4276),
     server(apps.site, 4277),
     ...(withConsumer ? [server(apps.consumer, 4275)] : []),
+    ...(withAdoption ? [server(apps.adoption, 4278)] : []),
   ],
 });

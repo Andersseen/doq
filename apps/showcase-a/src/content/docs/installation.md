@@ -15,6 +15,8 @@ Vanta targets modern Angular with standalone components and signal-based APIs.
 pnpm add @voltui/components
 ```
 
+::demo[vanta-install]
+
 The package provides theme utilities. Most component implementations are added through the Volt CLI so your team owns and can modify the source.
 
 ## Keep your styles
