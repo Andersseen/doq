@@ -9,17 +9,32 @@
     "dev:b": "pnpm --filter showcase-b dev",
     "build:doq": "pnpm --filter @getdoq/analog build",
     "pack:doq": "pnpm --filter @getdoq/analog run pack",
-    "typecheck:scripts": "tsc -p scripts/tsconfig.json",
+    "consumer:build": "node scripts/consumer.ts",
+    "typecheck:scripts": "tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "sdd:new": "node scripts/sdd/new.ts",
+    "sdd:check": "node scripts/sdd/check.ts",
+    "test:unit": "vitest run -c vitest.unit.config.ts",
+    "test:components": "pnpm --filter @getdoq/analog test:components",
+    "test:e2e": "node scripts/e2e.ts",
+    "test:contract": "node scripts/contract.ts",
     "verify:mvp": "node scripts/verification/mvp.ts",
-    "verify:package": "node scripts/verification/package.ts"
+    "verify:package": "node scripts/verification/package.ts",
+    "verify:negative-controls": "node scripts/negative-controls.ts",
+    "agentyx:check": "agentyx doctor --locked --check",
+    "verify:change": "node scripts/verify.ts change",
+    "quality:gate": "node scripts/verify.ts full"
   },
   "devDependencies": {
+    "@agentyx/cli": "0.20.0",
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
     "@types/node": "^22.20.5",
     "prettier": "^3.9.10",
     "turbo": "^2.5.6",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=22.22.3"

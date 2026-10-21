@@ -2,6 +2,12 @@
   "name": "@getdoq/analog",
   "version": "0.1.0",
   "description": "Composable Markdown documentation UI for Analog.js",
+  "license": "MIT",
+  "author": "Andersseen (https://github.com/Andersseen)",
+  "homepage": "https://github.com/Andersseen/doq#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/Andersseen/doq.git", "directory": "packages/doq" },
+  "bugs": { "url": "https://github.com/Andersseen/doq/issues" },
+  "keywords": ["angular", "analog", "analogjs", "documentation", "markdown", "docs", "ssr", "ssg"],
   "type": "module",
   "peerDependencies": {
     "@analogjs/content": "^2.9.0",
@@ -15,14 +21,33 @@
   "sideEffects": ["./styles.css"],
   "module": "./dist/fesm2022/getdoq-analog.mjs",
   "typings": "./dist/types/getdoq-analog.d.ts",
-  "files": ["fesm2022", "types", "styles.css", "README.md", "CHANGELOG.md"],
+  "files": ["fesm2022", "types", "styles.css", "README.md", "CHANGELOG.md", "LICENSE"],
   "exports": {
     ".": { "types": "./dist/types/getdoq-analog.d.ts", "default": "./dist/fesm2022/getdoq-analog.mjs" },
     "./styles.css": "./styles.css"
   },
-  "scripts": { "build": "ng-packagr -p ng-package.json", "pack": "pnpm build && cd dist && pnpm pack --pack-destination ../../../artifacts" },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json",
+    "pack": "pnpm build && cd dist && pnpm pack --pack-destination ../../../artifacts",
+    "test:components": "vitest run -c vitest.components.config.ts"
+  },
   "devDependencies": {
-    "@angular/common": "^21.2.2", "@angular/compiler": "^21.2.2", "@angular/compiler-cli": "^21.2.2", "@angular/core": "^21.2.2", "@angular/platform-browser": "^21.2.2", "@angular/router": "^21.2.2", "rxjs": "^7.8.0",
-    "ng-packagr": "^21.2.2", "typescript": "~5.9.3"
+    "@analogjs/content": "^2.9.0",
+    "@analogjs/vite-plugin-angular": "^2.9.0",
+    "@angular/common": "^21.2.2",
+    "@angular/compiler": "^21.2.2",
+    "@angular/compiler-cli": "^21.2.2",
+    "@angular/core": "^21.2.2",
+    "@angular/platform-browser": "^21.2.2",
+    "@angular/router": "^21.2.2",
+    "@testing-library/angular": "^19.6.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/user-event": "^14.6.8",
+    "jsdom": "^27.4.0",
+    "ng-packagr": "^21.2.2",
+    "rxjs": "^7.8.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.12"
   }
 }

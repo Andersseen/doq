@@ -79,7 +79,10 @@ export const consumerApp: VerifiedApp | null = process.env['MVP_CONSUMER_ROOT']
       distRoot: resolve(process.env['MVP_CONSUMER_ROOT']),
       doc: '/docs/onboarding/first-application',
       nested: '/docs/concepts/models',
-      v01: process.env['MVP_CONSUMER_V01'] ? (JSON.parse(process.env['MVP_CONSUMER_V01']) as V01Expectations) : null,
+      // `pnpm consumer:build` produces a copy of Showcase B, so its expectations are the default.
+      v01: process.env['MVP_CONSUMER_V01']
+        ? (JSON.parse(process.env['MVP_CONSUMER_V01']) as V01Expectations)
+        : (showcases[1]?.v01 ?? null),
     }
   : null;
 

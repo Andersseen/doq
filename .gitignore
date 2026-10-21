@@ -6,3 +6,18 @@ artifacts/
 turbo-build.log
 .angular/
 .DS_Store
+
+# Test and tooling output
+test-results/
+playwright-report/
+.venv/
+__pycache__/
+.pytest_cache/
+coverage/
+.sdd-tmp/
+
+# Local secrets and agent runtime state (Agentyx observation data is Git-local, never committed)
+.env
+.env.*
+!.env.example
+.agentyx/state/
