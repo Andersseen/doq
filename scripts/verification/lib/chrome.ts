@@ -84,7 +84,8 @@ export async function launchChrome(origins: readonly string[]): Promise<ChromeSe
         ]);
         if (!exited) chrome.kill('SIGKILL');
       }
-      await rm(profileRoot, { recursive: true, force: true });
+      // Chrome may still be flushing its profile for a moment after exit; a leftover temp dir must not fail the run.
+      await rm(profileRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 }).catch(() => {});
     },
   };
 }
