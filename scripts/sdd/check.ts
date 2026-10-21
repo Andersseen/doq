@@ -5,7 +5,9 @@ import { checkSpec, SPEC_DIR, SPEC_FILES, type Spec } from './lib.ts';
 
 const repo = resolve(import.meta.dirname, '../..');
 const specsRoot = resolve(process.env['DOQ_SPECS_ROOT'] ?? resolve(repo, 'docs/specs'));
-const testRoots = ['e2e', 'packages/doq/test', 'tests/contract', 'scripts'].map((path) => resolve(repo, path));
+const testRoots = ['e2e', 'packages/doq/test', 'tests/contract', 'scripts', 'apps/site/test', 'apps/site/src'].map(
+  (path) => resolve(repo, path),
+);
 
 async function walk(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);

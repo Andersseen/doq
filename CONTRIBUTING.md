@@ -14,6 +14,7 @@ pnpm build
 ## Layout
 
 - `packages/doq` — the `@getdoq/analog` library. Tests live in `packages/doq/test/`.
+- `apps/site` — the official website (static Analog landing, deployed to Cloudflare Pages). Release and deployment: [docs/operations/release-and-deployment.md](docs/operations/release-and-deployment.md).
 - `apps/showcase-a`, `apps/showcase-b` — two independent host applications that consume the library through the workspace.
 - `e2e/` — Playwright browser tests. `tests/contract/` — pytest checks of the packed tarball and generated HTTP output.
 - `scripts/` — TypeScript tooling run directly by Node (preview server, verification harness, SDD commands, gates). Keep to erasable syntax (no `enum`, parameter properties or `namespace`); `scripts/tsconfig.json` enforces it.
@@ -25,6 +26,7 @@ pnpm build
 ```sh
 pnpm dev:a            # Showcase A (Vanta UI) dev server
 pnpm dev:b            # Showcase B (ForgeCMS) dev server
+pnpm dev:site         # official website dev server
 pnpm build            # library + both showcases (production); each showcase also generates its Pagefind index after prerendering
 pnpm pack:doq         # artifacts/getdoq-analog-<version>.tgz — never publishes
 ```

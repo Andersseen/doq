@@ -4,7 +4,7 @@ Shared instructions for coding agents (Codex, Claude Code, Kimi Code) and humans
 
 ## What this repository is
 
-`@getdoq/analog` (`packages/doq`) is an Angular 21 / Analog.js library that adds Markdown documentation to an existing host app. Two independent showcase hosts (`apps/showcase-a`, `apps/showcase-b`) consume it. `scripts/` holds Node-run TypeScript tooling (preview server, CDP verification harness, SDD commands). `e2e/` (Playwright), `packages/doq/test/` (Vitest) and `tests/contract/` (pytest) hold the tests.
+`@getdoq/analog` (`packages/doq`) is an Angular 21 / Analog.js library that adds Markdown documentation to an existing host app. Two independent showcase hosts (`apps/showcase-a`, `apps/showcase-b`) consume it; `apps/site` is the official static website. Publishing (npm Trusted Publishing, `release.yml`) and Cloudflare Pages deployment (`deploy-site.yml`) are described in `docs/operations/release-and-deployment.md`; never add npm tokens, never publish or deploy by hand without the maintainer's authorization. `scripts/` holds Node-run TypeScript tooling (preview server, CDP verification harness, SDD commands). `e2e/` (Playwright), `packages/doq/test/` (Vitest) and `tests/contract/` (pytest) hold the tests.
 
 ## Rules that matter
 

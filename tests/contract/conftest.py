@@ -131,3 +131,9 @@ def site_b():
 def site_b_nosearch():
     """Showcase B built with `vite build --mode nosearch`: identical content, search disabled."""
     yield from _serve(REPO / "apps/showcase-b/dist/analog-nosearch/public")
+
+
+@pytest.fixture(scope="session")
+def site_official():
+    """The official website (apps/site) production build."""
+    yield from _serve(REPO / "apps/site/dist/analog/public")
