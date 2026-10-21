@@ -2,11 +2,11 @@
 
 ## Problem
 
-`@getdoq/analog` (0.2.0) cannot be installed by anyone: the registry returns 404 for the package, there is no release automation, and the project has no public website. A manual `npm publish` with a long-lived token would be the obvious shortcut and is the thing to avoid. This change is the distribution and website foundation of the 0.2.x product; it is not the 0.3.0 feature milestone.
+`@doqs/analog` (0.2.0) cannot be installed by anyone: the registry returns 404 for the package, there is no release automation, and the project has no public website. A manual `npm publish` with a long-lived token would be the obvious shortcut and is the thing to avoid. This change is the distribution and website foundation of the 0.2.x product; it is not the 0.3.0 feature milestone.
 
 ## Consumer impact
 
-None for the library API or behavior. Once the maintainer bootstraps the package, consumers can `pnpm add @getdoq/analog` and get provenance-attested releases. Package metadata gains `engines` and `publishConfig.access: public`. A new static website (`apps/site`) presents the product.
+None for the library API or behavior. Once the maintainer bootstraps the package, consumers can `pnpm add @doqs/analog` and get provenance-attested releases. Package metadata gains `engines` and `publishConfig.access: public`. A new static website (`apps/site`) presents the product.
 
 ## Scope
 
@@ -21,7 +21,7 @@ No version bump, no 0.3.0 work, no documentation site or fake docs routes, no An
 
 ## Requirements
 
-- **REQ-001** Package metadata is correct for a public scoped npm package: name `@getdoq/analog`, `publishConfig.access: public`, repository/provenance fields, engines, bin, exports, file allowlist, license.
+- **REQ-001** Package metadata is correct for a public scoped npm package: name `@doqs/analog`, `publishConfig.access: public`, repository/provenance fields, engines, bin, exports, file allowlist, license.
 - **REQ-002** The npm registry state is read without credentials and the release logic distinguishes "package missing", "version missing" and "version published", failing on unexpected responses.
 - **REQ-003** The first publication is documented as a manual, authorized bootstrap, and the automation stays inactive (skips, does not fail) while the package does not exist.
 - **REQ-004** Publication uses npm Trusted Publishing (OIDC) from a dedicated job with minimal permissions, an npm that supports it, provenance, and no persistent npm token anywhere.

@@ -33,7 +33,7 @@ PUBLIC_EXPORTS = [
 
 def test_contract_001_manifest_exports_resolve_to_shipped_files(package_files, manifest):
     """CONTRACT-001: every path in `exports`/`module`/`typings` exists in the tarball."""
-    assert manifest["name"] == "@getdoq/analog"
+    assert manifest["name"] == "@doqs/analog"
     targets = {
         manifest["module"],
         manifest["typings"],
@@ -48,10 +48,10 @@ def test_contract_001_manifest_exports_resolve_to_shipped_files(package_files, m
 
 def test_contract_002_declarations_expose_the_public_api(package_files):
     """CONTRACT-002: the shipped .d.ts declares every documented public symbol."""
-    declarations = package_files["types/getdoq-analog.d.ts"].decode()
+    declarations = package_files["types/doqs-analog.d.ts"].decode()
     missing = [name for name in PUBLIC_EXPORTS if not re.search(rf"\b{name}\b", declarations)]
     assert not missing, f"not declared: {missing}"
-    runtime = package_files["fesm2022/getdoq-analog.mjs"].decode()
+    runtime = package_files["fesm2022/doqs-analog.mjs"].decode()
     export_clause = re.search(r"export \{([^}]*)\}", runtime)
     assert export_clause, "bundle has no export clause"
     exported = {item.split(" as ")[-1].strip() for item in export_clause.group(1).split(",")}
@@ -60,7 +60,7 @@ def test_contract_002_declarations_expose_the_public_api(package_files):
 
 
 def test_contract_003_stylesheet_export_ships_the_documented_selectors(package_files, manifest):
-    """CONTRACT-003: `@getdoq/analog/styles.css` exists and carries the public CSS tokens."""
+    """CONTRACT-003: `@doqs/analog/styles.css` exists and carries the public CSS tokens."""
     assert "./styles.css" in manifest["exports"]
     css = package_files["styles.css"].decode()
     for token in ("--host-docs-background", "--host-docs-primary", "--host-docs-focus", "--host-docs-code-background"):
@@ -89,6 +89,6 @@ def test_contract_005_license_is_shipped_and_consistent(package_files, manifest)
     assert package_files["LICENSE"] == (REPO / "LICENSE").read_bytes()
     assert "MIT License" in package_files["LICENSE"].decode()
     assert {"README.md", "CHANGELOG.md"} <= set(package_files)
-    assert manifest["repository"]["url"].endswith("Andersseen/doq.git")
+    assert manifest["repository"]["url"].endswith("Andersseen/doqs.git")
     assert json.loads((REPO / "packages/doq/package.json").read_text())["license"] == "MIT"
     assert not Path(REPO / "packages/doq/dist/dist").exists()

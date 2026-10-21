@@ -22,7 +22,7 @@ LIBRARY_VERSION = json.loads((REPO / "packages/doq/package.json").read_text())["
 
 
 def _tarball_path() -> Path:
-    return Path(os.environ.get("DOQ_TARBALL", REPO / "artifacts" / f"getdoq-analog-{LIBRARY_VERSION}.tgz"))
+    return Path(os.environ.get("DOQ_TARBALL", REPO / "artifacts" / f"doqs-analog-{LIBRARY_VERSION}.tgz"))
 
 
 @pytest.fixture(scope="session")

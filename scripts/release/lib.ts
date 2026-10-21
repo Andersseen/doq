@@ -1,10 +1,10 @@
 /**
- * Release safety logic for @getdoq/analog. Pure functions, no I/O except the injected `fetch`, so every refusal is
+ * Release safety logic for @doqs/analog. Pure functions, no I/O except the injected `fetch`, so every refusal is
  * unit-tested with mocked registry responses. `cli.ts` wires this to files, env and GitHub Actions outputs.
  */
 import { createHash } from 'node:crypto';
 
-export const PACKAGE_NAME = '@getdoq/analog';
+export const PACKAGE_NAME = '@doqs/analog';
 export const REGISTRY = 'https://registry.npmjs.org';
 /** First npm release that supports Trusted Publishing (OIDC) from GitHub Actions. */
 export const MIN_NPM_FOR_OIDC = '11.5.1';

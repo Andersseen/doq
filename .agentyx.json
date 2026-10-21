@@ -30,8 +30,8 @@
   "project": {
     "id": "doq",
     "name": "Doq",
-    "description": "Composable Markdown documentation UI for Analog.js (@getdoq/analog).",
-    "repository": "https://github.com/Andersseen/doq"
+    "description": "Composable Markdown documentation UI for Analog.js (@doqs/analog).",
+    "repository": "https://github.com/Andersseen/doqs"
   },
   "context": {
     "commands": {
@@ -41,7 +41,7 @@
       "quality-gate": { "command": "pnpm quality:gate" }
     },
     "areas": [
-      { "path": "packages/doq", "purpose": "The published @getdoq/analog library" },
+      { "path": "packages/doq", "purpose": "The published @doqs/analog library" },
       { "path": "apps", "purpose": "Two independent showcase hosts consuming the library" },
       { "path": "docs/specs", "purpose": "Spec-driven development artifacts" }
     ],

@@ -20,17 +20,17 @@ const missing: RegistryState = { kind: 'version-missing', latest: '0.1.0' };
 const published = (integrity = INTEGRITY): RegistryState => ({
   kind: 'version-published',
   integrity,
-  tarballUrl: 'https://registry.npmjs.org/@getdoq/analog/-/analog-0.2.0.tgz',
+  tarballUrl: 'https://registry.npmjs.org/@doqs/analog/-/analog-0.2.0.tgz',
   hasAttestations: true,
 });
 
 const base = (overrides: Partial<PlanInput> = {}): PlanInput => ({
-  ci: { event: 'push', conclusion: 'success', headBranch: 'main', headRepository: 'Andersseen/doq', headSha: SHA },
-  repository: 'Andersseen/doq',
+  ci: { event: 'push', conclusion: 'success', headBranch: 'main', headRepository: 'Andersseen/doqs', headSha: SHA },
+  repository: 'Andersseen/doqs',
   workflowSha: SHA,
   defaultBranch: 'main',
   packageVersion: '0.2.0',
-  tarballName: 'getdoq-analog-0.2.0.tgz',
+  tarballName: 'doqs-analog-0.2.0.tgz',
   tarballVersion: '0.2.0',
   tarballIntegrity: INTEGRITY,
   registry: missing,
@@ -114,17 +114,17 @@ describe('UNIT-021 registry state with mocked responses', () => {
       headers = init?.headers;
       return { status: 404, json: async () => ({ error: 'Not found' }) };
     };
-    expect(await fetchRegistryState('@getdoq/analog', '0.2.0', spy)).toEqual({ kind: 'package-missing' });
+    expect(await fetchRegistryState('@doqs/analog', '0.2.0', spy)).toEqual({ kind: 'package-missing' });
     expect(Object.keys(headers ?? {}).map((key) => key.toLowerCase())).not.toContain('authorization');
   });
 
   it('requests the scoped packument with an encoded slash', async () => {
     let requested = '';
-    await fetchRegistryState('@getdoq/analog', '0.2.0', async (url) => {
+    await fetchRegistryState('@doqs/analog', '0.2.0', async (url) => {
       requested = url;
       return { status: 404, json: async () => ({}) };
     });
-    expect(requested).toBe('https://registry.npmjs.org/@getdoq%2fanalog');
+    expect(requested).toBe('https://registry.npmjs.org/@doqs%2fanalog');
   });
 
   it('distinguishes an unpublished version from a published one', async () => {
@@ -132,11 +132,11 @@ describe('UNIT-021 registry state with mocked responses', () => {
       'dist-tags': { latest: '0.1.0' },
       versions: { '0.1.0': { dist: { integrity: 'sha512-a', tarball: 'https://x/a.tgz' } } },
     };
-    expect(await fetchRegistryState('@getdoq/analog', '0.2.0', respond(200, body))).toEqual({
+    expect(await fetchRegistryState('@doqs/analog', '0.2.0', respond(200, body))).toEqual({
       kind: 'version-missing',
       latest: '0.1.0',
     });
-    expect(await fetchRegistryState('@getdoq/analog', '0.1.0', respond(200, body))).toMatchObject({
+    expect(await fetchRegistryState('@doqs/analog', '0.1.0', respond(200, body))).toMatchObject({
       kind: 'version-published',
       integrity: 'sha512-a',
       hasAttestations: false,
@@ -144,9 +144,9 @@ describe('UNIT-021 registry state with mocked responses', () => {
   });
 
   it('fails on unexpected statuses and malformed metadata instead of guessing', async () => {
-    await expect(fetchRegistryState('@getdoq/analog', '0.2.0', respond(503))).rejects.toThrow(/503/);
+    await expect(fetchRegistryState('@doqs/analog', '0.2.0', respond(503))).rejects.toThrow(/503/);
     const bad = { versions: { '0.2.0': { dist: {} } } };
-    await expect(fetchRegistryState('@getdoq/analog', '0.2.0', respond(200, bad))).rejects.toThrow(/integrity/);
+    await expect(fetchRegistryState('@doqs/analog', '0.2.0', respond(200, bad))).rejects.toThrow(/integrity/);
   });
 });
 

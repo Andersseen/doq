@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
-import { doqPrerenderRoutes } from '@getdoq/analog';
+import { doqPrerenderRoutes } from '@doqs/analog';
 import { doqPaths } from './src/doq.paths';
 
 export default defineConfig({

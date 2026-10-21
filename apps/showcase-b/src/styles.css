@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@getdoq/analog/styles.css';
+@import '@doqs/analog/styles.css';
 
 * { box-sizing:border-box; }
 body { margin:0; min-width:320px; background:#f7f5f2; color:#29252b; font-family:ui-sans-serif,system-ui,-apple-system,sans-serif; }

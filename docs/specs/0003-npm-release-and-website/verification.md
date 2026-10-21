@@ -28,16 +28,16 @@
 
 Playwright and the CDP harness used the installed Google Chrome (`PW_CHANNEL=chrome`).
 
-- `curl https://registry.npmjs.org/@getdoq%2Fanalog` → HTTP 404 `Not found` (MANUAL-010): the package is **not published**, 0.2.0 included. The organization page returned 403 to a script and `…/-/org/getdoq/package` returned `{}` without credentials, so organization membership, 2FA and any Trusted Publisher configuration are **not verified**. Local npm is 10.9.8; the workflow installs npm 11.21.1 and checks ≥ 11.5.1 at runtime.
-- `PW_CHANNEL=chrome pnpm quality:gate` → exit 0: format:check, typecheck:scripts, sdd:check, agentyx:check, test:unit (204 tests), test:components (58 + 10 site), build (showcases and `apps/site`), pack:doq, verify:package, test:contract (33), verify:negative-controls, consumer:build, test:e2e (81), verify:mvp (17 browser checks PASS, 0 FAIL).
+- `curl https://registry.npmjs.org/@doqs%2Fanalog` and the former `@getdoq` name both returned HTTP 404 (MANUAL-010): the package is **not published**. Organization membership, 2FA and any Trusted Publisher configuration cannot be read without the maintainer's login and are **not verified**. Local npm is 10.9.8; the workflow installs npm 11.21.1 and checks ≥ 11.5.1 at runtime.
+- `PW_CHANNEL=chrome pnpm quality:gate` (before the scope rename, then again after it, see the PR) → exit 0: format:check, typecheck:scripts, sdd:check, agentyx:check, test:unit (204 tests), test:components (58 + 10 site), build (showcases and `apps/site`), pack:doq, verify:package, test:contract (33), verify:negative-controls, consumer:build, test:e2e (81), verify:mvp (17 browser checks PASS, 0 FAIL).
 - Extra: `DOQ_SITE_ORIGIN=https://docs.example.com pnpm --filter site build` emitted canonical, `og:url`, a `Sitemap:` line and a valid `sitemap.xml`; the default build emits none of them.
-- An `NG0950` prerender error appeared once in a build log early in development and did not reproduce in five further clean and incremental builds or in the gate (no NG0950 in the gate log); watch for it in CI.
+- An `NG0950` prerender error appeared once in a build log early in development and did not reproduce in five further builds or in the gate.
 
 ## Remaining limitations
 
-Playwright and the CDP harness used the installed Google Chrome (`PW_CHANNEL=chrome`).
+Status per criterion: REL-01 PASS; REL-02 PASS (registry read; org/permissions UNVERIFIED); REL-03 PASS (documented); REL-04 PASS in code, AWAITING EXTERNAL ACTIVATION (package must exist and the Trusted Publisher be configured); REL-05 PASS; REL-06 to REL-09 PASS by unit tests and workflow invariants, never exercised by a real run; WEB-01 to WEB-08 PASS; CF-01 to CF-05 PASS in code, AWAITING EXTERNAL ACTIVATION (no Cloudflare project, token or secrets were available); CF-06 PASS (runbook); QA-01 to QA-06 PASS.
 
-- `curl https://registry.npmjs.org/@getdoq%2Fanalog` → HTTP 404 `Not found` (MANUAL-010): the package is **not published**, 0.2.0 included. The organization page returned 403 to a script and `…/-/org/getdoq/package` returned `{}` without credentials, so organization membership, 2FA and any Trusted Publisher configuration are **not verified**. Local npm is 10.9.8; the workflow installs npm 11.21.1 and checks ≥ 11.5.1 at runtime.
-- `PW_CHANNEL=chrome pnpm quality:gate` → exit 0: format:check, typecheck:scripts, sdd:check, agentyx:check, test:unit (204 tests), test:components (58 + 10 site), build (showcases and `apps/site`), pack:doq, verify:package, test:contract (33), verify:negative-controls, consumer:build, test:e2e (81), verify:mvp (17 browser checks PASS, 0 FAIL).
-- Extra: `DOQ_SITE_ORIGIN=https://docs.example.com pnpm --filter site build` emitted canonical, `og:url`, a `Sitemap:` line and a valid `sitemap.xml`; the default build emits none of them.
-- An `NG0950` prerender error appeared once in a build log early in development and did not reproduce in five further clean and incremental builds or in the gate (no NG0950 in the gate log); watch for it in CI.
+- The workflows (`release.yml`, `deploy-site.yml`) have not run on GitHub; they are validated by static invariants only. The `workflow_run` artifact download, `npm publish <tarball> --provenance` with OIDC and `gh release create` are unverified until the first real run.
+- Nothing was published or deployed by this change. The npm link on the site resolves only after the bootstrap publication.
+- Lighthouse was not measured. Axe is an automated smoke test, not a conformance claim.
+- The README still says "Not yet published"; update it after npm confirms the package.

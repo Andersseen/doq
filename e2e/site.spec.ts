@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { apps, expect, test } from './fixtures.ts';
 
-const installCommand = 'pnpm add @getdoq/analog @analogjs/content @analogjs/router prismjs';
+const installCommand = 'pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs';
 
 test.describe('E2E-030 official website', () => {
   test('hero, install command and the integration example are visible', async ({ page }) => {
@@ -28,11 +28,11 @@ test.describe('E2E-030 official website', () => {
     const main = page.getByRole('navigation', { name: 'Main' });
     await expect(main.getByRole('link', { name: 'GitHub' })).toHaveAttribute(
       'href',
-      'https://github.com/Andersseen/doq',
+      'https://github.com/Andersseen/doqs',
     );
     await expect(main.getByRole('link', { name: 'npm' })).toHaveAttribute(
       'href',
-      'https://www.npmjs.com/package/@getdoq/analog',
+      'https://www.npmjs.com/package/@doqs/analog',
     );
     const footer = page.getByRole('navigation', { name: 'Footer' });
     for (const name of ['GitHub', 'npm', 'Documentation (README)', 'MIT License'])

@@ -5,7 +5,7 @@ description: Spec-driven workflow for Doq changes - specify, define acceptance c
 
 # Doq spec-driven development
 
-Doq (`@getdoq/analog`) is a published Angular/Analog library. Consumers depend on its public contract, so every
+Doq (`@doqs/analog`) is a published Angular/Analog library. Consumers depend on its public contract, so every
 meaningful change starts from a written specification and ends with executed evidence.
 
 ## Workflow

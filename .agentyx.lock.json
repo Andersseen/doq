@@ -9,7 +9,7 @@
         "codex",
         "kimi"
       ],
-      "hash": "2a2b470122332dcb79821f078379d956c6f41bb7e03b3c072e048ba8be530a2c"
+      "hash": "7fc71be5b53105e37b5df8edef7d27003a6c831f16f3d1046c813424f142d8d4"
     },
     {
       "kind": "skill",
@@ -159,7 +159,7 @@
         "codex",
         "kimi"
       ],
-      "hash": "0f8904b9e47bd100eed71c7079c2fe1fc1e2fae86adf72f2b56aa6f74b20ef70"
+      "hash": "958bba38516b309abc935e45b07ad3e291b8077fd97921df804197ab3ddcd96c"
     },
     {
       "kind": "skill",
@@ -358,7 +358,7 @@
       "targets": [
         "claude"
       ],
-      "hash": "2a2b470122332dcb79821f078379d956c6f41bb7e03b3c072e048ba8be530a2c"
+      "hash": "7fc71be5b53105e37b5df8edef7d27003a6c831f16f3d1046c813424f142d8d4"
     },
     {
       "kind": "skill",
@@ -493,7 +493,7 @@
       "targets": [
         "claude"
       ],
-      "hash": "0f8904b9e47bd100eed71c7079c2fe1fc1e2fae86adf72f2b56aa6f74b20ef70"
+      "hash": "958bba38516b309abc935e45b07ad3e291b8077fd97921df804197ab3ddcd96c"
     },
     {
       "kind": "skill",
@@ -708,7 +708,7 @@
   ],
   "resolution": {
     "agentyxVersion": "0.20.0",
-    "configHash": "616441fc67f1a54859d552bd869adb696df846047c47610cef8380a2062ed337",
+    "configHash": "1421965087532a1f500945f5b16f630deda5ee01ebbe586395ae9fc382e26874",
     "targets": [
       "claude",
       "codex",
@@ -1047,7 +1047,7 @@
       },
       {
         "name": "doq-sdd-development",
-        "hash": "0f8904b9e47bd100eed71c7079c2fe1fc1e2fae86adf72f2b56aa6f74b20ef70",
+        "hash": "958bba38516b309abc935e45b07ad3e291b8077fd97921df804197ab3ddcd96c",
         "origins": [
           {
             "kind": "pack",
@@ -1057,7 +1057,7 @@
       },
       {
         "name": "agentyx-project-context",
-        "hash": "2a2b470122332dcb79821f078379d956c6f41bb7e03b3c072e048ba8be530a2c",
+        "hash": "7fc71be5b53105e37b5df8edef7d27003a6c831f16f3d1046c813424f142d8d4",
         "origins": [
           {
             "kind": "project-context"

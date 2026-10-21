@@ -1,6 +1,6 @@
 # Doq
 
-Doq (`@getdoq/analog`, **0.2.0**) adds Markdown documentation to an existing Angular/Analog.js application. The host keeps its header, footer, routes, theme and components; Doq supplies documentation routing, navigation, table of contents, index, code blocks, optional static full-text search (Pagefind, no backend) and a small set of composition points. Integration guide, configuration reference and defaults: [packages/doq/README.md](packages/doq/README.md). Release notes: [packages/doq/CHANGELOG.md](packages/doq/CHANGELOG.md). Not yet published to npm.
+Doq (`@doqs/analog`, **0.2.0**) adds Markdown documentation to an existing Angular/Analog.js application. The host keeps its header, footer, routes, theme and components; Doq supplies documentation routing, navigation, table of contents, index, code blocks, optional static full-text search (Pagefind, no backend) and a small set of composition points. Integration guide, configuration reference and defaults: [packages/doq/README.md](packages/doq/README.md). Release notes: [packages/doq/CHANGELOG.md](packages/doq/CHANGELOG.md). Not yet published to npm.
 
 ```ts
 // vite.config.ts                         // app.config.ts
@@ -22,9 +22,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and the pre-PR checklist. Teste
 pnpm install
 pnpm dev:a        # or dev:b
 pnpm build
-pnpm pack:doq     # artifacts/getdoq-analog-<version>.tgz; does not publish
+pnpm pack:doq     # artifacts/doqs-analog-<version>.tgz; does not publish
 pnpm verify:mvp   # browser acceptance (M9, M15–M17, M23, M24) plus the 0.1 check V01
-pnpm verify:package artifacts/getdoq-analog-<version>.tgz [consumer-dir]
+pnpm verify:package artifacts/doqs-analog-<version>.tgz [consumer-dir]
 pnpm typecheck:scripts && pnpm format:check
 pnpm test:unit && pnpm test:components   # Vitest + Angular Testing Library
 pnpm test:e2e && pnpm test:contract      # Playwright and pytest

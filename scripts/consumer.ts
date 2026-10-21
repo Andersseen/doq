@@ -1,12 +1,12 @@
 /**
- * Builds an independent consumer of the packed @getdoq/analog tarball.
+ * Builds an independent consumer of the packed @doqs/analog tarball.
  *
  * The consumer is a copy of Showcase B's sources with its own manifest and lockfile, installed outside
  * this workspace from the tarball (`file:`), so nothing resolves through `workspace:` links or library sources.
  *
  *   node scripts/consumer.ts [tarball] [outDir]
  *
- * Defaults: artifacts/getdoq-analog-<version>.tgz and $DOQ_CONSUMER_DIR or <tmp>/doq-e2e-consumer.
+ * Defaults: artifacts/doqs-analog-<version>.tgz and $DOQ_CONSUMER_DIR or <tmp>/doq-e2e-consumer.
  * The static output is written to <outDir>/dist/analog/public.
  */
 import { spawnSync } from 'node:child_process';
@@ -19,7 +19,7 @@ const source = resolve(repo, 'apps/showcase-b');
 const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
   version: string;
 };
-const tarball = resolve(process.argv[2] ?? `artifacts/getdoq-analog-${version}.tgz`);
+const tarball = resolve(process.argv[2] ?? `artifacts/doqs-analog-${version}.tgz`);
 const outDir = resolve(process.argv[3] ?? process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'));
 
 if (outDir === repo || outDir.startsWith(`${repo}/`))
@@ -35,7 +35,7 @@ await cp(source, outDir, { recursive: true, filter: (path) => !skip.has(path.spl
 
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
 manifest.name = 'doq-external-consumer';
-manifest.dependencies['@getdoq/analog'] = `file:${tarball}`;
+manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
 manifest.scripts = { build: 'vite build && doq-search index dist/analog/public' };
 await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 

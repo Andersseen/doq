@@ -3,7 +3,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { defineDoqConfig, doqRoutes, provideDoq } from '@getdoq/analog';
+import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
 import { doqPaths } from '../doq.paths';
 import { VantaButtonDemoComponent } from './demos/button-demo';
 import { VantaHelpComponent } from './slots/vanta-help';

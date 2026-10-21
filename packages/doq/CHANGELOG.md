@@ -6,7 +6,7 @@ Documentation search and navigation. Additive: configuration from 0.1 works unch
 
 ### Added
 - Optional static full-text search: `search: { enabled, bundlePath }` in `defineDoqConfig()`, a Doq-owned search dialog (native modal `<dialog>`, Ctrl/Cmd+K inside documentation views, keyboard result navigation, loading/empty/unavailable states, plain-text excerpts) and a lazy Pagefind data layer. No backend; the index is requested on the first query.
-- `doq-search index <siteDir>` and `@getdoq/analog/search-index` (`indexDoqSearch`): build the Pagefind index from the prerendered output. Node-only, not part of the browser entry point. `pagefind` is an optional peer dependency.
+- `doq-search index <siteDir>` and `@doqs/analog/search-index` (`indexDoqSearch`): build the Pagefind index from the prerendered output. Node-only, not part of the browser entry point. `pagefind` is an optional peer dependency.
 - Doq markup is annotated for Pagefind (`data-pagefind-body` on the article, `data-pagefind-ignore` on chrome, demos and slots) so only documentation content is indexed.
 - Exports: `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, `DoqSearchConfig`, `DoqResolvedSearchConfig`, `DoqSearchResult`, `DoqExcerptSegment`.
 - `--host-docs-scroll-offset` token (default `2rem`) for heading `scroll-margin-top`.
@@ -18,7 +18,7 @@ Documentation search and navigation. Additive: configuration from 0.1 works unch
 ### Changed
 - The document `<h1>` (and the index `<h1>`) carry `tabindex="-1"` as a programmatic focus target; they are not tab stops.
 - The document view gains a `.doq-topbar` wrapper around the breadcrumb (and the search button) and `.doq-region` wrappers (`display: contents`) around demos and slots.
-- `@getdoq/analog` now ships `bin/` and a `bin` entry.
+- `@doqs/analog` now ships `bin/` and a `bin` entry.
 
 ## 0.1.0
 

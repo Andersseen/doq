@@ -34,7 +34,7 @@ if (!skipConsumer) {
   const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
     version: string;
   };
-  const tarball = resolve(repo, `artifacts/getdoq-analog-${version}.tgz`);
+  const tarball = resolve(repo, `artifacts/doqs-analog-${version}.tgz`);
   const tarballTime = await mtime(tarball);
   if (tarballTime === undefined) {
     console.error('e2e: no tarball. Run "pnpm pack:doq" first (or pass --skip-consumer).');
