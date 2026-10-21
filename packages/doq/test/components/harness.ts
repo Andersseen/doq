@@ -30,7 +30,7 @@ export async function renderDocs(options: { docs: FakeDoc[]; config?: Partial<Do
     providers: [provideDoq(config), { provide: ContentRenderer, useClass: FixtureRenderer }, ...(options.providers ?? [])],
   });
   const router = TestBed.inject(Router);
-  await view.navigate(options.url);
+  await router.navigateByUrl(options.url);
   await view.fixture.whenStable();
   view.detectChanges();
   return { ...view, router };

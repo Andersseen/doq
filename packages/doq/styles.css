@@ -10,6 +10,7 @@
   --doq-focus: var(--host-docs-focus, var(--color-focus, #3b82f6));
   --doq-code-background: var(--host-docs-code-background, #f1f4f2);
   --doq-code-foreground: var(--host-docs-code-foreground, #202923);
+  --doq-scroll-offset: var(--host-docs-scroll-offset, 2rem);
   color: var(--doq-foreground); background: var(--doq-background); min-height: 68vh;
   font: inherit; isolation: isolate;
 }
@@ -46,14 +47,42 @@
 .doq-nav-link:hover,.doq-overview:hover { background: var(--doq-surface); color: var(--doq-foreground)!important; }
 .doq-nav-link.is-active { background: color-mix(in srgb,var(--doq-primary) 11%,transparent); color: var(--doq-primary)!important; font-weight: 650; }
 .doq-article { position: relative; min-width: 0; width: min(100%,calc(var(--doq-content-width) + 14rem)); margin: 0 auto; }
+.doq-topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem; margin: .5rem 0 2.5rem; }
+.doq-topbar .doq-breadcrumb { margin: 0; }
+.doq-index > .doq-topbar { max-width: 65rem; margin: 0 0 2rem; justify-content: flex-end; }
+.doq-region { display: contents; }
+.doq-doc-header h1:focus { outline: none; }
+.doq-doc-header h1:focus-visible { outline: 3px solid var(--doq-focus); outline-offset: 6px; border-radius: .25rem; }
 .doq-breadcrumb { display: flex; gap: .55rem; align-items: center; color: var(--doq-muted); font-size: .8rem; margin: .5rem 0 2.5rem; }
+.doq-visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.doq-search-trigger { display: inline-flex; align-items: center; gap: .75rem; min-height: 2.5rem; padding: .4rem .6rem .4rem .85rem; border: 1px solid var(--doq-border); border-radius: .6rem; background: var(--doq-surface); color: var(--doq-foreground); font: inherit; font-size: .85rem; cursor: pointer; }
+.doq-search-trigger:hover { border-color: var(--doq-primary); }
+.doq-search-trigger kbd { padding: .1rem .4rem; border: 1px solid var(--doq-border); border-radius: .3rem; background: var(--doq-background); color: var(--doq-foreground); font: inherit; font-size: .72rem; }
+.doq-search-trigger:focus-visible,.doq-search-close:focus-visible,.doq-search-input:focus-visible,.doq-search-result:focus-visible { outline: 3px solid var(--doq-focus); outline-offset: 2px; }
+.doq-search-dialog { width: min(40rem, calc(100vw - 2rem)); max-height: min(36rem, calc(100vh - 4rem)); margin: 4rem auto auto; padding: 1rem; overflow: auto; border: 1px solid var(--doq-border); border-radius: .9rem; background: var(--doq-background); color: var(--doq-foreground); box-shadow: 0 1.5rem 4rem rgb(0 0 0 / .35); font: inherit; }
+.doq-search-dialog::backdrop { background: rgb(0 0 0 / .55); }
+.doq-search-dialog * { box-sizing: border-box; }
+.doq-search-title { margin: 0 0 .75rem; font-size: .8rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; color: var(--doq-muted); }
+.doq-search-form { display: flex; gap: .5rem; }
+.doq-search-input { flex: 1; min-width: 0; min-height: 2.75rem; padding: .5rem .8rem; border: 1px solid var(--doq-border); border-radius: .6rem; background: var(--doq-surface); color: var(--doq-foreground); font: inherit; }
+.doq-search-close { min-height: 2.75rem; padding: .5rem .85rem; border: 1px solid var(--doq-border); border-radius: .6rem; background: var(--doq-surface); color: var(--doq-foreground); font: inherit; font-weight: 650; cursor: pointer; }
+.doq-search-status { margin: .75rem 0 0; color: var(--doq-muted); font-size: .82rem; }
+.doq-search-status.is-error { color: var(--doq-foreground); }
+.doq-search-results { list-style: none; margin: .5rem 0 0; padding: 0; display: grid; gap: .25rem; }
+.doq-search-result { display: grid; gap: .25rem; padding: .7rem .8rem; border-radius: .6rem; color: var(--doq-foreground); text-decoration: none; }
+.doq-search-result:hover,.doq-search-result:focus-visible { background: color-mix(in srgb,var(--doq-primary) 11%,transparent); }
+.doq-search-result-title { font-weight: 700; }
+.doq-search-result-section { color: var(--doq-primary); font-weight: 600; }
+.doq-search-result-excerpt { color: var(--doq-muted); font-size: .85rem; line-height: 1.5; overflow-wrap: anywhere; }
+.doq-search-result-excerpt mark { background: color-mix(in srgb,var(--doq-primary) 24%,transparent); color: var(--doq-foreground); border-radius: .2rem; padding: 0 .1rem; }
 .doq-doc-header { max-width: var(--doq-content-width); }
 .doq-eyebrow { color: var(--doq-primary); text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 750; }
 .doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; }
 .doq-description { color: var(--doq-muted); font-size: 1.15rem; line-height: 1.7; }
 .doq-markdown { display: block; max-width: var(--doq-content-width); line-height: 1.78; }
-.doq-markdown h2 { margin: 3rem 0 1rem; padding-top: .5rem; font-size: 1.55rem; letter-spacing: -.025em; line-height: 1.3; scroll-margin-top: 2rem; }
-.doq-markdown h3 { margin: 2rem 0 .75rem; font-size: 1.15rem; scroll-margin-top: 2rem; }
+.doq-markdown :is(h1,h2,h3,h4,h5,h6)[id] { scroll-margin-top: var(--doq-scroll-offset); }
+.doq-markdown h2 { margin: 3rem 0 1rem; padding-top: .5rem; font-size: 1.55rem; letter-spacing: -.025em; line-height: 1.3; }
+.doq-markdown h3 { margin: 2rem 0 .75rem; font-size: 1.15rem; }
 .doq-markdown p,.doq-markdown ul,.doq-markdown ol { margin: 1rem 0; }
 .doq-markdown li { margin: .4rem 0; padding-left: .2rem; }
 .doq-markdown a { color: var(--doq-primary); text-decoration: underline; text-underline-offset: 3px; }
@@ -109,7 +138,9 @@
   .doq-root[data-sidebar="right"] .doq-sidebar { left: auto; right: 0; }
   .doq-sidebar.is-open,.doq-root[data-sidebar="right"] .doq-sidebar.is-open { display: block; }
   .doq-overview,.doq-nav-link { padding: .65rem .75rem; }
-  .doq-breadcrumb { margin: 1rem 0 2rem; }
+  .doq-topbar { margin: 1rem 0 2rem; }
+  .doq-search-dialog { margin-top: 1rem; max-height: calc(100vh - 2rem); }
+  .doq-search-trigger { min-height: 2.75rem; }
   .doq-doc-header h1,.doq-index h1 { font-size: clamp(2rem, 10vw, 3rem); }
   .doq-index-grid { grid-template-columns: 1fr; }
   .doq-toc { overflow-wrap: anywhere; }

@@ -9,7 +9,7 @@ body:
     id: doq
     attributes:
       label: Doq version
-      placeholder: '@getdoq/analog 0.1.0 (or commit SHA)'
+      placeholder: '@getdoq/analog 0.2.0 (or commit SHA)'
     validations: { required: true }
   - type: input
     id: stack

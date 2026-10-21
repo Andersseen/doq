@@ -24,6 +24,10 @@ PUBLIC_EXPORTS = [
     "DoqPaths",
     "DoqSlots",
     "DoqPresentation",
+    "DoqSearchConfig",
+    "DoqSearchResult",
+    "normalizeDoqSearchConfig",
+    "normalizeSearchResultUrl",
 ]
 
 

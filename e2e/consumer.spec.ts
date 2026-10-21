@@ -34,4 +34,30 @@ test.describe('E2E-008 external package consumer', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Content models' })).toBeVisible();
     await expect(page).toHaveTitle('Content models · ForgeCMS Developers');
   });
+
+  test('search built by the packaged doq-search binary finds body text at the custom-slug route', async ({
+    page,
+    request,
+  }) => {
+    expect((await request.get(`${apps.consumer.url}/pagefind/pagefind.js`)).status()).toBe(200);
+    expect((await request.get(`${apps.consumer.url}/pagefind/pagefind-entry.json`)).status()).toBe(200);
+
+    await page.goto(`${apps.consumer.url}/docs/concepts/models`);
+    await page.getByRole('button', { name: /^Search/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Search documentation' });
+    await dialog.getByRole('searchbox').fill('environment credentials out of browser bundles');
+    const result = dialog.getByRole('link', { name: /Getting started/ }).first();
+    await expect(result).toHaveAttribute('href', '/docs/onboarding/first-application#create-a-workspace');
+    await result.click();
+    await expect(page).toHaveURL(`${apps.consumer.url}/docs/onboarding/first-application#create-a-workspace`);
+    await expect(page.locator('#create-a-workspace')).toBeInViewport();
+    await expect(page.locator('#create-a-workspace')).toBeFocused();
+    await expect(page.locator('a[href*="getting-started"]')).toHaveCount(0);
+  });
+
+  test('a direct fragment load scrolls to the heading in the packed library', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 400 });
+    await page.goto(`${apps.consumer.url}/docs/onboarding/first-application#request-an-entry`);
+    await expect(page.locator('#request-an-entry')).toBeInViewport();
+  });
 });

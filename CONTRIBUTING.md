@@ -25,7 +25,7 @@ pnpm build
 ```sh
 pnpm dev:a            # Showcase A (Vanta UI) dev server
 pnpm dev:b            # Showcase B (ForgeCMS) dev server
-pnpm build            # library + both showcases (production)
+pnpm build            # library + both showcases (production); each showcase also generates its Pagefind index after prerendering
 pnpm pack:doq         # artifacts/getdoq-analog-<version>.tgz — never publishes
 ```
 

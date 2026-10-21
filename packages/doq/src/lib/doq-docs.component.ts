@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, PLATFORM_ID, Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, untracked, PLATFORM_ID, Type } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
 import { injectDoqDocuments, resolveDoqCopy } from './doq-catalog';
@@ -9,13 +9,14 @@ import { DOQ_CONFIG } from './doq-config';
 import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
+import { DoqSearchComponent } from './doq-search.component';
 
 interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; demo?: string; }
 
 @Component({
   selector: 'doq-docs',
   standalone: true,
-  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, NgComponentOutlet],
+  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (document(); as doc) {
@@ -29,19 +30,24 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
           <doq-nav-tree [nodes]="navigationTree()" (navigate)="closeMobileNavigation()" />
         </nav>
         }
-        <article class="doq-article">
-          <div class="doq-breadcrumb"><a [routerLink]="config.basePath">{{ copy.breadcrumbRoot }}</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
-          <header class="doq-doc-header"><p class="doq-eyebrow">{{ doc.attributes.group || copy.label }}</p><h1>{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
+        <article class="doq-article" data-pagefind-body>
+          <div class="doq-topbar" data-pagefind-ignore>
+            <div class="doq-breadcrumb"><a [routerLink]="config.basePath">{{ copy.breadcrumbRoot }}</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
+            @if (config.search?.enabled) { <doq-search /> }
+          </div>
+          <header class="doq-doc-header"><p class="doq-eyebrow" data-pagefind-ignore>{{ doc.attributes.group || copy.label }}</p><h1 tabindex="-1">{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
           <analog-markdown class="doq-markdown" [content]="doc.content" />
           @if (doc.attributes.demo; as demoId) {
+            <div class="doq-region" data-pagefind-ignore>
             @if (demoComponent(demoId); as demo) { <ng-container *ngComponentOutlet="demo" /> }
             @else { <p class="doq-demo-fallback" role="status">Demo “{{ demoId }}” is not registered by this application.</p> }
+            </div>
           }
-          @if (config.slots?.documentAfterContent; as slot) { <ng-container *ngComponentOutlet="slot" /> }
+          @if (config.slots?.documentAfterContent; as slot) { <div class="doq-region" data-pagefind-ignore><ng-container *ngComponentOutlet="slot" /></div> }
           @if (config.showTableOfContents && headings().length) {
-            <aside class="doq-toc" aria-label="On this page"><p>On this page</p>@for (heading of headings(); track heading.id) { <a [routerLink]="[]" [fragment]="heading.id" [class.level-three]="heading.level === 3" [class.is-active]="activeHeading() === heading.id">{{ heading.text }}</a> }</aside>
+            <aside class="doq-toc" aria-label="On this page" data-pagefind-ignore><p>On this page</p>@for (heading of headings(); track heading.id) { <a [routerLink]="[]" [fragment]="heading.id" [class.level-three]="heading.level === 3" [class.is-active]="activeHeading() === heading.id">{{ heading.text }}</a> }</aside>
           }
-          <nav class="doq-pagination" aria-label="Page navigation">
+          <nav class="doq-pagination" aria-label="Page navigation" data-pagefind-ignore>
             @if (previous(); as prev) { <a [routerLink]="prev.href"><span>Previous</span><strong>← {{ prev.title }}</strong></a> }
             @if (next(); as nxt) { <a class="next" [routerLink]="nxt.href"><span>Next</span><strong>{{ nxt.title }} →</strong></a> }
           </nav>
@@ -59,11 +65,37 @@ export class DoqDocsComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly routeSlug = toSignal(this.route.paramMap.pipe(map(params => params.get(this.config.routeParam ?? 'slug') ?? '')), { initialValue: '' });
-  private readonly closeMobileNavigationAfterRouteChange = this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed()).subscribe(() => {
-    const navigation = this.hostElement.querySelector<HTMLElement>('.doq-sidebar');
-    const focusWasInNavigation = !!navigation?.contains(this.documentRef.activeElement);
-    this.mobileNavigationOpen.set(false);
-    if (focusWasInNavigation) this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
+  readonly fragment = toSignal(this.route.fragment, { initialValue: null });
+  /** True once the current document's Markdown is in the DOM, so fragment targets exist. */
+  private readonly rendered = signal(false);
+  private navigationTrigger: string | undefined;
+  private lastSlug = this.routeSlug();
+  private currentNavigationId?: number;
+  private restoreNavigationId?: number;
+  private scrollPositions = new Map<number, number>();
+  private restorePosition?: number;
+  /** Set for an in-app document change: start at the top and move focus once the new document is rendered. */
+  private arrival = this.router.navigated && this.router.currentNavigation()?.trigger === 'imperative';
+  private readonly trackNavigation = this.router.events.pipe(takeUntilDestroyed()).subscribe(event => {
+    if (event instanceof NavigationStart) {
+      // On Back/Forward the browser has usually restored the destination's scroll by now, so use the position seen at popstate.
+      const leavingScroll = event.navigationTrigger === 'popstate' ? this.scrollAtPopstate : this.documentRef.defaultView?.scrollY ?? 0;
+      if (this.currentNavigationId !== undefined) this.scrollPositions.set(this.currentNavigationId, leavingScroll);
+      this.navigationTrigger = event.navigationTrigger;
+      this.restoreNavigationId = event.restoredState?.navigationId;
+      this.restorePosition = undefined;
+    } else if (event instanceof NavigationEnd) {
+      this.currentNavigationId = event.id;
+      const slug = this.routeSlug();
+      const documentChanged = slug !== this.lastSlug;
+      this.lastSlug = slug;
+      const navigation = this.hostElement.querySelector<HTMLElement>('.doq-sidebar');
+      const focusWasInNavigation = !!navigation?.contains(this.documentRef.activeElement);
+      this.mobileNavigationOpen.set(false);
+      if (this.navigationTrigger === 'popstate' && this.restoreNavigationId !== undefined) this.restorePosition = this.scrollPositions.get(this.restoreNavigationId);
+      if (documentChanged && this.navigationTrigger === 'imperative') this.arrival = true;
+      else if (focusWasInNavigation && !documentChanged) this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
+    }
   });
   readonly copy = resolveDoqCopy(this.config);
   readonly documents = injectDoqDocuments(this.config);
@@ -75,6 +107,14 @@ export class DoqDocsComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly metadata = inject(DoqPageMetadata);
   private readonly claimMetadata = this.metadata.claim(inject(DestroyRef));
+  private scrollAtPopstate = 0;
+  private readonly trackPopstate = (() => {
+    const view = isPlatformBrowser(this.platformId) ? this.documentRef.defaultView : null;
+    if (!view) return;
+    const listener = () => { this.scrollAtPopstate = view.scrollY; };
+    view.addEventListener('popstate', listener);
+    inject(DestroyRef).onDestroy(() => view.removeEventListener('popstate', listener));
+  })();
   readonly navigation = computed(() => this.documents.map(document => ({ ...document, href: document.routePath })));
   readonly navigationTree = computed(() => {
     const roots: DoqNavigationNode[] = [];
@@ -138,19 +178,26 @@ export class DoqDocsComponent {
   private readonly enhancementEffect = effect(onCleanup => {
     const doc = this.document();
     this.activeHeading.set('');
+    this.rendered.set(false);
     onCleanup(() => this.disconnectHeadingObserver());
     if (!doc || !isPlatformBrowser(this.platformId)) return;
     const observer = new MutationObserver(() => {
-      if (this.enhanceRenderedDocument()) observer.disconnect();
+      if (this.enhanceRenderedDocument()) { observer.disconnect(); this.rendered.set(true); }
     });
     observer.observe(this.hostElement, { childList: true, subtree: true });
     const timer = globalThis.setTimeout(() => {
-      if (this.enhanceRenderedDocument()) observer.disconnect();
+      if (this.enhanceRenderedDocument()) { observer.disconnect(); this.rendered.set(true); }
     }, 0);
     onCleanup(() => {
       globalThis.clearTimeout(timer);
       observer.disconnect();
     });
+  });
+  /** Re-runs whenever the document finishes rendering or the fragment changes; one mechanism for every way of arriving. */
+  private readonly revealEffect = effect(() => {
+    const ready = this.rendered();
+    const fragment = this.fragment();
+    if (ready) untracked(() => this.reveal(fragment));
   });
   toggleMobileNavigation(): void {
     this.mobileNavigationOpen.update(open => !open);
@@ -161,6 +208,33 @@ export class DoqDocsComponent {
     if (!this.mobileNavigationOpen()) return;
     this.mobileNavigationOpen.set(false);
     this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
+  }
+  private reveal(fragment: string | null): void {
+    const view = this.documentRef.defaultView;
+    const markdown = this.hostElement.querySelector<HTMLElement>('.doq-markdown');
+    const target = fragment && markdown ? this.findFragmentTarget(markdown, fragment) : undefined;
+    const focusTarget = this.arrival;
+    this.arrival = false;
+    if (this.restorePosition !== undefined) {
+      view?.scrollTo({ top: this.restorePosition, behavior: 'instant' });
+      this.restorePosition = undefined;
+      return;
+    }
+    if (target) target.scrollIntoView?.({ block: 'start' });
+    else if (focusTarget) view?.scrollTo(0, 0);
+    if (!focusTarget) return;
+    const focusable = target ?? this.hostElement.querySelector<HTMLElement>('.doq-doc-header h1');
+    if (!focusable) return;
+    if (!focusable.hasAttribute('tabindex')) focusable.setAttribute('tabindex', '-1');
+    focusable.focus({ preventScroll: true });
+  }
+  private findFragmentTarget(markdown: HTMLElement, fragment: string): HTMLElement | undefined {
+    const candidates = [fragment];
+    try { candidates.push(decodeURIComponent(fragment)); } catch { /* keep the raw fragment */ }
+    for (const id of candidates) {
+      for (const node of Array.from(markdown.querySelectorAll<HTMLElement>('[id]'))) if (node.id === id) return node;
+    }
+    return undefined;
   }
   private canonicalFilename(filename: string): string {
     const normalized = filename.replace(/\\/g, '/');
@@ -176,7 +250,7 @@ export class DoqDocsComponent {
     for (const pre of Array.from(markdown.querySelectorAll<HTMLElement>('pre:not([data-doq-copy])'))) {
       pre.dataset['doqCopy'] = 'true';
       const button = this.documentRef.createElement('button');
-      button.type = 'button'; button.className = 'doq-code-copy'; button.setAttribute('aria-label', 'Copy code'); button.textContent = 'Copy';
+      button.type = 'button'; button.className = 'doq-code-copy'; button.setAttribute('data-pagefind-ignore', ''); button.setAttribute('aria-label', 'Copy code'); button.textContent = 'Copy';
       const copy = async () => {
         try {
           if (!globalThis.navigator?.clipboard) throw new Error('Clipboard unavailable');

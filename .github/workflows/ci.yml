@@ -63,7 +63,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm pack:doq
-      - run: pnpm verify:package artifacts/getdoq-analog-0.1.0.tgz
+      - run: pnpm verify:package "artifacts/getdoq-analog-$(node -p "require('./packages/doq/package.json').version").tgz"
       - uses: actions/upload-artifact@v7
         with:
           name: builds
@@ -73,6 +73,7 @@ jobs:
             artifacts/*.tgz
             apps/showcase-a/dist/analog/public
             apps/showcase-b/dist/analog/public
+            apps/showcase-b/dist/analog-nosearch/public
 
   contract:
     name: Python contract tests

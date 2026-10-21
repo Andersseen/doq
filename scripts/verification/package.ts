@@ -12,6 +12,9 @@ import { pathToFileURL } from 'node:url';
 const [tarballArg, consumerArg] = process.argv.slice(2);
 assert.ok(tarballArg, 'Usage: package.ts <tarball> [consumer-directory]');
 const tarball = resolve(tarballArg);
+const { version } = JSON.parse(
+  await readFile(resolve(import.meta.dirname, '../../packages/doq/package.json'), 'utf8'),
+) as { version: string };
 const publicNames = [
   'defineDoqConfig',
   'doqPrerenderRoutes',
@@ -23,6 +26,10 @@ const publicNames = [
   'DoqPaths',
   'DoqConfig',
   'DoqShellComponent',
+  'DoqSearchConfig',
+  'DoqSearchResult',
+  'normalizeDoqSearchConfig',
+  'normalizeSearchResultUrl',
 ];
 const checks: ['PASS' | 'FAIL', string][] = [];
 const check = (name: string, fn: () => void) => {
@@ -40,9 +47,9 @@ try {
   const root = join(temp, 'package');
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const declarations = await readFile(join(root, manifest.typings), 'utf8');
-  check('tarball manifest is @getdoq/analog@0.1.0', () => {
+  check(`tarball manifest is @getdoq/analog@${version}`, () => {
     assert.equal(manifest.name, '@getdoq/analog');
-    assert.equal(manifest.version, '0.1.0');
+    assert.equal(manifest.version, version);
   });
   check('manifest has no workspace/private references', () =>
     assert.ok(!/workspace:|packages\/doq\/src/.test(JSON.stringify(manifest))),
@@ -50,9 +57,16 @@ try {
   check('exports map points at existing entries', () => {
     assert.deepEqual(
       Object.keys(manifest.exports),
-      ['.', './styles.css', './package.json'].filter((key) => key in manifest.exports),
+      ['.', './search-index', './styles.css', './package.json'].filter((key) => key in manifest.exports),
     );
     assert.ok(manifest.exports['.'].types && manifest.exports['.'].default);
+  });
+  check('the indexer is a Node-only entry point, not part of the browser declarations', () => {
+    assert.equal(manifest.exports['./search-index'].default, './bin/search-index.mjs');
+    assert.deepEqual(manifest.bin, { 'doq-search': './bin/doq-search.mjs' });
+    assert.ok(!/indexDoqSearch/.test(declarations));
+    assert.deepEqual(manifest.peerDependenciesMeta?.pagefind, { optional: true });
+    assert.ok(!manifest.dependencies?.pagefind);
   });
   for (const name of publicNames)
     check(`type declarations export ${name}`, () => assert.match(declarations, new RegExp(`\\b${name}\\b`)));
@@ -61,7 +75,7 @@ try {
     const consumer = resolve(consumerArg);
     const lock = await readFile(join(consumer, 'pnpm-lock.yaml'), 'utf8').catch(() => '');
     check('consumer lockfile resolves the tarball without workspace links', () => {
-      assert.ok(lock.includes('getdoq-analog-0.1.0.tgz'), 'lockfile does not mention the 0.1.0 tarball');
+      assert.ok(lock.includes(`getdoq-analog-${version}.tgz`), `lockfile does not mention the ${version} tarball`);
       assert.ok(!/workspace:|link:\.\.\/doq/.test(lock));
     });
     const consumerRequire = createRequire(join(consumer, 'package.json'));
@@ -70,7 +84,16 @@ try {
       pathToFileURL(createRequire(join(consumer, 'package.json')).resolve('@getdoq/analog')).href
     );
     const installed = JSON.parse(await readFile(join(consumer, 'node_modules/@getdoq/analog/package.json'), 'utf8'));
-    check('installed package is 0.1.0', () => assert.equal(installed.version, '0.1.0'));
+    check(`installed package is ${version}`, () => assert.equal(installed.version, version));
+    const { indexDoqSearch } = await import(
+      pathToFileURL(join(consumer, 'node_modules/@getdoq/analog/bin/search-index.mjs')).href
+    );
+    check('installed ./search-index entry exports indexDoqSearch and the doq-search binary is linked', () => {
+      assert.equal(typeof indexDoqSearch, 'function');
+      return readFile(join(consumer, 'node_modules/.bin/doq-search')).then(() => undefined);
+    });
+    const bundle = await readFile(join(consumer, 'dist/analog/public/pagefind/pagefind.js'), 'utf8').catch(() => '');
+    check('the consumer build produced a search bundle with the packaged binary', () => assert.ok(bundle.length > 0));
     check('runtime exports: defineDoqConfig, doqPrerenderRoutes, doqPrerenderRoute', () => {
       for (const name of [
         'defineDoqConfig',

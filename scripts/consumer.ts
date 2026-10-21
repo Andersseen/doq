@@ -36,7 +36,7 @@ await cp(source, outDir, { recursive: true, filter: (path) => !skip.has(path.spl
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
 manifest.name = 'doq-external-consumer';
 manifest.dependencies['@getdoq/analog'] = `file:${tarball}`;
-manifest.scripts = { build: 'vite build' };
+manifest.scripts = { build: 'vite build && doq-search index dist/analog/public' };
 await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 for (const args of [['install'], ['build']]) {
