@@ -63,8 +63,7 @@ Bundle evidence (unminified published `fesm2022/getdoq-analog.mjs`): 0.1.0 43,17
 
 ## Remaining limitations
 
-- The CI workflow for this branch had not run when this file was written; the PR's checks are the authority for AC-022 on GitHub.
-- Playwright ran against installed Chrome here; CI uses Playwright's Chromium. Firefox and WebKit were not exercised.
+- GitHub Actions on PR #10 (run 39614714730): all six jobs passed, including Playwright on CI's Chromium and the CDP harness with the tarball consumer. Firefox and WebKit were not exercised.
 - Search quality is Pagefind's (stemming and ranking). Only English content was indexed in the showcases; multilingual search is a non-goal.
 - `vite dev` does not serve a generated index, so search shows its "unavailable" state there (documented); run the build or preview the static output.
 - A search-disabled app still ships the search component (about 6 KB gzip with the new navigation code); it is not code-split. Showcase B builds twice so the disabled variant can be tested.
