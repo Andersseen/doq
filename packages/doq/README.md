@@ -2,7 +2,7 @@
 
 Documentation that lives inside your Angular/[Analog](https://analogjs.org) app. Doq adds a Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks — and leaves your header, footer, routes, theme and components to you.
 
-Version **0.2.0**. Not yet published to npm; install from a packed tarball (`pnpm pack:doq` in the Doq repository).
+Version **0.2.0**. Published on npm as [`@doqs/analog`](https://www.npmjs.com/package/@doqs/analog).
 
 ## What Analog requires vs. what Doq adds
 
@@ -17,7 +17,7 @@ Version **0.2.0**. Not yet published to npm; install from a packed tarball (`pnp
 ## Quick start
 
 ```sh
-pnpm add ./doqs-analog-0.2.0.tgz @analogjs/content @analogjs/router prismjs
+pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs
 ```
 
 ```css

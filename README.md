@@ -1,6 +1,6 @@
 # Doq
 
-Doq (`@doqs/analog`, **0.2.0**) adds Markdown documentation to an existing Angular/Analog.js application. The host keeps its header, footer, routes, theme and components; Doq supplies documentation routing, navigation, table of contents, index, code blocks, optional static full-text search (Pagefind, no backend) and a small set of composition points. Integration guide, configuration reference and defaults: [packages/doq/README.md](packages/doq/README.md). Release notes: [packages/doq/CHANGELOG.md](packages/doq/CHANGELOG.md). Not yet published to npm.
+Doq (`@doqs/analog`, **0.2.0**) adds Markdown documentation to an existing Angular/Analog.js application. The host keeps its header, footer, routes, theme and components; Doq supplies documentation routing, navigation, table of contents, index, code blocks, optional static full-text search (Pagefind, no backend) and a small set of composition points. Integration guide, configuration reference and defaults: [packages/doq/README.md](packages/doq/README.md). Release notes: [packages/doq/CHANGELOG.md](packages/doq/CHANGELOG.md).
 
 ```ts
 // vite.config.ts                         // app.config.ts
