@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping. Doq (`@getdoq/analog`) adds Markdown documentation to an existing Angular/Analog.js application and is meant to be a small, dependable library. By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Questions go through [SUPPORT.md](SUPPORT.md); vulnerabilities through [SECURITY.md](SECURITY.md). Coding agents follow [AGENTS.md](AGENTS.md), which points back here.
+Thanks for helping. Doq (`@doqs/analog`) adds Markdown documentation to an existing Angular/Analog.js application and is meant to be a small, dependable library. By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Questions go through [SUPPORT.md](SUPPORT.md); vulnerabilities through [SECURITY.md](SECURITY.md). Coding agents follow [AGENTS.md](AGENTS.md), which points back here.
 
 ## Setup
 
@@ -13,7 +13,7 @@ pnpm build
 
 ## Layout
 
-- `packages/doq` — the `@getdoq/analog` library. Tests live in `packages/doq/test/`.
+- `packages/doq` — the `@doqs/analog` library. Tests live in `packages/doq/test/`.
 - `apps/site` — the official website (static Analog landing, deployed to Cloudflare Pages). Release and deployment: [docs/operations/release-and-deployment.md](docs/operations/release-and-deployment.md).
 - `apps/showcase-a`, `apps/showcase-b` — two independent host applications that consume the library through the workspace.
 - `e2e/` — Playwright browser tests. `tests/contract/` — pytest checks of the packed tarball and generated HTTP output.
@@ -28,7 +28,7 @@ pnpm dev:a            # Showcase A (Vanta UI) dev server
 pnpm dev:b            # Showcase B (ForgeCMS) dev server
 pnpm dev:site         # official website dev server
 pnpm build            # library + both showcases (production); each showcase also generates its Pagefind index after prerendering
-pnpm pack:doq         # artifacts/getdoq-analog-<version>.tgz — never publishes
+pnpm pack:doq         # artifacts/doqs-analog-<version>.tgz — never publishes
 ```
 
 `pnpm --filter showcase-a preview` / `showcase-b preview` serve a production build (`dist/analog/public`).

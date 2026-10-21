@@ -113,11 +113,11 @@ describe('UNIT-023 workflow permission and trust invariants', () => {
 describe('UNIT-024 package publishing metadata', () => {
   it('is a public scoped package with provenance-ready repository metadata', async () => {
     const manifest = JSON.parse(await read('packages/doq/package.json'));
-    expect(manifest.name).toBe('@getdoq/analog');
+    expect(manifest.name).toBe('@doqs/analog');
     expect(manifest.publishConfig).toEqual({ access: 'public' });
     expect(manifest.repository).toMatchObject({
       type: 'git',
-      url: 'git+https://github.com/Andersseen/doq.git',
+      url: 'git+https://github.com/Andersseen/doqs.git',
       directory: 'packages/doq',
     });
     expect(manifest.license).toBe('MIT');

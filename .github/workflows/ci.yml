@@ -66,7 +66,7 @@ jobs:
           # Optional repository variable: the public origin enables canonical URLs and the sitemap of apps/site.
           DOQ_SITE_ORIGIN: ${{ vars.DOQ_SITE_ORIGIN }}
       - run: pnpm pack:doq
-      - run: pnpm verify:package "artifacts/getdoq-analog-$(node -p "require('./packages/doq/package.json').version").tgz"
+      - run: pnpm verify:package "artifacts/doqs-analog-$(node -p "require('./packages/doq/package.json').version").tgz"
       - uses: actions/upload-artifact@v7
         with:
           name: builds

@@ -1,7 +1,7 @@
 name: Release
 
-# Publishes @getdoq/analog to npm with Trusted Publishing (OIDC). Registered with npm as the trusted publisher:
-#   repository Andersseen/doq, workflow filename release.yml, environment npm-publish.
+# Publishes @doqs/analog to npm with Trusted Publishing (OIDC). Registered with npm as the trusted publisher:
+#   repository Andersseen/doqs, workflow filename release.yml, environment npm-publish.
 # It never runs for pull requests: it starts only after the CI workflow completed successfully for a push to main,
 # and it publishes the tarball that CI built and verified for that exact commit (never a rebuild).
 # See docs/operations/release-and-deployment.md.
@@ -152,4 +152,4 @@ jobs:
           fi
           node scripts/release/cli.ts notes "$VERSION" "$RUNNER_TEMP/notes.md"
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$CI_HEAD_SHA" \
-            --title "@getdoq/analog $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag=false
+            --title "@doqs/analog $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag=false

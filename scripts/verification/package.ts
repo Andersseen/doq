@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Verifies the packed @getdoq/analog tarball and, optionally, its installed copy in an external consumer.
+// Verifies the packed @doqs/analog tarball and, optionally, its installed copy in an external consumer.
 // Usage: node scripts/verification/package.ts <tarball> [consumer-directory]
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
@@ -47,8 +47,8 @@ try {
   const root = join(temp, 'package');
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const declarations = await readFile(join(root, manifest.typings), 'utf8');
-  check(`tarball manifest is @getdoq/analog@${version}`, () => {
-    assert.equal(manifest.name, '@getdoq/analog');
+  check(`tarball manifest is @doqs/analog@${version}`, () => {
+    assert.equal(manifest.name, '@doqs/analog');
     assert.equal(manifest.version, version);
   });
   check('manifest has no workspace/private references', () =>
@@ -75,18 +75,16 @@ try {
     const consumer = resolve(consumerArg);
     const lock = await readFile(join(consumer, 'pnpm-lock.yaml'), 'utf8').catch(() => '');
     check('consumer lockfile resolves the tarball without workspace links', () => {
-      assert.ok(lock.includes(`getdoq-analog-${version}.tgz`), `lockfile does not mention the ${version} tarball`);
+      assert.ok(lock.includes(`doqs-analog-${version}.tgz`), `lockfile does not mention the ${version} tarball`);
       assert.ok(!/workspace:|link:\.\.\/doq/.test(lock));
     });
     const consumerRequire = createRequire(join(consumer, 'package.json'));
     await import(pathToFileURL(consumerRequire.resolve('@angular/compiler')).href); // partial-compiled Angular code needs the JIT facade outside a bundler
-    const doq = await import(
-      pathToFileURL(createRequire(join(consumer, 'package.json')).resolve('@getdoq/analog')).href
-    );
-    const installed = JSON.parse(await readFile(join(consumer, 'node_modules/@getdoq/analog/package.json'), 'utf8'));
+    const doq = await import(pathToFileURL(createRequire(join(consumer, 'package.json')).resolve('@doqs/analog')).href);
+    const installed = JSON.parse(await readFile(join(consumer, 'node_modules/@doqs/analog/package.json'), 'utf8'));
     check(`installed package is ${version}`, () => assert.equal(installed.version, version));
     const { indexDoqSearch } = await import(
-      pathToFileURL(join(consumer, 'node_modules/@getdoq/analog/bin/search-index.mjs')).href
+      pathToFileURL(join(consumer, 'node_modules/@doqs/analog/bin/search-index.mjs')).href
     );
     check('installed ./search-index entry exports indexDoqSearch and the doq-search binary is linked', () => {
       assert.equal(typeof indexDoqSearch, 'function');

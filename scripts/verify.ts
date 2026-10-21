@@ -21,7 +21,7 @@ if (mode !== 'change' && mode !== 'full') {
 const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
   version: string;
 };
-const tarball = `artifacts/getdoq-analog-${version}.tgz`;
+const tarball = `artifacts/doqs-analog-${version}.tgz`;
 const consumerDir = resolve(process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'));
 
 interface Step {

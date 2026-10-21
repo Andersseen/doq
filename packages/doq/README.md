@@ -1,4 +1,4 @@
-# @getdoq/analog
+# @doqs/analog
 
 Documentation that lives inside your Angular/[Analog](https://analogjs.org) app. Doq adds a Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks — and leaves your header, footer, routes, theme and components to you.
 
@@ -12,17 +12,17 @@ Version **0.2.0**. Not yet published to npm; install from a packed tarball (`pnp
 | `prerender` routes in `vite.config.ts` | Analog | Doq supplies `doqPrerenderRoutes()` to generate them. |
 | `prismjs` and the Analog content peers | Analog | `@analogjs/content`, `@analogjs/router` and `prismjs` stay your dependencies. |
 | `doqRoutes()`, `provideDoq()`, `defineDoqConfig()` | Doq | Docs routing and configuration. |
-| `@import '@getdoq/analog/styles.css'` | Doq | Once, in your global stylesheet. |
+| `@import '@doqs/analog/styles.css'` | Doq | Once, in your global stylesheet. |
 
 ## Quick start
 
 ```sh
-pnpm add ./getdoq-analog-0.2.0.tgz @analogjs/content @analogjs/router prismjs
+pnpm add ./doqs-analog-0.2.0.tgz @analogjs/content @analogjs/router prismjs
 ```
 
 ```css
 /* src/styles.css */
-@import '@getdoq/analog/styles.css';
+@import '@doqs/analog/styles.css';
 ```
 
 **1. Share the paths once.** This module is imported by `vite.config.ts`, so keep it free of Angular components.
@@ -36,7 +36,7 @@ export const doqPaths = { contentDirectory: 'docs', basePath: '/docs' } as const
 
 ```ts
 // vite.config.ts
-import { doqPrerenderRoutes } from '@getdoq/analog';
+import { doqPrerenderRoutes } from '@doqs/analog';
 import { doqPaths } from './src/doq.paths';
 
 analog({
@@ -55,7 +55,7 @@ analog({
 // src/app/app.config.ts
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
-import { defineDoqConfig, doqRoutes, provideDoq } from '@getdoq/analog';
+import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
 import { doqPaths } from '../doq.paths';
 
 const doqConfig = defineDoqConfig({
@@ -164,7 +164,7 @@ pnpm add -D pagefind
 "scripts": { "build": "vite build && doq-search index dist/analog/public" }
 ```
 
-`doq-search index <siteDir> [--output <dir>]` writes `<siteDir>/pagefind` (default). It removes any previous bundle, indexes only elements Doq marks with `data-pagefind-body` (the article: title, description, section headings and Markdown body) and fails with a clear message when the site has not been prerendered, has no documentation pages or Pagefind is missing. Your landing page, header, footer, sidebar, table of contents, pagination, copy buttons, demos and slots are not indexed. The same function is available to Node scripts as `import { indexDoqSearch } from '@getdoq/analog/search-index'` (Node only, never import it in browser code).
+`doq-search index <siteDir> [--output <dir>]` writes `<siteDir>/pagefind` (default). It removes any previous bundle, indexes only elements Doq marks with `data-pagefind-body` (the article: title, description, section headings and Markdown body) and fails with a clear message when the site has not been prerendered, has no documentation pages or Pagefind is missing. Your landing page, header, footer, sidebar, table of contents, pagination, copy buttons, demos and slots are not indexed. The same function is available to Node scripts as `import { indexDoqSearch } from '@doqs/analog/search-index'` (Node only, never import it in browser code).
 
 **What readers get.** A *Search* button next to the breadcrumb opens a native modal dialog, also opened with Ctrl+K / ⌘K only while a Doq documentation view is shown and never while another text field has focus. The index is loaded the first time the reader types. Results show the page title, the matching section and a highlighted excerpt rendered as plain text, link to the canonical public URL (custom and nested slugs included, never the source filename) and open the section heading. ArrowDown/ArrowUp move between results, Enter opens one, Escape closes. Loading, empty and "search unavailable" (index missing) states are announced in a status region; a missing index never breaks the page (this is also what you see under `vite dev`, which does not serve a generated index; run the build once or preview the static output to try search).
 
@@ -184,7 +184,7 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `normalizeDoqPaths`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@getdoq/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@getdoq/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `normalizeDoqPaths`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 

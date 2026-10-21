@@ -1,5 +1,5 @@
 @import 'tailwindcss';
-@import '@getdoq/analog/styles.css';
+@import '@doqs/analog/styles.css';
 @import '@voltui/components/themes.css';
 
 * { box-sizing: border-box; }

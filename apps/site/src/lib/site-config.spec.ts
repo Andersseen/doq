@@ -34,9 +34,9 @@ describe('UNIT-025 canonical origin and crawler files', () => {
   });
 
   it('points to the real repository and package, and installs the scoped package', () => {
-    expect(siteLinks.github).toBe('https://github.com/Andersseen/doq');
-    expect(siteLinks.npm).toBe('https://www.npmjs.com/package/@getdoq/analog');
-    expect(installCommand).toContain('@getdoq/analog');
+    expect(siteLinks.github).toBe('https://github.com/Andersseen/doqs');
+    expect(siteLinks.npm).toBe('https://www.npmjs.com/package/@doqs/analog');
+    expect(installCommand).toContain('@doqs/analog');
     expect(site.routes).toEqual(['/']);
   });
 });

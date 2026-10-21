@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Doq (`@getdoq/analog`) has not been published to npm yet. Security fixes are made on the `main` branch and the latest `0.1.x` line; older pre-release states are not supported.
+Doq (`@doqs/analog`) has not been published to npm yet. Security fixes are made on the `main` branch and the latest `0.1.x` line; older pre-release states are not supported.
 
 | Version | Supported |
 | ------- | --------- |
@@ -13,7 +13,7 @@ Doq (`@getdoq/analog`) has not been published to npm yet. Security fixes are mad
 
 Please do **not** report security problems through public issues, pull requests or discussions: public reports can be read, cached and indexed before a fix exists.
 
-1. Preferred: use GitHub's private vulnerability reporting — the **Report a vulnerability** button on the repository's [Security tab](https://github.com/Andersseen/doq/security/advisories/new).
+1. Preferred: use GitHub's private vulnerability reporting — the **Report a vulnerability** button on the repository's [Security tab](https://github.com/Andersseen/doqs/security/advisories/new).
 2. If that button is not available (see the note below), open an issue titled "Security contact request" that contains **no technical details**, or reach the maintainer, [@Andersseen](https://github.com/Andersseen), through the contact options on their GitHub profile. A private channel will be arranged.
 
 > Maintainer note: as of this writing, private vulnerability reporting was **not enabled** on the repository (checked through the GitHub API). Enable it under _Settings → Code security → Private vulnerability reporting_ so the first path above works.
@@ -31,4 +31,4 @@ Reports are handled by a single volunteer maintainer, on a best-effort basis. Th
 
 ## Scope
 
-In scope: the `@getdoq/analog` package and the build/verification tooling in this repository. Vulnerabilities in Angular, Analog.js or other dependencies should be reported to their own maintainers.
+In scope: the `@doqs/analog` package and the build/verification tooling in this repository. Vulnerabilities in Angular, Analog.js or other dependencies should be reported to their own maintainers.

@@ -116,7 +116,7 @@ const controls: Control[] = [
     breaks: 'the packed tarball ships without styles.css although exports still reference it',
     expect: /test_contract_00[13]/,
     run: async (workspace) => {
-      const tarball = resolve(repo, `artifacts/getdoq-analog-${version}.tgz`);
+      const tarball = resolve(repo, `artifacts/doqs-analog-${version}.tgz`);
       const extracted = resolve(workspace, 'extracted');
       await cp(tarball, resolve(workspace, 'original.tgz'));
       sh('mkdir', ['-p', extracted], workspace);

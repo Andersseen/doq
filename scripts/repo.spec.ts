@@ -51,8 +51,8 @@ describe('UNIT-007 open-source community files', () => {
 
   it('keeps package metadata pointing at this repository', async () => {
     const manifest = await json('packages/doq/package.json');
-    expect(manifest.repository.url).toBe('git+https://github.com/Andersseen/doq.git');
-    expect(manifest.bugs.url).toBe('https://github.com/Andersseen/doq/issues');
+    expect(manifest.repository.url).toBe('git+https://github.com/Andersseen/doqs.git');
+    expect(manifest.bugs.url).toBe('https://github.com/Andersseen/doqs/issues');
     expect(manifest.keywords).toContain('angular');
   });
 });

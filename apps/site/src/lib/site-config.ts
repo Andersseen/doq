@@ -1,13 +1,13 @@
 // Build-safe: imported by vite.config.ts, so it must stay free of Angular and browser code.
 export const siteLinks = {
-  github: 'https://github.com/Andersseen/doq',
-  npm: 'https://www.npmjs.com/package/@getdoq/analog',
-  readme: 'https://github.com/Andersseen/doq/blob/main/packages/doq/README.md',
-  changelog: 'https://github.com/Andersseen/doq/blob/main/packages/doq/CHANGELOG.md',
-  license: 'https://github.com/Andersseen/doq/blob/main/LICENSE',
+  github: 'https://github.com/Andersseen/doqs',
+  npm: 'https://www.npmjs.com/package/@doqs/analog',
+  readme: 'https://github.com/Andersseen/doqs/blob/main/packages/doq/README.md',
+  changelog: 'https://github.com/Andersseen/doqs/blob/main/packages/doq/CHANGELOG.md',
+  license: 'https://github.com/Andersseen/doqs/blob/main/LICENSE',
 } as const;
 
-export const installCommand = 'pnpm add @getdoq/analog @analogjs/content @analogjs/router prismjs';
+export const installCommand = 'pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs';
 
 export const site = {
   title: 'Doq — Documentation that lives in your Angular app',

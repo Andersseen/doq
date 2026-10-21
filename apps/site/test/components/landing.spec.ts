@@ -53,8 +53,8 @@ describe('COMP-021 navigation and external links', () => {
     const nav = screen.getByRole('navigation', { name: 'Main' });
     expect(within(nav).getByRole('link', { name: 'Features' }).getAttribute('href')).toBe('#features');
     expect(within(nav).getByRole('link', { name: 'Getting started' }).getAttribute('href')).toBe('#getting-started');
-    expect(within(nav).getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/Andersseen/doq');
-    expect(within(nav).getByRole('link', { name: 'npm' }).getAttribute('href')).toBe('https://www.npmjs.com/package/@getdoq/analog');
+    expect(within(nav).getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/Andersseen/doqs');
+    expect(within(nav).getByRole('link', { name: 'npm' }).getAttribute('href')).toBe('https://www.npmjs.com/package/@doqs/analog');
   });
 
   it('opens and closes the mobile menu with the button, a link and Escape', async () => {

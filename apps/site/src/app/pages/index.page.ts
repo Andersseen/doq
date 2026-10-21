@@ -24,7 +24,7 @@ const pathsCode = `// src/doq.paths.ts — shared by vite.config.ts, so no Angul
 export const doqPaths = { contentDirectory: 'docs', basePath: '/docs' } as const;`;
 
 const viteCode = `// vite.config.ts — Analog configuration: prerender routes
-import { doqPrerenderRoutes } from '@getdoq/analog';
+import { doqPrerenderRoutes } from '@doqs/analog';
 import { doqPaths } from './src/doq.paths';
 
 analog({
@@ -37,7 +37,7 @@ analog({
 const appCode = `// src/app/app.config.ts — Doq configuration next to Analog's providers
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
-import { defineDoqConfig, doqRoutes, provideDoq } from '@getdoq/analog';
+import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
 import { doqPaths } from '../doq.paths';
 
 const doqConfig = defineDoqConfig({ ...doqPaths, sidebar: 'left', showTableOfContents: true });
@@ -106,7 +106,7 @@ export const appConfig: ApplicationConfig = {
           <figure class="code wide"><figcaption>3 · Doq configuration</figcaption><pre tabindex="0"><code>{{ appCode }}</code></pre></figure>
         </div>
         <p class="note">
-          Import <code>&#64;getdoq/analog/styles.css</code> once in your global stylesheet. The complete guide lives in the
+          Import <code>&#64;doqs/analog/styles.css</code> once in your global stylesheet. The complete guide lives in the
           <a [href]="links.readme" rel="noopener">package README</a>.
         </p>
       </section>

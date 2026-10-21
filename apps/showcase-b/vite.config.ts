@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
-import { doqPrerenderRoutes } from '@getdoq/analog';
+import { doqPrerenderRoutes } from '@doqs/analog';
 import { doqPaths } from './src/doq.paths';
 
 // `vite build --mode nosearch` builds the search-disabled variant into its own directory (see src/app/app.config.ts).

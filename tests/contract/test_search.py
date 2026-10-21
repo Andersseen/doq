@@ -103,9 +103,9 @@ def test_contract_016_tarball_ships_the_indexer_without_a_pagefind_dependency(pa
     assert "pagefind" not in manifest.get("dependencies", {})
     assert "pagefind" in manifest["peerDependencies"]
     assert manifest["peerDependenciesMeta"]["pagefind"] == {"optional": True}
-    runtime = package_files["fesm2022/getdoq-analog.mjs"].decode()
+    runtime = package_files["fesm2022/doqs-analog.mjs"].decode()
     assert "node:" not in runtime and "pagefind.js" in runtime  # browser entry: no Node imports, only the lazy bundle URL
-    browser_only = package_files["types/getdoq-analog.d.ts"].decode()
+    browser_only = package_files["types/doqs-analog.d.ts"].decode()
     assert "indexDoqSearch" not in browser_only
     indexer = package_files["bin/search-index.mjs"].decode()
     assert "import" in indexer and "from '@angular" not in indexer
