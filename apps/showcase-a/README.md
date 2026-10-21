@@ -1,6 +1,6 @@
 # Showcase A — Vanta UI
 
-The dark-first component-library host for the Doq pilot. It keeps its own compact Vanta header, footer, theme tokens, typography, left docs sidebar, TOC, and app-owned `vanta-button` Angular demo.
+The dark-first component-library host for Doq 0.1. It keeps its own compact Vanta header, footer, theme tokens, typography, left docs sidebar, TOC, and app-owned `vanta-button` Angular demo.
 
 Run from the monorepo root:
 

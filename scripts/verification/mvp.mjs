@@ -11,13 +11,13 @@ const repo = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const chromeCandidates = [process.env.CHROME_BIN, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium', '/usr/bin/google-chrome', '/usr/bin/chromium'].filter(Boolean);
 const viewports = [[375,812],[768,1024],[1280,800],[1440,900],[1920,1080]];
 const apps = [
-  { key:'a', name: 'Showcase A', port: 4173, root: 'apps/showcase-a/dist/analog/public', paths: ['/','/docs','/docs/components/button','/docs/overview'], doc: '/docs/components/button', nested: '/docs/components/navigation', toc: true, side: 'left', codePath: '/docs/components/button', tocPath: '/docs/overview' },
-  { key:'b', name: 'Showcase B', port: 4174, root: 'apps/showcase-b/dist/analog/public', paths: ['/','/docs','/docs/onboarding/first-application','/docs/concepts/models'], doc: '/docs/onboarding/first-application', nested: '/docs/architecture/content-delivery', toc: false, side: 'right', codePath: '/docs/onboarding/first-application' },
+  { key:'a', name: 'Showcase A', port: 4173, root: 'apps/showcase-a/dist/analog/public', paths: ['/','/docs','/docs/components/button','/docs/overview'], doc: '/docs/components/button', nested: '/docs/components/navigation', toc: true, side: 'left', codePath: '/docs/components/button', tocPath: '/docs/overview', v01: { hostTitle:'Vanta UI — Components with good energy', hostDescription:'Vanta UI is an Angular component library with sensible defaults.', suffix:'Vanta UI', indexTitle:'Build with Vanta UI', indexSlot:'[data-testid="vanta-start"]', docSlot:'[data-testid="vanta-help"]' } },
+  { key:'b', name: 'Showcase B', port: 4174, root: 'apps/showcase-b/dist/analog/public', paths: ['/','/docs','/docs/onboarding/first-application','/docs/concepts/models'], doc: '/docs/onboarding/first-application', nested: '/docs/architecture/content-delivery', toc: false, side: 'right', codePath: '/docs/onboarding/first-application', v01: { hostTitle:'ForgeCMS — Developer platform', hostDescription:'ForgeCMS is a developer-first content platform.', suffix:'ForgeCMS Developers', indexTitle:'ForgeCMS developer hub', indexSlot:'[data-testid="forge-onboarding"]', docSlot:'[data-testid="forge-token-note"]', noDescriptionPath:'/docs/reference/changelog' } },
 ];
 const selectedApp = process.argv.includes('--app=a') ? 'a' : process.argv.includes('--app=b') ? 'b' : 'both';
 const selectedApps = selectedApp === 'both' ? apps : apps.filter(a => a.key === selectedApp);
 const checkFilters = process.argv.find(a => a.startsWith('--check='))?.slice(8).split(',').filter(Boolean)??[];
-const consumerApp = process.env.MVP_CONSUMER_ROOT ? { key:'consumer',name:'External consumer',port:4175,distRoot:resolve(process.env.MVP_CONSUMER_ROOT),doc:'/docs/onboarding/first-application',nested:'/docs/concepts/models' } : null;
+const consumerApp = process.env.MVP_CONSUMER_ROOT ? { key:'consumer',name:'External consumer',port:4175,distRoot:resolve(process.env.MVP_CONSUMER_ROOT),doc:'/docs/onboarding/first-application',nested:'/docs/concepts/models',v01:process.env.MVP_CONSUMER_V01?JSON.parse(process.env.MVP_CONSUMER_V01):null } : null;
 const artifactDir=resolve(process.env.MVP_ARTIFACT_DIR??join(tmpdir(),'doq-mvp-evidence'));
 const tocFixtureDir=join(repo,'apps/showcase-a/src/content/docs/verification');
 const results = [];
@@ -179,6 +179,52 @@ async function diagnostics(app) {
   for(const [name,listener] of listeners)cdp.off(name,listener);
   pass(`M23 ${app.name}`,'production routes, interactions and reload emitted no runtime exceptions, console errors or failed network requests');
 }
+async function v01(app) {
+  const x=app.v01;assert.ok(x,`${app.name}: no 0.1 expectations configured (set MVP_CONSUMER_V01 for the external consumer)`);
+  const base=`http://127.0.0.1:${app.port}`;
+  const head=()=>cdp.evaluate("({title:document.title,description:document.querySelector('meta[name=description]')?.content??null,h1:[...document.querySelectorAll('h1')].length,h1Text:document.querySelector('h1')?.textContent.trim()})");
+  const count=selector=>cdp.evaluate(`document.querySelectorAll(${JSON.stringify(selector)}).length`);
+  const waitTitle=(title,label)=>waitFor(async()=>(await cdp.evaluate('document.title'))===title,`${label} title "${title}"`);
+  for(const [w,h] of [[1440,900],[375,812]]){
+    await viewport(w,h);
+    // Direct load of a document: suffix, slot, single h1.
+    await navigate(base+app.doc);
+    let state=await head();const docHeading=state.h1Text;
+    assert.equal(state.title,`${docHeading} · ${x.suffix}`,`direct document title at ${w}px`);assert.equal(state.h1,1,'exactly one h1 on a document');
+    assert.equal(await count(x.docSlot),1,'document slot renders exactly once');
+    assert.equal(await cdp.evaluate(`(()=>{const a=document.querySelector('.doq-markdown'),s=document.querySelector(${JSON.stringify(x.docSlot)});return !!(a.compareDocumentPosition(s)&Node.DOCUMENT_POSITION_FOLLOWING)})()`),true,'document slot follows the Markdown content');
+    // Index: presentation copy, index slot before cards, single h1, no document slot.
+    await navigate(base+'/docs');state=await head();
+    assert.equal(state.h1Text,x.indexTitle,'index heading');assert.equal(state.title,x.indexTitle,'index title');assert.equal(state.h1,1,'exactly one h1 on the index');assert.equal(await count(x.indexSlot),1,'index slot renders exactly once');assert.equal(await count(x.docSlot),0,'document slot absent on the index');
+    assert.equal(await cdp.evaluate(`(()=>{const s=document.querySelector(${JSON.stringify(x.indexSlot)}),g=document.querySelector('.doq-index-grid');return !!(s.compareDocumentPosition(g)&Node.DOCUMENT_POSITION_FOLLOWING)})()`),true,'index slot sits before the document cards');
+    assert.ok(await count('.doq-index-card')>0,'index cards still render');
+    assert.ok(state.description&&state.description!==x.hostDescription,'index description comes from presentation config');
+    if(w===375)continue;
+    // Client navigation index → document → document → index → host route; metadata follows each step.
+    await click('.doq-index-card');await waitFor(async()=>(await count('.doq-markdown'))>0,'document after index card click');
+    state=await head();await waitTitle(`${state.h1Text} · ${x.suffix}`,'card navigation');
+    const firstTitle=state.title;
+    await cdp.evaluate("(()=>{document.querySelectorAll('details.doq-nav-group').forEach(d=>d.setAttribute('open',''));const l=[...document.querySelectorAll('.doq-nav-link:not(.is-active)')].find(e=>e.getClientRects().length&&!e.closest('details:not([open])'));l.setAttribute('data-v01-target','')})()");await click('[data-v01-target]');await waitFor(async()=>(await cdp.evaluate('document.title'))!==firstTitle,'title change after sidebar navigation').catch(async e=>{throw new Error(e.message+' '+JSON.stringify(await cdp.evaluate("({path:location.pathname,title:document.title,target:document.querySelector('[data-v01-target]')?.getAttribute('href'),hit:(()=>{const t=document.querySelector('[data-v01-target]'),r=t.getBoundingClientRect(),e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return [r.x,r.y,r.width,r.height,e?.outerHTML.slice(0,120)]})()})")))});
+    state=await head();assert.equal(state.title,`${state.h1Text} · ${x.suffix}`,'title after client navigation');
+    const described=await cdp.evaluate("document.querySelector('.doq-article .doq-description')?.textContent.trim()??null");assert.equal(state.description,described??x.hostDescription,'description matches the visible document, never a stale one');
+    if(x.noDescriptionPath){
+      await cdp.evaluate(`document.querySelector('.doq-nav-link[href="${x.noDescriptionPath}"]').closest('details.doq-nav-group:not([open])')?.setAttribute('open','')`);await click(`.doq-nav-link[href="${x.noDescriptionPath}"]`);await waitFor(async()=>(await cdp.evaluate('location.pathname'))===x.noDescriptionPath,'no-description route');
+      await waitFor(async()=>(await cdp.evaluate("document.querySelector('h1')?.textContent.trim()==='Changelog'&&document.querySelector('.doq-markdown')?.childElementCount>0")),'no-description content');state=await head();
+      assert.equal(await cdp.evaluate("!!document.querySelector('.doq-article .doq-description')"),false);assert.equal(state.description,x.hostDescription,'a document without description falls back to the host description');
+    }
+    await click('.doq-overview');await waitFor(async()=>(await cdp.evaluate('document.title'))===x.indexTitle,'index title after client navigation');await waitFor(async()=>(await count(x.indexSlot))===1,'index slot after client navigation');
+    await click('.doq-index-card');await waitFor(async()=>(await count('.doq-markdown'))>0,'document after second card click');
+    await click('a[href="/"]');await waitFor(async()=>(await cdp.evaluate('location.pathname'))==='/','host route');
+    await waitFor(async()=>(await cdp.evaluate('document.title'))===x.hostTitle,'host title restored after leaving docs');
+    state=await head();assert.equal(state.description,x.hostDescription,'host description restored after leaving docs');
+    // Direct document load then leave: the host values must come from the server capture, not the doc head.
+    await navigate(base+app.doc);await click('a[href="/"]');await waitFor(async()=>(await cdp.evaluate('document.title'))===x.hostTitle,'host title restored after hydrated doc');
+    state=await head();assert.equal(state.description,x.hostDescription,'host description restored after hydrated doc');
+    // Unknown document route (client-side): not-found metadata, no stale title.
+    await navigate(base+app.doc);await cdp.evaluate("history.pushState({},'','/docs/not-a-real-page');dispatchEvent(new PopStateEvent('popstate'))");
+    await waitFor(async()=>(await count('.doq-not-found'))>0,'not-found view');await waitTitle(`Page not found · ${x.suffix}`,'not found');
+  }
+}
 async function main() {
   let chromeBin='';
   try {
@@ -186,10 +232,11 @@ async function main() {
     await startPreviews();chromeBin=await launchChrome();console.log(`Browser: ${chromeBin} (isolated headless Chrome via Chrome DevTools Protocol)`);
     try { const child=spawn(process.execPath,['scripts/verification/duplicate-routes.mjs'],{cwd:repo,stdio:'ignore'});const exit=await new Promise(resolve=>child.on('exit',resolve));assert.equal(exit,0,'duplicate route API fixture failed');pass('M9','real exported normalization/sorting API rejects duplicate routes and validates slug cases'); } catch(e){fail('M9',e)}
     for(const app of selectedApps){
-      const checks=[['m15',`M15 ${app.name}`,()=>mobileNavigation(app)],['m24',`M24 ${app.name}`,()=>responsive(app)],['dynamic',`M24 dynamic ${app.name}`,()=>dynamic(app)],['m16',`M16 ${app.name}`,()=>toc(app)],['m17',`M17 ${app.name}`,()=>clipboard(app)],['m23',`M23 ${app.name}`,()=>diagnostics(app)]];
-      for(const [key,id,fn] of checks.filter(([key])=>!checkFilters.length||checkFilters.includes(key))){try{await fn();if(id.startsWith('M15')||id.startsWith('M24')||id.startsWith('M16')||id.startsWith('M17'))pass(id,`production browser verification succeeded at required viewports for ${app.name}`)}catch(e){fail(id,e)}}
+      const checks=[['m15',`M15 ${app.name}`,()=>mobileNavigation(app)],['m24',`M24 ${app.name}`,()=>responsive(app)],['dynamic',`M24 dynamic ${app.name}`,()=>dynamic(app)],['m16',`M16 ${app.name}`,()=>toc(app)],['m17',`M17 ${app.name}`,()=>clipboard(app)],['m23',`M23 ${app.name}`,()=>diagnostics(app)],['v01',`V01 ${app.name}`,()=>v01(app)]];
+      for(const [key,id,fn] of checks.filter(([key])=>!checkFilters.length||checkFilters.includes(key))){try{await fn();if(id.startsWith('V01'))pass(id,`0.1 presentation, slots and metadata verified at desktop and mobile for ${app.name}`);else if(id.startsWith('M15')||id.startsWith('M24')||id.startsWith('M16')||id.startsWith('M17'))pass(id,`production browser verification succeeded at required viewports for ${app.name}`)}catch(e){fail(id,e)}}
     }
     if(consumerApp&&(!checkFilters.length||checkFilters.includes('m23'))){try{await diagnostics(consumerApp);}catch(e){fail('M23 External consumer',e)}}
+    if(consumerApp&&(!checkFilters.length||checkFilters.includes('v01'))){try{await v01(consumerApp);pass('V01 External consumer','0.1 presentation, slots and metadata verified in the tarball-installed consumer');}catch(e){fail('V01 External consumer',e)}}
     if(!consumerApp&&(!checkFilters.length||checkFilters.includes('m23')))fail('M23 External consumer',new Error('Set MVP_CONSUMER_ROOT to the external consumer dist/analog/public directory to verify its production hydration.'));
   } catch(error) { fail('HARNESS',error); }
   finally { cdp?.close(); for(const p of servers){p.kill('SIGTERM');} await Promise.all(servers.map(p=>new Promise(resolve=>p.exitCode!==null?resolve():p.once('exit',resolve)))); if(chrome&&chrome.exitCode===null){chrome.kill('SIGTERM');const exited=await Promise.race([new Promise(r=>chrome.once('exit',()=>r(true))),delay(3000).then(()=>false)]);if(!exited)chrome.kill('SIGKILL');} if(temp)await rm(temp,{recursive:true,force:true}); if(fixturesPrepared){try{await restoreTocFixtures();console.log('Temporary TOC fixtures removed; Showcase A rebuilt without them.')}catch(e){fail('HARNESS cleanup',e)}} }

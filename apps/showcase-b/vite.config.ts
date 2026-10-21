@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
-import { doqPrerenderRoute } from '@getdoq/analog';
+import { doqPrerenderRoutes } from '@getdoq/analog';
+import { doqPaths } from './src/doq.paths';
 
 export default defineConfig({
   build: { target: ['es2022'] },
@@ -11,10 +12,7 @@ export default defineConfig({
       ssr: true,
       static: true,
       content: { highlighter: 'prism' },
-      prerender: { routes: async () => [
-        '/', '/docs',
-        { contentDir: 'src/content/docs', recursive: true, transform: (file) => doqPrerenderRoute(file, '/docs') },
-      ] },
+      prerender: { routes: async () => ['/', ...doqPrerenderRoutes(doqPaths)] },
     }),
     tailwindcss(),
   ],

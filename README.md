@@ -1,151 +1,34 @@
-# Doq pilot
+# Doq
 
-Doq is an experimental Angular documentation package for Analog.js. It adds Markdown pages and reusable documentation navigation to an existing app while the host keeps its own routes, header, footer, brand, type, and theme. This is an architecture pilot, not a 0.1 release or a published package.
+Doq (`@getdoq/analog`, **0.1.0**) adds Markdown documentation to an existing Angular/Analog.js application. The host keeps its header, footer, routes, theme and components; Doq supplies documentation routing, navigation, table of contents, index, code blocks and a small set of composition points. Integration guide, configuration reference and defaults: [packages/doq/README.md](packages/doq/README.md). Release notes: [packages/doq/CHANGELOG.md](packages/doq/CHANGELOG.md). Not yet published to npm.
 
-## Architecture
+```ts
+// vite.config.ts                         // app.config.ts
+prerender: { routes: async () =>          const doqConfig = defineDoqConfig({
+  ['/', ...doqPrerenderRoutes(doqPaths)]    ...doqPaths, slots: { ... }, presentation: { ... },
+}                                         });
+```
 
-- `packages/doq` is the Angular library. ng-packagr builds it in partial compilation mode. Doq uses Analog's public content discovery, file loader, Markdown renderer, and Angular Router APIs.
-- `apps/showcase-a` is a dark-first component-library host with a left navigation, its own styles, and a Vanta button demo.
-- `apps/showcase-b` is a light-first developer-platform host with a right navigation, independent styles, and a Forge schema demo.
-- Each app owns its shell, content files, and demo components. The two apps use the same Doq package and do not provide Doq's navigation or rendering code.
+## Workspace
 
-The workspace has been built with Node 22.23.1, pnpm 10.18.3, Analog 2.9.0, Angular 21.2.x, TypeScript 5.9.3, and Vite 8.3.x. A clean external tarball consumer also built successfully with Analog 2.9.1 and Angular 21.2.25. Angular 22 is in the package peer range but has not been validated. Keep Doq experimental; this is not a 0.1 release.
+- `packages/doq` — the Angular library (ng-packagr, partial compilation).
+- `apps/showcase-a` — dark-first component-library host (Vanta UI): left sidebar, TOC, its own button demo, a getting-started callout on the index and a help footer on every document.
+- `apps/showcase-b` — light-first developer-platform host (ForgeCMS): right sidebar, no TOC, custom nested slug, its own schema demo, an onboarding-path banner on the index and an API-token note on every document.
+- Each showcase has its own `src/doq.paths.ts`, shell, content, demos and slot components; they share only the Doq package.
 
-## Workspace commands
+Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3, Vite 8.
 
 ```sh
 pnpm install
-pnpm dev:a
-pnpm dev:b
+pnpm dev:a        # or dev:b
 pnpm build
-pnpm --filter @getdoq/analog build
-pnpm pack:doq
+pnpm pack:doq     # artifacts/getdoq-analog-0.1.0.tgz; does not publish
+pnpm verify:mvp   # browser acceptance (M9, M15–M17, M23, M24) plus the 0.1 check V01
+pnpm verify:package artifacts/getdoq-analog-0.1.0.tgz [consumer-dir]
 ```
 
-`pnpm pack:doq` builds and creates `artifacts/getdoq-analog-0.0.0-pilot.tgz`; it does not publish. `pnpm --filter showcase-a preview` and `pnpm --filter showcase-b preview` serve the generated `dist/analog/public` directories after building. The preview server maps generated `index.html` files to deep URLs and returns 404 when a file is missing.
+`pnpm --filter showcase-a preview` / `showcase-b preview` serve the generated `dist/analog/public`; the preview server maps `index.html` files to deep URLs and returns 404 for missing files. Production hosts should configure their own 404 behavior.
 
-## Install into an Analog application
+## Verification
 
-Doq is not published. To install the locally built artifact from an existing app:
-
-```sh
-pnpm add /path/to/getdoq-analog-0.0.0-pilot.tgz @analogjs/content @analogjs/router prismjs
-```
-
-Import the package CSS once from the host's global stylesheet:
-
-```css
-@import '@getdoq/analog/styles.css';
-```
-
-Configure the same `basePath` and `routeParam` for the Router matcher and provider. `routeParam` defaults to `slug`; a custom value is supported. `contentDirectory` names the folder below `src/content`.
-
-```ts
-import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
-import { doqRoutes, provideDoq } from '@getdoq/analog';
-
-const doqConfig = {
-  contentDirectory: 'docs',
-  basePath: '/docs',
-  routeParam: 'slug',
-  contentWidth: '48rem',
-  sidebar: 'left' as const, // 'left' | 'right' | 'hidden'
-  sidebarWidth: '16rem',
-  showTableOfContents: true,
-};
-
-export const appConfig: ApplicationConfig = {
-  providers: [
-    provideFileRouter(withExtraRoutes(doqRoutes(doqConfig))),
-    provideContent(withMarkdownRenderer()),
-    provideDoq(doqConfig),
-  ],
-};
-```
-
-Keep the host's existing shell around `<router-outlet>`; Doq supplies the docs region, not a replacement site header or footer. `doqRoutes()` uses Angular's public `UrlMatcher`, mounts the index at `/docs`, and captures a nested path as one route parameter. Other application routes remain owned by the host.
-
-## Markdown and canonical URLs
-
-Add Markdown under `src/content/<contentDirectory>`. A source file such as `src/content/docs/guides/setup.md` defaults to `/docs/guides/setup`. A frontmatter `slug` replaces the entire URL path below `basePath`; for example `slug: getting-started` produces `/docs/getting-started`, and `slug: quickstart/setup` produces `/docs/quickstart/setup`, regardless of the source folder. Slug segments accept letters, numbers, `_`, `-`, and `~`. Empty/invalid slugs and duplicate public routes throw a diagnostic naming the source files.
-
-The canonical document catalog drives the index, sidebar, breadcrumbs, previous/next links, content lookup, and route resolution. A public route first resolves to its catalog entry. Analog's `injectContentFilesMap()` rekeys the loader under the frontmatter slug, so Doq selects that loader by the catalog entry's normalized public slug; the loader still returns the Markdown body from the original source file, which is passed through Analog's renderer. Doq retains `sourceFilename` and `sourceSlug` for source identity and diagnostics and does not maintain a second consumer slug map.
-
-```markdown
----
-title: Setup
-slug: quickstart/setup
-description: Configure the application.
-group: Guides
-order: 3
-demo: product-button
----
-
-## Configure the host
-```
-
-Navigation is ordered by `order`, then public route. The `group` metadata forms collapsible sidebar sections; when omitted, the source directory provides a grouping label. Previous/next links follow that same order. `MarkdownComponent` provides heading IDs and the TOC links to those IDs. Copy controls are attached once after a document renders, not during every Angular check.
-
-## Static generation
-
-Analog prerendering is configured by the host. Reuse Doq's route helper so custom slugs, nested sources, and `basePath` follow the same canonical rule:
-
-```ts
-import { doqPrerenderRoute } from '@getdoq/analog';
-
-analog({
-  ssr: true,
-  static: true,
-  content: { highlighter: 'prism' }, // requires the consumer's prismjs dependency
-  prerender: {
-    routes: async () => [
-      '/', '/docs',
-      {
-        contentDir: 'src/content/docs',
-        recursive: true,
-        transform: file => doqPrerenderRoute(file, '/docs'),
-      },
-    ],
-  },
-});
-```
-
-List any non-content host routes that should be prerendered alongside documentation. Serve the generated `dist/analog/public` directory with directory index resolution to support direct links. The included preview server returns HTTP 404 for absent files. Production static hosts should configure their own 404 behavior; an SPA fallback can otherwise return HTTP 200 for an unknown route.
-
-## Theme and composition
-
-The host owns its theme switch and can expose semantic CSS custom properties on an ancestor of the routed docs. Doq has scoped defaults when optional values are missing; it does not set global `html` or `body` styles.
-
-| Doq role | Optional host custom property |
-| --- | --- |
-| Background / foreground | `--host-docs-background`, `--host-docs-foreground` |
-| Primary / secondary | `--host-docs-primary`, `--host-docs-secondary` |
-| Muted / border / surface | `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface` |
-| Focus | `--host-docs-focus` |
-| Code background / foreground | `--host-docs-code-background`, `--host-docs-code-foreground` |
-
-`contentWidth`, `sidebar`, `sidebarWidth`, and `showTableOfContents` configure the docs region. On desktop the sidebar is regular interactive navigation. At the mobile breakpoint it becomes a non-modal drawer that is removed from layout and keyboard navigation while closed; opening moves focus to the overview link; the drawer's Close navigation control, Escape, or selecting a documentation link closes it, and focus returns to the menu trigger. The browser behavior of this drawer is tracked as M15 in `docs/verification/mvp-final-validation.md`. The TOC moves into the article when the viewport does not have room for a side rail and tracks visible headings in the browser. `DoqShellComponent` is optional for a new host that wants a neutral starter shell.
-
-## Consumer-owned Angular demos
-
-Register standalone Angular components by stable ID in `DoqConfig.demos`, then reference the ID in Markdown `demo` metadata. Doq renders them with Angular's `NgComponentOutlet`; it does not compile arbitrary templates from Markdown.
-
-```ts
-const doqConfig = {
-  contentDirectory: 'docs',
-  demos: { 'product-button': ProductButtonDemoComponent },
-};
-```
-
-Unknown IDs show an accessible fallback. Demo components are currently registered eagerly. A legacy package-owned `button` demo is retained for compatibility with the pilot showcase.
-
-## Package contents and verification
-
-The package tarball contains `fesm2022/getdoq-analog.mjs`, `types/getdoq-analog.d.ts`, `styles.css`, `README.md`, and package metadata. Public exports are `@getdoq/analog` and `@getdoq/analog/styles.css`.
-
-Build both showcase production apps with `pnpm build`, inspect the generated HTML under each app's `dist/analog/public`, then use the app's `preview` script to check direct routes and status codes. The generated pages should include Markdown content, metadata, headings, TOC links, host shell, and navigation. Do not treat an output file's existence alone as proof of successful rendering.
-
-The tarball was installed into a separate Analog consumer at `/private/tmp/doq-external-consumer` using its own manifest and lockfile, then built successfully with `pnpm build`. The consumer resolved `@getdoq/analog` from the packed `0.0.0-pilot` archive, not from the workspace. Its pages verified custom nested slugs, ordinary nested routes, static rendering, and the host shell. No package was published.
-
-The reusable acceptance harness and browser instructions are in [scripts/verification](scripts/verification/README.md). Run `pnpm verify:mvp` after building; it uses isolated headless Chrome/CDP and returns nonzero on failed mandatory checks.
+[scripts/verification](scripts/verification/README.md) documents the harness. Historical evidence for the 0.0.0-pilot MVP: [docs/verification/mvp-final-validation.md](docs/verification/mvp-final-validation.md). 0.1.0 evidence: [docs/verification/0.1.0-validation.md](docs/verification/0.1.0-validation.md).

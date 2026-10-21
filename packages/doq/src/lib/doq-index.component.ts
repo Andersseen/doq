@@ -1,20 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { injectContentFiles } from '@analogjs/content';
+import { injectDoqDocuments, resolveDoqCopy } from './doq-catalog';
 import { DOQ_CONFIG } from './doq-config';
-import { normalizeDoqDocument, sortDoqDocuments } from './doq-document';
-
-interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; }
+import { DoqPageMetadata } from './doq-metadata';
 
 @Component({
   selector: 'doq-index',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="doq-index" [style.--doq-content-width]="config.contentWidth">
-      <p class="doq-eyebrow">Documentation</p><h1>Explore the docs</h1>
-      <p class="doq-description">Browse guides and references for this product.</p>
+      <p class="doq-eyebrow">{{ copy.label }}</p><h1>{{ copy.indexTitle }}</h1>
+      <p class="doq-description">{{ copy.indexDescription }}</p>
+      @if (config.slots?.indexAfterIntro; as slot) { <ng-container *ngComponentOutlet="slot" /> }
       <div class="doq-index-grid">
         @for (item of navigation; track item.routePath) {
           <a class="doq-index-card" [routerLink]="item.routePath"><span>{{ item.group }}</span><strong>{{ item.title }}</strong><p>{{ item.description }}</p><span class="doq-index-arrow">Read guide →</span></a>
@@ -25,7 +25,12 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
 })
 export class DoqIndexComponent {
   readonly config = inject(DOQ_CONFIG);
-  readonly navigation = sortDoqDocuments(injectContentFiles<DocAttributes>(file => file.filename.includes(`src/content/${this.config.contentDirectory}/`))
-    .map(file => normalizeDoqDocument(file, this.config.contentDirectory, this.config.basePath ?? '/docs'))
-    .filter((doc): doc is NonNullable<typeof doc> => !!doc));
+  readonly copy = resolveDoqCopy(this.config);
+  readonly navigation = injectDoqDocuments(this.config);
+
+  constructor() {
+    const metadata = inject(DoqPageMetadata);
+    metadata.claim(inject(DestroyRef));
+    metadata.set(this.copy.hasIndexTitle ? this.copy.indexTitle : this.copy.label, this.copy.hasIndexDescription ? this.copy.indexDescription : undefined);
+  }
 }
