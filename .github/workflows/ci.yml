@@ -126,8 +126,6 @@ jobs:
     name: MVP and 0.1 acceptance harness
     needs: build
     runs-on: ubuntu-latest
-    env:
-      DOQ_CONSUMER_DIR: ${{ runner.temp }}/doq-consumer
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -139,6 +137,8 @@ jobs:
       - run: pnpm build
       - run: pnpm pack:doq
       - run: pnpm consumer:build
+        env:
+          DOQ_CONSUMER_DIR: ${{ runner.temp }}/doq-consumer
       - name: Full CDP harness including the tarball-installed consumer
         run: pnpm verify:mvp
         env:
