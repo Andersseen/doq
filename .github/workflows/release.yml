@@ -1,0 +1,155 @@
+name: Release
+
+# Publishes @getdoq/analog to npm with Trusted Publishing (OIDC). Registered with npm as the trusted publisher:
+#   repository Andersseen/doq, workflow filename release.yml, environment npm-publish.
+# It never runs for pull requests: it starts only after the CI workflow completed successfully for a push to main,
+# and it publishes the tarball that CI built and verified for that exact commit (never a rebuild).
+# See docs/operations/release-and-deployment.md.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+# One release at a time, and a newer push must never cancel an npm publication halfway through.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+env:
+  CI_RUN_ID: ${{ github.event.workflow_run.id }}
+  CI_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+
+jobs:
+  plan:
+    name: Release eligibility
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      action: ${{ steps.plan.outputs.action }}
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      tarball_sha256: ${{ steps.plan.outputs.tarball_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: package-tarball
+          path: artifacts
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Structural check of the tarball CI validated
+        run: |
+          set -euo pipefail
+          test "$(ls artifacts/*.tgz | wc -l)" = 1
+          node scripts/verification/package.ts artifacts/*.tgz
+      - id: plan
+        name: Decide what this run may do
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_EVENT: ${{ github.event.workflow_run.event }}
+          CI_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          CI_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          CI_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: node scripts/release/cli.ts plan artifacts/*.tgz
+
+  publish:
+    name: Publish to npm (Trusted Publishing)
+    needs: plan
+    if: needs.plan.outputs.action == 'publish'
+    runs-on: ubuntu-latest
+    # Optional required reviewers on this environment make every publication a manual approval.
+    environment: npm-publish
+    permissions:
+      contents: read
+      actions: read
+      id-token: write # OIDC token for npm Trusted Publishing; granted to this job only
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+      - name: Use an npm that supports Trusted Publishing
+        run: npm install --global npm@11.21.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: package-tarball
+          path: artifacts
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: The artifact is exactly the one that was planned
+        env:
+          EXPECTED_SHA256: ${{ needs.plan.outputs.tarball_sha256 }}
+        run: |
+          set -euo pipefail
+          test "$(ls artifacts/*.tgz | wc -l)" = 1
+          echo "${EXPECTED_SHA256}  $(ls artifacts/*.tgz)" | sha256sum --check
+      - run: node scripts/release/cli.ts preflight-publish
+      - id: guard
+        run: node scripts/release/cli.ts assert-unpublished
+      - name: npm publish (provenance is generated automatically)
+        if: steps.guard.outputs.publish == 'true'
+        run: npm publish artifacts/*.tgz --access public --provenance
+
+  github-release:
+    name: GitHub Release
+    needs: [plan, publish]
+    # Runs after a successful publication, or alone to repair a missing release; never after a failed publication.
+    if: >-
+      always() &&
+      (needs.plan.outputs.action == 'repair-github-release' ||
+       (needs.plan.outputs.action == 'publish' && needs.publish.result == 'success'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: package-tarball
+          path: artifacts
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Confirm npm serves exactly the validated artifact
+        run: node scripts/release/cli.ts verify-published artifacts/*.tgz
+      - name: Create the tag and release at the published commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.plan.outputs.tag }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists."
+            exit 0
+          fi
+          node scripts/release/cli.ts notes "$VERSION" "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$CI_HEAD_SHA" \
+            --title "@getdoq/analog $VERSION" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag=false

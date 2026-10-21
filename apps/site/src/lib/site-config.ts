@@ -1,0 +1,60 @@
+// Build-safe: imported by vite.config.ts, so it must stay free of Angular and browser code.
+export const siteLinks = {
+  github: 'https://github.com/Andersseen/doq',
+  npm: 'https://www.npmjs.com/package/@getdoq/analog',
+  readme: 'https://github.com/Andersseen/doq/blob/main/packages/doq/README.md',
+  changelog: 'https://github.com/Andersseen/doq/blob/main/packages/doq/CHANGELOG.md',
+  license: 'https://github.com/Andersseen/doq/blob/main/LICENSE',
+} as const;
+
+export const installCommand = 'pnpm add @getdoq/analog @analogjs/content @analogjs/router prismjs';
+
+export const site = {
+  title: 'Doq — Documentation that lives in your Angular app',
+  description:
+    'Doq adds Markdown documentation to an existing Angular and Analog.js app — SSR/SSG, sidebar, table of contents and search — while your branding, routing and Angular components stay yours.',
+  /** Every route the build prerenders; the sitemap lists exactly these. */
+  routes: ['/'],
+} as const;
+
+/**
+ * The public origin comes from the DOQ_SITE_ORIGIN build variable, never from a guess. Returns undefined when it is
+ * unset or not a plain https origin (http is accepted for localhost only), so canonical URLs are simply omitted.
+ */
+export function normalizeOrigin(raw: string | undefined): string | undefined {
+  if (!raw?.trim()) return undefined;
+  let url: URL;
+  try {
+    url = new URL(raw.trim());
+  } catch {
+    return undefined;
+  }
+  const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  if (url.protocol !== 'https:' && !(local && url.protocol === 'http:')) return undefined;
+  if (url.username || url.password) return undefined;
+  return url.origin;
+}
+
+export const canonicalUrl = (origin: string, path = '/'): string => new URL(path, `${origin}/`).href;
+
+const escapeXml = (text: string) =>
+  text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+const escapeAttr = escapeXml;
+
+export function buildRobots(origin: string | undefined): string {
+  const lines = ['User-agent: *', 'Allow: /'];
+  if (origin) lines.push('', `Sitemap: ${canonicalUrl(origin, '/sitemap.xml')}`);
+  return `${lines.join('\n')}\n`;
+}
+
+export function buildSitemap(origin: string, paths: readonly string[] = site.routes): string {
+  const urls = paths.map((path) => `  <url><loc>${escapeXml(canonicalUrl(origin, path))}</loc></url>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+/** Tags that depend on the origin; the origin-independent metadata lives in index.html. */
+export function originHeadTags(origin: string | undefined, path = '/'): string {
+  if (!origin) return '';
+  const url = escapeAttr(canonicalUrl(origin, path));
+  return [`<link rel="canonical" href="${url}">`, `<meta property="og:url" content="${url}">`].join('\n    ');
+}

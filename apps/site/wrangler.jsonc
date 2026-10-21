@@ -1,0 +1,7 @@
+{
+  // Cloudflare Pages (Direct Upload) project owned by GitHub Actions + Wrangler. See docs/operations/release-and-deployment.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "doq-site",
+  "pages_build_output_dir": "./dist/analog/public",
+  "compatibility_date": "2026-10-01"
+}

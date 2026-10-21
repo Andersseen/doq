@@ -9,6 +9,8 @@ const mime: Record<string, string> = {
   '.js': 'text/javascript; charset=utf-8',
   '.ico': 'image/x-icon',
   '.svg': 'image/svg+xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 createServer(async (request, response) => {

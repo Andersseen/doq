@@ -5,6 +5,6 @@ export default defineConfig({
   test: {
     name: 'unit',
     environment: 'node',
-    include: ['packages/doq/test/unit/**/*.spec.ts', 'scripts/**/*.spec.ts'],
+    include: ['packages/doq/test/unit/**/*.spec.ts', 'scripts/**/*.spec.ts', 'apps/site/src/**/*.spec.ts'],
   },
 });

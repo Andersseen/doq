@@ -9,6 +9,7 @@ export const apps = {
   b: { url: 'http://127.0.0.1:4274', root: 'apps/showcase-b/dist/analog/public' },
   // Showcase B built with `vite build --mode nosearch`: the same app and content with search disabled.
   noSearch: { url: 'http://127.0.0.1:4276', root: 'apps/showcase-b/dist/analog-nosearch/public' },
+  site: { url: 'http://127.0.0.1:4277', root: 'apps/site/dist/analog/public' },
   consumer: {
     url: 'http://127.0.0.1:4275',
     root: resolve(process.env.DOQ_CONSUMER_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer'), 'dist/analog/public'),
@@ -45,6 +46,7 @@ export default defineConfig({
     server(apps.a, 4273),
     server(apps.b, 4274),
     server(apps.noSearch, 4276),
+    server(apps.site, 4277),
     ...(withConsumer ? [server(apps.consumer, 4275)] : []),
   ],
 });
