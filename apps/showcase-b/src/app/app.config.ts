@@ -3,10 +3,26 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { doqRoutes, provideDoq } from '@getdoq/analog';
+import { defineDoqConfig, doqRoutes, provideDoq } from '@getdoq/analog';
+import { doqPaths } from '../doq.paths';
 import { ForgeSchemaDemoComponent } from './demos/schema-demo';
+import { ForgeOnboardingComponent } from './slots/forge-onboarding';
+import { ForgeTokenNoteComponent } from './slots/forge-token-note';
 
-const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '49rem', sidebar: 'right' as const, sidebarWidth: '13rem', showTableOfContents: false, demos: { 'forge-schema': ForgeSchemaDemoComponent } };
+const doqConfig = defineDoqConfig({
+  ...doqPaths,
+  contentWidth: '49rem',
+  sidebar: 'right',
+  sidebarWidth: '13rem',
+  showTableOfContents: false,
+  demos: { 'forge-schema': ForgeSchemaDemoComponent },
+  slots: { indexAfterIntro: ForgeOnboardingComponent, documentAfterContent: ForgeTokenNoteComponent },
+  presentation: {
+    indexTitle: 'ForgeCMS developer hub',
+    indexDescription: 'Model content, query it over the delivery API and ship it to every environment.',
+    pageTitleSuffix: 'ForgeCMS Developers',
+  },
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [

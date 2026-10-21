@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, PendingTasks, signal, PLATFORM_ID, Type } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, PLATFORM_ID, Type } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
-import { ContentRenderer, injectContentFiles, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
-import { Meta, Title } from '@angular/platform-browser';
+import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
+import { injectDoqDocuments, resolveDoqCopy } from './doq-catalog';
 import { DOQ_CONFIG } from './doq-config';
+import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
-import { DoqDocument, normalizeDoqDocument, sortDoqDocuments } from './doq-document';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
 
 interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; demo?: string; }
@@ -22,21 +22,22 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
       @if (doc.attributes.title) {
       <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar">
         @if (config.sidebar !== 'hidden') {
-        <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">Documentation menu</button>
-        <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" aria-label="Documentation" (keydown.escape)="closeMobileNavigation()">
+        <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">{{ copy.label }} menu</button>
+        <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" [attr.aria-label]="copy.label" (keydown.escape)="closeMobileNavigation()">
           <button class="doq-mobile-close" type="button" (click)="closeMobileNavigation()">Close navigation</button>
           <a class="doq-overview" [routerLink]="config.basePath" (click)="closeMobileNavigation()">Overview</a>
           <doq-nav-tree [nodes]="navigationTree()" (navigate)="closeMobileNavigation()" />
         </nav>
         }
         <article class="doq-article">
-          <div class="doq-breadcrumb"><a [routerLink]="config.basePath">Docs</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
-          <header class="doq-doc-header"><p class="doq-eyebrow">{{ doc.attributes.group || 'Documentation' }}</p><h1>{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
+          <div class="doq-breadcrumb"><a [routerLink]="config.basePath">{{ copy.breadcrumbRoot }}</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
+          <header class="doq-doc-header"><p class="doq-eyebrow">{{ doc.attributes.group || copy.label }}</p><h1>{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
           <analog-markdown class="doq-markdown" [content]="doc.content" />
           @if (doc.attributes.demo; as demoId) {
             @if (demoComponent(demoId); as demo) { <ng-container *ngComponentOutlet="demo" /> }
             @else { <p class="doq-demo-fallback" role="status">Demo “{{ demoId }}” is not registered by this application.</p> }
           }
+          @if (config.slots?.documentAfterContent; as slot) { <ng-container *ngComponentOutlet="slot" /> }
           @if (config.showTableOfContents && headings().length) {
             <aside class="doq-toc" aria-label="On this page"><p>On this page</p>@for (heading of headings(); track heading.id) { <a [routerLink]="[]" [fragment]="heading.id" [class.level-three]="heading.level === 3" [class.is-active]="activeHeading() === heading.id">{{ heading.text }}</a> }</aside>
           }
@@ -64,16 +65,16 @@ export class DoqDocsComponent {
     this.mobileNavigationOpen.set(false);
     if (focusWasInNavigation) this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
   });
-  private readonly files = injectContentFiles<DocAttributes>(file => file.filename.includes(`/content/${this.config.contentDirectory}/`));
-  readonly documents = sortDoqDocuments(this.files.map(file => normalizeDoqDocument(file, this.config.contentDirectory, this.config.basePath ?? '/docs')).filter((doc): doc is NonNullable<typeof doc> => !!doc));
+  readonly copy = resolveDoqCopy(this.config);
+  readonly documents = injectDoqDocuments(this.config);
   private readonly contentMap = injectContentFilesMap();
   private readonly renderer = inject(ContentRenderer);
   private readonly pendingTasks = inject(PendingTasks);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly documentRef = inject(DOCUMENT);
   private readonly host = inject(ElementRef<HTMLElement>);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+  private readonly metadata = inject(DoqPageMetadata);
+  private readonly claimMetadata = this.metadata.claim(inject(DestroyRef));
   readonly navigation = computed(() => this.documents.map(document => ({ ...document, href: document.routePath })));
   readonly navigationTree = computed(() => {
     const roots: DoqNavigationNode[] = [];
@@ -129,9 +130,10 @@ export class DoqDocsComponent {
   readonly next = computed(() => this.adjacent(1));
   private readonly titleEffect = effect(() => {
     const doc = this.document();
-    if (!doc?.attributes.title) return;
-    this.title.setTitle(`${doc.attributes.title} · Documentation`);
-    if (doc.attributes.description) this.meta.updateTag({ name: 'description', content: doc.attributes.description });
+    if (doc === undefined) return;
+    const title = doc?.attributes.title;
+    if (!title) this.metadata.set(doqPageTitle('Page not found', this.copy.pageTitleSuffix));
+    else this.metadata.set(doqPageTitle(title, this.copy.pageTitleSuffix), doc?.attributes.description);
   });
   private readonly enhancementEffect = effect(onCleanup => {
     const doc = this.document();

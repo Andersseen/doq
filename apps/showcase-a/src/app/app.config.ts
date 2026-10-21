@@ -3,10 +3,27 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { doqRoutes, provideDoq } from '@getdoq/analog';
+import { defineDoqConfig, doqRoutes, provideDoq } from '@getdoq/analog';
+import { doqPaths } from '../doq.paths';
 import { VantaButtonDemoComponent } from './demos/button-demo';
+import { VantaHelpComponent } from './slots/vanta-help';
+import { VantaStartComponent } from './slots/vanta-start';
 
-const doqConfig = { contentDirectory: 'docs', basePath: '/docs', routeParam: 'slug', contentWidth: '43rem', sidebar: 'left' as const, sidebarWidth: '14rem', showTableOfContents: true, demos: { 'vanta-button': VantaButtonDemoComponent } };
+const doqConfig = defineDoqConfig({
+  ...doqPaths,
+  contentWidth: '43rem',
+  sidebar: 'left',
+  sidebarWidth: '14rem',
+  showTableOfContents: true,
+  demos: { 'vanta-button': VantaButtonDemoComponent },
+  slots: { indexAfterIntro: VantaStartComponent, documentAfterContent: VantaHelpComponent },
+  presentation: {
+    documentationLabel: 'Vanta UI docs',
+    indexTitle: 'Build with Vanta UI',
+    indexDescription: 'Component guides, theming and routing recipes for teams shipping thoughtful interfaces.',
+    pageTitleSuffix: 'Vanta UI',
+  },
+});
 
 export const appConfig: ApplicationConfig = {
   providers: [

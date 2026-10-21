@@ -26,7 +26,7 @@ button { font: inherit; }
 .landing-a h1 { max-width:58rem; margin:1.7rem 0 1.25rem; font-size:clamp(3rem,8vw,6.2rem); letter-spacing:-.075em; line-height:.98; }
 .landing-a h1 em { color:#65dc9a; font-style:normal; }
 .landing-a > p { max-width:42rem; color:#a3ada6; font-size:1.15rem; line-height:1.7; }
-.landing-actions { display:flex; gap:.8rem; margin:2rem 0 5rem; }
+.landing-actions { display:flex; flex-wrap:wrap; gap:.8rem; margin:2rem 0 5rem; }
 .landing-actions a { padding:.75rem 1rem; border-radius:.6rem; border:1px solid #303a33; font-weight:650; }
 .landing-actions a:first-child { color:#08140c; border-color:#65dc9a; background:#65dc9a; }
 .landing-features { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }

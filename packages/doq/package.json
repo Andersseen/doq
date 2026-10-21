@@ -1,6 +1,6 @@
 {
   "name": "@getdoq/analog",
-  "version": "0.0.0-pilot",
+  "version": "0.1.0",
   "description": "Composable Markdown documentation UI for Analog.js",
   "type": "module",
   "peerDependencies": {
@@ -15,7 +15,7 @@
   "sideEffects": ["./styles.css"],
   "module": "./dist/fesm2022/getdoq-analog.mjs",
   "typings": "./dist/types/getdoq-analog.d.ts",
-  "files": ["fesm2022", "types", "styles.css", "README.md"],
+  "files": ["fesm2022", "types", "styles.css", "README.md", "CHANGELOG.md"],
   "exports": {
     ".": { "types": "./dist/types/getdoq-analog.d.ts", "default": "./dist/fesm2022/getdoq-analog.mjs" },
     "./styles.css": "./styles.css"
