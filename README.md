@@ -16,7 +16,7 @@ prerender: { routes: async () =>          const doqConfig = defineDoqConfig({
 - `apps/showcase-b` — light-first developer-platform host (ForgeCMS): right sidebar, no TOC, custom nested slug, its own schema demo, an onboarding-path banner on the index and an API-token note on every document.
 - Each showcase has its own `src/doq.paths.ts`, shell, content, demos and slot components; they share only the Doq package.
 
-Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3, Vite 8.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and the pre-PR checklist. Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3, Vite 8.
 
 ```sh
 pnpm install
@@ -25,6 +25,7 @@ pnpm build
 pnpm pack:doq     # artifacts/getdoq-analog-0.1.0.tgz; does not publish
 pnpm verify:mvp   # browser acceptance (M9, M15–M17, M23, M24) plus the 0.1 check V01
 pnpm verify:package artifacts/getdoq-analog-0.1.0.tgz [consumer-dir]
+pnpm typecheck:scripts && pnpm format:check
 ```
 
 `pnpm --filter showcase-a preview` / `showcase-b preview` serve the generated `dist/analog/public`; the preview server maps `index.html` files to deep URLs and returns 404 for missing files. Production hosts should configure their own 404 behavior.

@@ -1,0 +1,10 @@
+node_modules
+dist
+.turbo
+.angular
+artifacts
+pnpm-lock.yaml
+# Library and showcase sources are not yet formatted with Prettier; scripts, docs and config are.
+apps
+packages
+docs/verification/mvp-final-validation.md

@@ -36,3 +36,12 @@ If the run fails with `Timed out waiting for Chrome DevToolsActivePort`, Chrome 
 `v01` (run per showcase and, when `MVP_CONSUMER_ROOT` is set, against the external consumer) checks at desktop and 375px: direct-load document title with the configured suffix and exactly one `<h1>`; the document slot renders once after the Markdown; the index shows the configured title/description, renders its slot before the cards and keeps the cards; client navigation (index card → sidebar link → overview → host route) keeps `document.title` and the meta description correct, never stale; a document without a description falls back to the host description; leaving the docs restores the host title and description (after both client-side and hydrated direct loads); an unknown docs route gets the not-found title. For the consumer, pass its expectations as JSON in `MVP_CONSUMER_V01` (`hostTitle`, `hostDescription`, `suffix`, `indexTitle`, `indexSlot`, `docSlot`, optional `noDescriptionPath`).
 
 `pnpm verify:package <tarball> [consumer-dir]` inspects the packed manifest, exports and type declarations, and — given an installed consumer — its lockfile (no `workspace:` links), the installed version, and the runtime behavior of `defineDoqConfig()`, `doqPrerenderRoutes()` and `doqRoutes()`.
+
+## Structure
+
+The harness is TypeScript, run directly by Node 22 (`node scripts/verification/mvp.ts`) and type-checked with `pnpm typecheck:scripts`.
+
+- `mvp.ts` — entry point: selects apps and checks, starts previews and Chrome, runs checks, reports, cleans up.
+- `checks/` — one module per check (`mobile-navigation`, `responsive`, `dynamic-resize`, `toc`, `clipboard`, `diagnostics`, `v01`), each taking a `Page` and the app under test.
+- `lib/` — `cdp.ts` (DevTools Protocol client), `page.ts` (viewport, navigation, click, key, wait helpers), `chrome.ts`, `servers.ts`, `fixtures.ts` (temporary TOC fixtures), `config.ts` (apps, viewports, CLI/env selection), `report.ts`.
+- `duplicate-routes.ts` (M9) imports Doq's real `doq-document.ts` source; `package.ts` checks the packed tarball.
