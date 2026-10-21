@@ -7,6 +7,8 @@ import { defineConfig } from '@playwright/test';
 export const apps = {
   a: { url: 'http://127.0.0.1:4273', root: 'apps/showcase-a/dist/analog/public' },
   b: { url: 'http://127.0.0.1:4274', root: 'apps/showcase-b/dist/analog/public' },
+  // Showcase B built with `vite build --mode nosearch`: the same app and content with search disabled.
+  noSearch: { url: 'http://127.0.0.1:4276', root: 'apps/showcase-b/dist/analog-nosearch/public' },
   consumer: {
     url: 'http://127.0.0.1:4275',
     root: resolve(process.env.DOQ_CONSUMER_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer'), 'dist/analog/public'),
@@ -39,5 +41,10 @@ export default defineConfig({
   },
   // PW_CHANNEL=chrome runs the installed Google Chrome instead of the downloaded Chromium build.
   projects: [{ name: 'chromium', use: { browserName: 'chromium', channel: process.env.PW_CHANNEL || undefined } }],
-  webServer: [server(apps.a, 4273), server(apps.b, 4274), ...(withConsumer ? [server(apps.consumer, 4275)] : [])],
+  webServer: [
+    server(apps.a, 4273),
+    server(apps.b, 4274),
+    server(apps.noSearch, 4276),
+    ...(withConsumer ? [server(apps.consumer, 4275)] : []),
+  ],
 });

@@ -125,3 +125,9 @@ def site_a():
 @pytest.fixture(scope="session")
 def site_b():
     yield from _serve(REPO / "apps/showcase-b/dist/analog/public")
+
+
+@pytest.fixture(scope="session")
+def site_b_nosearch():
+    """Showcase B built with `vite build --mode nosearch`: identical content, search disabled."""
+    yield from _serve(REPO / "apps/showcase-b/dist/analog-nosearch/public")

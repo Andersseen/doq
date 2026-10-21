@@ -40,8 +40,43 @@ test.describe('E2E-003 mobile navigation', () => {
       await drawer.getByRole('link', { name: c.link }).click();
       await expect(page).toHaveURL(`${new URL(c.url).origin}${c.target}`);
       await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      // Focus must not stay inside the now-hidden drawer.
+      // Focus must not stay inside the now-hidden drawer, and must not fall back to <body>: it moves to the new article.
       await expect(drawer.locator(':focus')).toHaveCount(0);
+      await expect(page.getByRole('heading', { level: 1, name: c.link })).toBeFocused();
+      expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveAttribute('tabindex', '-1');
+    });
+
+    test(`${c.name}: the heading focus target adds no tab stop and the hidden drawer is not tabbable`, async ({
+      page,
+    }) => {
+      await page.goto(c.url);
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      const hiddenLinks = page.locator('nav.doq-sidebar a');
+      await expect(hiddenLinks.first()).toBeHidden();
+      const stops: string[] = [];
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press('Tab');
+        stops.push(
+          await page.evaluate(
+            () =>
+              document.activeElement?.tagName.toLowerCase() +
+              ':' +
+              (document.activeElement?.textContent ?? '').trim().slice(0, 20),
+          ),
+        );
+      }
+      expect(stops.some((stop) => stop.startsWith('h1'))).toBe(false);
+      expect(await page.evaluate(() => !!document.activeElement?.closest('nav.doq-sidebar'))).toBe(false);
+    });
+
+    test(`${c.name}: the Close button closes the drawer and returns focus to the trigger`, async ({ page }) => {
+      await page.goto(c.url);
+      const trigger = page.getByRole('button', { name: /menu$/i });
+      await trigger.click();
+      await page.getByRole('button', { name: 'Close navigation' }).click();
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      await expect(trigger).toBeFocused();
     });
 
     test(`${c.name}: Escape closes the drawer and restores focus`, async ({ page }) => {

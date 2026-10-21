@@ -80,6 +80,38 @@ const controls: Control[] = [
     },
   },
   {
+    name: 'search result URL',
+    breaks: 'normalizeSearchResultUrl keeps results outside the Doq base path',
+    expect: /UNIT-011 normalizeSearchResultUrl/,
+    run: async (workspace) => {
+      await libraryCopy(workspace);
+      await mutate(
+        resolve(workspace, 'packages/doq/src/lib/doq-search.ts'),
+        'if (path !== base && !path.startsWith(`${base}/`)) return undefined;',
+        '',
+      );
+      return sh('pnpm', ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit'], workspace);
+    },
+  },
+  {
+    name: 'fragment scrolling',
+    breaks: 'the document view stops scrolling the fragment heading into view',
+    expect: /COMP-015/,
+    run: async (workspace) => {
+      await libraryCopy(workspace);
+      await mutate(
+        resolve(workspace, 'packages/doq/src/lib/doq-docs.component.ts'),
+        "if (target) target.scrollIntoView?.({ block: 'start' });",
+        '',
+      );
+      return sh(
+        'pnpm',
+        ['exec', 'vitest', 'run', '-c', 'vitest.components.config.ts'],
+        resolve(workspace, 'packages/doq'),
+      );
+    },
+  },
+  {
     name: 'package export',
     breaks: 'the packed tarball ships without styles.css although exports still reference it',
     expect: /test_contract_00[13]/,

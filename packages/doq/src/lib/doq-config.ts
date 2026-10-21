@@ -1,5 +1,6 @@
 import { InjectionToken, Provider, Type } from '@angular/core';
 import { DoqPaths, normalizeDoqPaths } from './doq-paths';
+import { DoqSearchConfig, normalizeDoqSearchConfig } from './doq-search';
 
 export type DoqDemoRegistry = Readonly<Record<string, Type<unknown>>>;
 
@@ -42,13 +43,15 @@ export interface DoqConfig extends DoqPaths {
   slots?: DoqSlots;
   /** Optional product-aware copy and page titles. */
   presentation?: DoqPresentation;
+  /** Optional static full-text search. Disabled unless `enabled: true`; see `doq-search` for the indexing step. */
+  search?: DoqSearchConfig;
 }
 
 export const DOQ_CONFIG = new InjectionToken<DoqConfig>('DOQ_CONFIG');
 
 /** Validate and normalize a configuration once; pass the result to doqRoutes() and provideDoq(). */
 export function defineDoqConfig(config: DoqConfig): DoqConfig {
-  return { ...config, ...normalizeDoqPaths(config) };
+  return { ...config, ...normalizeDoqPaths(config), ...(config.search === undefined ? {} : { search: normalizeDoqSearchConfig(config.search) }) };
 }
 
 export function provideDoq(config: DoqConfig): Provider {

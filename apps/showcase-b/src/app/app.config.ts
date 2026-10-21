@@ -15,6 +15,8 @@ const doqConfig = defineDoqConfig({
   sidebar: 'right',
   sidebarWidth: '13rem',
   showTableOfContents: false,
+  // `vite build --mode nosearch` builds the search-disabled variant that the E2E suite compares against.
+  search: { enabled: import.meta.env.MODE !== 'nosearch' },
   demos: { 'forge-schema': ForgeSchemaDemoComponent },
   slots: { indexAfterIntro: ForgeOnboardingComponent, documentAfterContent: ForgeTokenNoteComponent },
   presentation: {

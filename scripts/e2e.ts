@@ -22,9 +22,9 @@ const mtime = async (path: string) => (await stat(path).catch(() => undefined))?
 const run = (command: string, commandArgs: string[], env: NodeJS.ProcessEnv = {}) =>
   spawnSync(command, commandArgs, { cwd: repo, stdio: 'inherit', env: { ...process.env, ...env } }).status ?? 1;
 
-for (const app of ['showcase-a', 'showcase-b']) {
-  if ((await mtime(resolve(repo, `apps/${app}/dist/analog/public/index.html`))) === undefined) {
-    console.error(`e2e: apps/${app} has no production build. Run "pnpm build" first.`);
+for (const output of ['showcase-a/dist/analog', 'showcase-b/dist/analog', 'showcase-b/dist/analog-nosearch']) {
+  if ((await mtime(resolve(repo, `apps/${output}/public/index.html`))) === undefined) {
+    console.error(`e2e: apps/${output} has no production build. Run "pnpm build" first.`);
     process.exit(1);
   }
 }

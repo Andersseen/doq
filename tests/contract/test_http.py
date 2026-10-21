@@ -39,7 +39,7 @@ def test_contract_006_every_markdown_document_is_prerendered_at_its_public_route
         assert status == 200, route
         assert headers["content-type"].startswith("text/html"), route
         html = body.decode()
-        assert f"<h1>{title}</h1>" in html, f"{route}: rendered title missing"
+        assert re.search(rf"<h1[^>]*>{re.escape(title)}</h1>", html), f"{route}: rendered title missing"
         assert "<title>" in html and title in re.search(r"<title>(.*?)</title>", html, re.S).group(1)
     status, _, body = site.get("/docs")
     assert status == 200 and b"doq-index" in body

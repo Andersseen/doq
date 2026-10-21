@@ -15,6 +15,7 @@ const doqConfig = defineDoqConfig({
   sidebar: 'left',
   sidebarWidth: '14rem',
   showTableOfContents: true,
+  search: { enabled: true },
   demos: { 'vanta-button': VantaButtonDemoComponent },
   slots: { indexAfterIntro: VantaStartComponent, documentAfterContent: VantaHelpComponent },
   presentation: {

@@ -6,3 +6,5 @@ export * from './lib/doq-config';
 export * from './lib/doq-demo.component';
 export * from './lib/doq-document';
 export * from './lib/doq-paths';
+export { normalizeDoqSearchConfig, normalizeSearchResultUrl } from './lib/doq-search';
+export type { DoqSearchConfig, DoqResolvedSearchConfig, DoqSearchResult, DoqExcerptSegment } from './lib/doq-search';
