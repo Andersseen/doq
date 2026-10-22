@@ -1,4 +1,5 @@
 import { doqPrerenderRoute } from './doq-document';
+import { DoqResolvedVersioning, DoqVersioning, getDoqVersions, normalizeContentDirectory, normalizeDoqVersioning } from './doq-versions';
 
 /** The two values shared by Angular runtime config and Analog's build-time prerender config. */
 export interface DoqPaths {
@@ -6,6 +7,8 @@ export interface DoqPaths {
   readonly contentDirectory: string;
   /** Public mount path, for example /docs, or "/" when the whole application is documentation. Defaults to /docs. */
   readonly basePath?: string;
+  /** Optional documentation versions: this `contentDirectory` stays the current version; archives are separate snapshots. */
+  readonly versioning?: DoqVersioning;
 }
 
 /** Analog `prerender.routes` entry that expands a content directory into routes. */
@@ -16,9 +19,9 @@ export interface DoqPrerenderContentRoute {
 }
 
 /** Trim and validate path settings; returns slash-free `contentDirectory` and a `/`-prefixed `basePath` ("/" for the root). */
-export function normalizeDoqPaths(paths: DoqPaths): { contentDirectory: string; basePath: string } {
-  const contentDirectory = (paths.contentDirectory ?? '').replace(/\\/g, '/').split('/').filter(Boolean).join('/');
-  if (!contentDirectory || contentDirectory.split('/').some(part => part === '.' || part === '..')) {
+export function normalizeDoqPaths(paths: DoqPaths): { contentDirectory: string; basePath: string; versioning?: DoqResolvedVersioning } {
+  const contentDirectory = normalizeContentDirectory(paths.contentDirectory ?? '');
+  if (!contentDirectory) {
     throw new Error(`Doq: invalid contentDirectory "${paths.contentDirectory}"; use a directory below src/content, for example "docs".`);
   }
   const rawBasePath = (paths.basePath ?? '/docs').trim();
@@ -28,7 +31,8 @@ export function normalizeDoqPaths(paths: DoqPaths): { contentDirectory: string; 
   if ((!segments.length && !isRoot) || segments.some(part => part === '.' || part === '..')) {
     throw new Error(`Doq: invalid basePath "${paths.basePath}"; use a mount path such as "/docs", or "/" for the application root.`);
   }
-  return { contentDirectory, basePath: `/${segments.join('/')}` };
+  const result = { contentDirectory, basePath: `/${segments.join('/')}` };
+  return paths.versioning === undefined ? result : { ...result, versioning: normalizeDoqVersioning(paths.versioning, contentDirectory) };
 }
 
 /**
@@ -37,9 +41,14 @@ export function normalizeDoqPaths(paths: DoqPaths): { contentDirectory: string; 
  * Spread the result into `analog({ prerender: { routes: async () => ['/', ...doqPrerenderRoutes(doqPaths)] } })`.
  */
 export function doqPrerenderRoutes(paths: DoqPaths): readonly (string | DoqPrerenderContentRoute)[] {
-  const { contentDirectory, basePath } = normalizeDoqPaths(paths);
-  return [
-    basePath,
-    { contentDir: `src/content/${contentDirectory}`, recursive: true, transform: file => doqPrerenderRoute(file, basePath) },
-  ];
+  const normalized = normalizeDoqPaths(paths);
+  const reserved = normalized.versioning?.pathSegment;
+  return getDoqVersions(normalized).flatMap((version): (string | DoqPrerenderContentRoute)[] => [
+    version.basePath,
+    {
+      contentDir: `src/content/${version.contentDirectory}`,
+      recursive: true,
+      transform: file => doqPrerenderRoute(file, version.basePath, version.current ? reserved : undefined),
+    },
+  ]);
 }

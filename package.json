@@ -10,7 +10,7 @@
     "dev:site": "pnpm --filter site dev",
     "build:doq": "pnpm --filter @doqs/analog build",
     "pack:doq": "pnpm --filter @doqs/analog run pack",
-    "consumer:build": "node scripts/consumer.ts && node scripts/consumer.ts --app=showcase-a",
+    "consumer:build": "node scripts/consumer.ts && node scripts/consumer.ts --app=showcase-a && node scripts/consumer.ts --unversioned && node scripts/consumer.ts --app=showcase-a --unversioned",
     "typecheck:scripts": "tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
     "deploy:site": "pnpm --filter site build && pnpm --filter site exec wrangler pages deploy --branch=main",
     "deploy:site:preview": "pnpm --filter site build && pnpm --filter site exec wrangler pages deploy --branch=preview",

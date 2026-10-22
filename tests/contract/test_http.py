@@ -32,6 +32,27 @@ def _expected_routes(app: str) -> dict[str, str]:
     return routes
 
 
+# (app, site fixture, archive prefix, archive content directory, archive version id, archive label)
+ARCHIVES = {
+    "showcase-a": {"site": "site_a", "prefix": "/docs/v/1", "directory": "docs-v1", "id": "1", "label": "v1.x", "current_prefix": "/docs"},
+    "showcase-b": {"site": "site_b", "prefix": "/v/1", "directory": "docs-v1", "id": "1", "label": "1.x", "current_prefix": ""},
+}
+
+
+def expected_archive_routes(app: str) -> dict[str, str]:
+    """Archive public route -> title, derived from the archived Markdown sources (custom slug wins)."""
+    info = ARCHIVES[app]
+    content = REPO / f"apps/{app}/src/content/{info['directory']}"
+    routes = {}
+    for file in sorted(content.rglob("*.md")):
+        meta = _frontmatter(file)
+        slug = meta.get("slug") or str(file.relative_to(content).with_suffix("")).removesuffix("/index")
+        routes[info["prefix"] + "/" + slug.strip("/")] = meta["title"]
+    return routes
+
+
+
+
 @pytest.mark.parametrize("app,site_name", [("showcase-a", "site_a"), ("showcase-b", "site_b")])
 def test_contract_006_every_markdown_document_is_prerendered_at_its_public_route(app, site_name, request):
     """CONTRACT-006: each source document is served at exactly its canonical or custom-slug URL, with its content."""

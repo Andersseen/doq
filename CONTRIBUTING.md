@@ -33,6 +33,10 @@ pnpm pack:doq         # artifacts/doqs-analog-<version>.tgz — never publishes
 
 `pnpm --filter showcase-a preview` / `showcase-b preview` serve a production build (`dist/analog/public`).
 
+### Versioned documentation fixtures (0.6)
+
+Both showcases enable `versioning` through their `src/doq.paths.ts`: Showcase A keeps an archive in `src/content/docs-v1` (served at `/docs/v/1`, with its own older API fixture `vanta-ui-v1`), Showcase B in `src/content/docs-v1` (served at `/v/1`, fixture `forge-sdk-v1`). Their API pages are generated per version: `pnpm api` runs `api:latest` and `api:v1`, and `pnpm api:check` checks both. After editing an archive fixture, regenerate it, never edit generated files. `scripts/consumer.ts --unversioned` builds the same showcase from the tarball with a 0.5-style configuration (no `versioning`, no archives); `pnpm consumer:build` builds all four consumers and the quality gate requires them.
+
 ## Tests: what each layer is for
 
 | Command                | Layer                                    | Proves                                                                                                                                                            |

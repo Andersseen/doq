@@ -80,6 +80,7 @@ export function sortDoqDocuments(documents: readonly DoqDocument[]): DoqDocument
 export function doqPrerenderRoute(
   file: { name: string; relativePath?: string; attributes?: { slug?: unknown } },
   basePath = '/docs',
+  reservedSegment?: string,
 ): string {
   const customSlug = file.attributes?.slug;
   let slug: string;
@@ -91,6 +92,9 @@ export function doqPrerenderRoute(
   }
   if (!slug || slug.split('/').some(part => !/^[\p{L}\p{N}_~-]+$/u.test(part))) {
     throw new Error(`Doq: invalid prerender slug "${slug}" for "${file.name}".`);
+  }
+  if (reservedSegment && slug.split('/')[0] === reservedSegment) {
+    throw new Error(`Doq: slug "${slug}" for "${file.name}" collides with the reserved archive prefix "${reservedSegment}/".`);
   }
   return joinDoqPath(basePath, slug);
 }

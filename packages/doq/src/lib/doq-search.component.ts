@@ -1,11 +1,12 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { DOQ_CONFIG } from './doq-config';
 import { createLatestGate, DoqSearchResult, normalizeDoqSearchConfig } from './doq-search';
-import { DoqSearchService } from './doq-search.service';
+import { DoqSearchService, DoqVersionNotIndexedError } from './doq-search.service';
+import { DoqVersion } from './doq-versions';
 
-type SearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'unavailable';
+type SearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'unavailable' | 'unindexed';
 
 const DEBOUNCE_MS = 120;
 
@@ -28,7 +29,7 @@ const DEBOUNCE_MS = 120;
         <input #input id="doq-search-input" class="doq-search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Search the documentation" [value]="query()" (input)="onInput(input.value)" />
         <button class="doq-search-close" type="button" (click)="close()">Close</button>
       </form>
-      <p class="doq-search-status" role="status" [class.is-error]="status() === 'unavailable'">{{ statusText() }}</p>
+      <p class="doq-search-status" role="status" [class.is-error]="status() === 'unavailable' || status() === 'unindexed'">{{ statusText() }}</p>
       @if (results().length) {
         <ul class="doq-search-results" aria-label="Search results">
           @for (result of results(); track result.url + $index) {
@@ -45,6 +46,8 @@ const DEBOUNCE_MS = 120;
   `,
 })
 export class DoqSearchComponent {
+  /** Version being read on a versioned site; results are filtered to it. Omit on an unversioned site. */
+  readonly version = input<DoqVersion>();
   private readonly config = inject(DOQ_CONFIG);
   private readonly search = normalizeDoqSearchConfig(this.config.search);
   private readonly service = inject(DoqSearchService);
@@ -77,6 +80,7 @@ export class DoqSearchComponent {
       case 'loading': return 'Searching…';
       case 'ready': return `${this.results().length} ${this.results().length === 1 ? 'result' : 'results'}`;
       case 'empty': return `No results for “${this.query().trim()}”.`;
+      case 'unindexed': return `Search has no index for ${this.version()?.label ?? 'this version'}. Rebuild the search index.`;
       case 'unavailable': return 'Search is unavailable right now. The search index could not be loaded.';
       default: return 'Type to search the documentation.';
     }
@@ -168,14 +172,15 @@ export class DoqSearchComponent {
 
   private async run(query: string, ticket: number): Promise<void> {
     try {
-      const results = await this.service.search(query, this.search.bundlePath, this.config.basePath ?? '/docs');
+      const version = this.version();
+      const results = await this.service.search(query, this.search.bundlePath, version?.basePath ?? this.config.basePath ?? '/docs', version?.id);
       if (!this.gate.isCurrent(ticket)) return;
       this.results.set(results);
       this.status.set(results.length ? 'ready' : 'empty');
-    } catch {
+    } catch (error) {
       if (!this.gate.isCurrent(ticket)) return;
       this.results.set([]);
-      this.status.set('unavailable');
+      this.status.set(error instanceof DoqVersionNotIndexedError ? 'unindexed' : 'unavailable');
     }
   }
 

@@ -1,5 +1,6 @@
 import { DestroyRef, inject, Injectable, makeStateKey, PLATFORM_ID, TransferState } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 
 type HostMetadata = { title: string; description: string | null };
@@ -16,6 +17,7 @@ const HOST_METADATA = makeStateKey<HostMetadata>('doq-host-metadata');
 export class DoqPageMetadata {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
+  private readonly document = inject(DOCUMENT);
   private owners = 0;
   private readonly transferState = inject(TransferState);
   private readonly server = isPlatformServer(inject(PLATFORM_ID));
@@ -33,6 +35,7 @@ export class DoqPageMetadata {
       if (--this.owners === 0 && this.original) {
         this.title.setTitle(this.original.title);
         this.writeDescription(this.original.description);
+        this.setCanonical(undefined);
         this.original = undefined;
       }
     });
@@ -44,12 +47,32 @@ export class DoqPageMetadata {
     this.writeDescription(description || this.original?.description || null);
   }
 
+  /**
+   * Declare this page's own canonical URL (versioned sites with a configured origin). Doq only manages the link it created:
+   * a host-authored canonical is never replaced, and Doq's link is removed with the last Doq page.
+   */
+  setCanonical(href: string | undefined): void {
+    const head = this.document.head;
+    const existing = head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (existing && !existing.hasAttribute('data-doq-canonical')) return;
+    if (!href) {
+      existing?.remove();
+      return;
+    }
+    const link = existing ?? this.document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    link.setAttribute('href', href);
+    link.setAttribute('data-doq-canonical', '');
+    if (!existing) head.appendChild(link);
+  }
+
   private writeDescription(content: string | null): void {
     if (content) this.meta.updateTag({ name: 'description', content });
     else this.meta.removeTag('name="description"');
   }
 }
 
-export function doqPageTitle(title: string, suffix: string): string {
-  return suffix ? `${title} · ${suffix}` : title;
+export function doqPageTitle(title: string, suffix: string, versionLabel?: string): string {
+  const base = suffix ? `${title} · ${suffix}` : title;
+  return versionLabel ? `${base} · ${versionLabel}` : base;
 }

@@ -124,6 +124,7 @@ Without `slug`, `src/content/docs/guides/setup.md` is served at `/docs/guides/se
 | `slots` | none | Host-owned components at two stable locations. |
 | `presentation` | none | Product-specific copy and title suffix. |
 | `search` | disabled | Optional static full-text search, see [Search](#search). |
+| `versioning` | none | Optional archived documentation versions, see [Versioned documentation](#versioned-documentation-06). |
 
 ### Presentation
 
@@ -358,6 +359,99 @@ Pages are written only below `--out`, which must sit inside the content director
 
 TypeDoc-style per-version archives, template analysis and a live source view are out of scope. Links inside Markdown are ordinary anchors (Analog does not intercept them), so following a reference link is a normal navigation to a prerendered page. Where the compiler cannot see Angular's types (the package is not installed) explicit type arguments are used and a warning says so.
 
+## Versioned documentation (0.6)
+
+Versioning is **optional**. Without a `versioning` setting nothing changes: same URLs, same markup, same search, no selector. A project that wants to keep the documentation of older releases readable adds archived snapshots next to its current documentation.
+
+```ts
+// src/doq.paths.ts — build-safe: imported by vite.config.ts and by the Angular app config
+export const doqPaths = {
+  contentDirectory: 'docs',     // the CURRENT documentation, unchanged
+  basePath: '/docs',            // or '/' for a docs-first site
+  versioning: {
+    current: { id: 'latest', label: 'Latest' },
+    archives: [
+      { id: '1.3', label: 'v1.3', contentDirectory: 'docs-v1-3' },
+      { id: '1.2', label: 'v1.2', contentDirectory: 'docs-v1-2' },
+    ],
+    // pathSegment: 'v',                          // default; the URL segment before an archive id
+    // canonicalOrigin: 'https://docs.example.com', // optional: each page declares its own canonical URL
+  },
+} as const;
+```
+
+The same object feeds `doqPrerenderRoutes(doqPaths)` in `vite.config.ts`, `defineDoqConfig({ ...doqPaths })` and `doqRoutes(config)`; no other wiring changes.
+
+### Content layout and URLs
+
+Each version is an independent catalog in its own folder below `src/content`. An archive is a deliberate snapshot: nothing is copied or synchronized for you, and a version never reads another version's folder.
+
+```text
+src/content/docs/        → /docs, /docs/installation            (current, unchanged URLs)
+src/content/docs-v1-3/   → /docs/v/1.3, /docs/v/1.3/installation
+src/content/docs-v1-2/   → /docs/v/1.2, /docs/v/1.2/installation
+```
+
+With `basePath: '/'` the archives are `/v/1.3` and `/v/1.3/installation`. The current version has exactly one URL per page (there is no `/latest` alias), so existing links, bookmarks and search-engine entries keep working and there is no duplicate content.
+
+- Two versions may contain the same slug and the same title; duplicate public routes inside one version still throw.
+- Custom `slug` frontmatter works in every version and is matched by public slug, not file name.
+- Version ids use letters, numbers, `.`, `_` and `-`; they must be unique (case-insensitively). Content directories must be separate: one may not equal or sit inside another (`docs` and `docs-v1` are fine, `docs` and `docs/v1` are not).
+- The URL segment (default `v`) is **reserved** among the current version's slugs. A current document whose slug starts with it (for example `v/1.3/x`) throws, in the app and in the prerender step. Change `pathSegment` if you really need a `v/…` page.
+- Invalid configuration throws a one-line diagnostic; an archive without Markdown files throws instead of silently rendering an empty version.
+
+### Version selector and switching
+
+When more than one version exists, a selector appears at the top of the sidebar (and therefore in the mobile drawer), or in the top bar when `sidebar: 'hidden'`, and on every index page. It is a native `<details>` whose entries are ordinary links, so every destination is a prerendered URL: the active version carries `aria-current="true"`, each entry says whether it is current or archived, Escape closes it and returns focus to its summary, and after choosing a version the new article heading takes focus. Archived pages show a short notice that links back to the latest documentation.
+
+Switching preserves context by public identity:
+
+| Situation | Destination |
+| --- | --- |
+| The target version has a document with the same public slug | that document |
+| The target version does not have it | the target version's index |
+| Reading an index page | the target version's index |
+
+Nothing is guessed from similar file names, API symbols are never "translated", and an archive URL never silently shows current content.
+
+### Search
+
+On a versioned site every indexed page carries `data-pagefind-filter="doqsVersion:<id>"` and the search dialog passes that filter to Pagefind (`pagefind.search(query, { filters: { doqsVersion } })`), so only the version being read is searched and nothing is truncated or discarded afterwards. One index serves all versions; results link to the version-correct URL and section. If the index has no pages for the version, the dialog says the version is not indexed instead of searching another one. Unversioned sites use no filter at all. Rebuild the index with `doq-search index` after any version change.
+
+### SEO
+
+Current pages keep their URLs and titles. Archive titles end with the version label (`Installation · Docs · v1.3`), and archive pages are never canonicalized to current. Doqs does not know your site's origin, so it emits no canonical link by default. Set `versioning.canonicalOrigin` (an origin only, no path) to have each Doqs page declare its **own** URL as canonical; a canonical link that your host already provides is never replaced, and Doqs's link is removed again when the reader leaves the documentation.
+
+### API reference per version
+
+`doq-api` already takes the pieces a versioned layout needs. Document an archived checkout into the archive's own content folder, with the archive's base path:
+
+```bash
+doq-api generate --project ../old/tsconfig.json --entry ../old/src/public-api.ts \
+  --content-dir src/content/docs-v1-3 --out src/content/docs-v1-3/reference/generated \
+  --base-path /docs/v/1.3
+```
+
+Each run owns its own `--out` folder and manifest, `check` stays non-mutating, and regenerating the current reference cannot touch an archive. Links inside the generated pages target the version's own URLs. The documentation version is a concept you control: Doqs does not infer it from the installed package version and never analyzes Git history.
+
+### Archiving a version
+
+1. Copy the current content folder to a new snapshot folder (`cp -R src/content/docs src/content/docs-v2`), including the generated reference.
+2. In the snapshot, fix absolute links (`/docs/…` → `/docs/v/2/…`) and regenerate the API reference with the snapshot's `--content-dir`, `--out` and `--base-path` (from a checkout of the matching tag if the API changed).
+3. Add `{ id: '2', label: 'v2', contentDirectory: 'docs-v2' }` to `archives`, then update the current documentation for the new release.
+4. `pnpm build` (prerenders every version and rebuilds the search index), check the archive pages, deploy.
+
+### Limits
+
+- Frontmatter of **all** versions is part of the application bundle (Analog's content list); document bodies load lazily per page. Very large archives therefore add a little bundle size, not a download per document.
+- Prerendering needs a static host that answers 404 for URLs that were not generated (every static host does); unknown versions and documents missing from a version are 404 pages there, and a "page not found" view after in-app navigation.
+- Identical heading text in several versions shares Analog's build-time heading slugger. If your project is affected by the upstream numeric-suffix problem for repeated headings (see the Angular Movement migration notes), versions with identical headings can make it more likely; compare prerendered ids with the client bundle after a build.
+- No localized documentation, no automatic snapshots, no remote content, no per-version themes.
+
+### Upgrading from 0.5
+
+Nothing is required: a configuration without `versioning` renders exactly as before. To adopt it, add the `versioning` object above and the archive folders. `normalizeDoqPaths()` now also returns the resolved `versioning` when it is configured.
+
 ## Navigation and reading
 
 These behaviors need no configuration:
@@ -370,8 +464,8 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary; `@doqs/analog/api-reference` (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`) and the `doq-api` binary (0.5). Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, `doqVersionLinks`, `DOQ_VERSION_FILTER` (0.6), the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, `DoqVersioning`, `DoqVersionConfig`, `DoqArchiveConfig`, `DoqResolvedVersioning`, `DoqVersion`, `DoqVersionLink` (0.6), the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`, `DoqVersionSwitcherComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary; `@doqs/analog/api-reference` (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`) and the `doq-api` binary (0.5). Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 
-Built with Angular 21.2 and Analog 2.9. Angular 22 is in the peer range but not validated. Existing 0.0.0-pilot and 0.1 configuration objects keep working without changes; search is opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`); `doq-api` needs the project's own `typescript` (optional peer `^5.5.0 || ^6.0.0`, tested with 5.9 and 6.0). See [CHANGELOG.md](./CHANGELOG.md).
+Built with Angular 21.2 and Analog 2.9. Angular 22 is in the peer range but not validated. Existing 0.0.0-pilot through 0.5 configuration objects keep working without changes; search and versioning are opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`); `doq-api` needs the project's own `typescript` (optional peer `^5.5.0 || ^6.0.0`, tested with 5.9 and 6.0). See [CHANGELOG.md](./CHANGELOG.md).

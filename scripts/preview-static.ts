@@ -19,8 +19,10 @@ createServer(async (request, response) => {
     let file = resolve(root, `.${pathname}`);
     if (!file.startsWith(root + sep) && file !== root) throw new Error('Invalid path');
     if ((await stat(file)).isDirectory()) file = resolve(file, 'index.html');
+    // Read before writing headers: a directory without index.html (for example the bare /docs/v prefix) must answer 404.
+    const body = await readFile(file);
     response.writeHead(200, { 'content-type': mime[extname(file)] ?? 'application/octet-stream' });
-    response.end(await readFile(file));
+    response.end(body);
   } catch {
     response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     response.end('Not found');

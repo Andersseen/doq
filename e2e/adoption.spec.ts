@@ -300,3 +300,79 @@ test.describe('E2E-100 Angular Movement API reference (generated from the real s
 
 const output0Link = (page: Page) =>
   page.locator('.doq-markdown table').nth(1).getByRole('link', { name: 'MoveDragEvent' }).first();
+
+// ADOPTION-05: versioned documentation (Doqs 0.6). The archive is the real Angular Movement tag v0.9.0: its library project was
+// cloned by scripts/adoption.ts and documented by the installed doq-api into src/content/handbook-v0-9. Nothing is invented.
+test.describe('E2E-114 Angular Movement adoption: versioned handbook', () => {
+  const archive = `${base}/handbook/v/0.9`;
+  const archivedReference = (slug: string) => `${archive}/api/${slug}`;
+
+  test('latest keeps its URLs; the v0.9.0 archive has its own index, pages and generated reference', async ({
+    page,
+    request,
+  }) => {
+    await page.goto(`${base}/handbook/introduction`);
+    await expect(page.locator('.doq-version summary')).toContainText('Latest');
+    await expect(page.locator('article')).toHaveAttribute('data-pagefind-filter', 'doqsVersion:latest');
+    await page.goto(archive);
+    await expect(page.locator('.doq-version-notice')).toContainText('v0.9.0');
+    const cards = await page
+      .locator('.doq-index-card')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href')));
+    expect(cards.length).toBeGreaterThan(3);
+    expect(cards.every((href) => href!.startsWith('/handbook/v/0.9/'))).toBe(true);
+    // The same symbol exists in both versions; `MoveTime` (generated from the latest source) does not exist in the v0.9.0 tag.
+    for (const url of [reference('move-enter-directive'), archivedReference('move-enter-directive')]) {
+      expect((await request.get(url)).status(), url).toBe(200);
+    }
+    expect((await request.get(reference('move-time'))).status()).toBe(200);
+    expect((await request.get(archivedReference('move-time'))).status()).toBe(404);
+  });
+
+  test('switching versions on a shared reference page keeps the symbol; a latest-only page falls back to the index', async ({
+    page,
+  }) => {
+    await page.goto(reference('move-enter-directive'));
+    await page.locator('.doq-version summary').click();
+    await page.getByRole('link', { name: /v0\.9\.0/ }).click();
+    await expect(page).toHaveURL(archivedReference('move-enter-directive'));
+    await expect(page.getByRole('heading', { level: 1, name: 'MoveEnterDirective' })).toBeVisible();
+    await expect(page.locator('.doq-breadcrumb')).toContainText('v0.9.0');
+    await page.reload();
+    await expect(page.getByRole('heading', { level: 1, name: 'MoveEnterDirective' })).toBeVisible();
+    await page.goto(reference('move-time'));
+    await page.locator('.doq-version summary').click();
+    await page.getByRole('link', { name: /v0\.9\.0/ }).click();
+    await expect(page).toHaveURL(archive);
+  });
+
+  test('a real Angular Movement demo renders inside an archived page, hydrated without errors', async ({ page }) => {
+    await page.goto(`${archive}/introduction`);
+    await expect(page.locator('[ng-version]').first()).toBeAttached();
+    const enter = demo(page, 'Enter animation demo');
+    await enter.getByLabel('Preset').selectOption('scale-in');
+    await expect(enter).toContainText('Entered with scale-in');
+  });
+
+  test('search follows the version being read', async ({ page }) => {
+    const searchIn = async (url: string, phrase: string) => {
+      await page.goto(url);
+      await page.getByRole('button', { name: 'Search', exact: false }).first().click();
+      const dialog = page.getByRole('dialog', { name: 'Search documentation' });
+      await dialog.getByRole('searchbox', { name: 'Search the documentation' }).fill(phrase);
+      return dialog;
+    };
+    let dialog = await searchIn(`${archive}/introduction`, 'archive-tag-marker');
+    await expect(dialog.getByRole('link', { name: /Introduction/ })).toHaveAttribute(
+      'href',
+      /^\/handbook\/v\/0\.9\/introduction#/,
+    );
+    await page.keyboard.press('Escape');
+    dialog = await searchIn(`${base}/handbook/introduction`, 'archive-tag-marker');
+    await expect(dialog.getByText('No results')).toBeVisible();
+    await page.keyboard.press('Escape');
+    dialog = await searchIn(`${archive}/introduction`, 'MoveEnterDirective');
+    await expect(dialog.locator('a[href^="/handbook/api"]')).toHaveCount(0);
+    await expect(dialog.locator('a[href^="/handbook/v/0.9/api/move-enter-directive"]').first()).toBeVisible();
+  });
+});

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from conftest import REPO
-from test_http import _expected_routes
+from test_http import _expected_routes, expected_archive_routes
 
 BUNDLE_FILES = ("pagefind.js", "pagefind-entry.json", "pagefind-worker.js", "wasm.unknown.pagefind", "wasm.en.pagefind")
 
@@ -43,7 +43,7 @@ def test_contract_011_search_bundle_is_served_over_http(site_name, request):
 def test_contract_012_every_documentation_page_is_indexed_at_its_canonical_route(app, site_name, request):
     """CONTRACT-012: the index holds exactly the documents, keyed by their public (custom or nested) URLs."""
     site = request.getfixturevalue(site_name)
-    expected = _expected_routes(app)
+    expected = {**_expected_routes(app), **expected_archive_routes(app)}
     pages = _fragments(site)
     assert sorted(page["url"] for page in pages) == sorted(route + "/" for route in expected)
     titles = {page["url"].rstrip("/"): page["meta"]["title"] for page in pages}

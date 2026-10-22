@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
 import { DoqSearchResult, mapPagefindFragment, PagefindFragment } from './doq-search';
+import { DOQ_VERSION_FILTER } from './doq-versions';
 
 interface PagefindModule {
-  search(query: string): Promise<{ results: { data(): Promise<PagefindFragment> }[] }>;
+  search(query: string, options?: { filters?: Record<string, string> }): Promise<{ results: { data(): Promise<PagefindFragment> }[] }>;
+  filters?(): Promise<Record<string, Record<string, number> | undefined>>;
 }
+
+/** The index has no pages carrying the requested documentation version. */
+export class DoqVersionNotIndexedError extends Error {}
 
 const MAX_PAGES = 8;
 const MAX_ROWS = 12;
@@ -16,10 +21,17 @@ const MAX_ROWS = 12;
 export class DoqSearchService {
   private loading?: { bundlePath: string; module: Promise<PagefindModule> };
 
-  /** Rejects when the index cannot be loaded; a later call retries. */
-  search(query: string, bundlePath: string, basePath: string): Promise<DoqSearchResult[]> {
+  /**
+   * Rejects when the index cannot be loaded; a later call retries. With `versionId` the query is filtered by Pagefind itself
+   * (before ranking and truncation); a version that was never indexed rejects with DoqVersionNotIndexedError.
+   */
+  search(query: string, bundlePath: string, basePath: string, versionId?: string): Promise<DoqSearchResult[]> {
     return this.load(bundlePath).then(async pagefind => {
-      const { results } = await pagefind.search(query);
+      if (versionId !== undefined) {
+        const known = (await pagefind.filters?.())?.[DOQ_VERSION_FILTER];
+        if (!known || !(versionId in known)) throw new DoqVersionNotIndexedError(versionId);
+      }
+      const { results } = await pagefind.search(query, versionId === undefined ? undefined : { filters: { [DOQ_VERSION_FILTER]: versionId } });
       const pages = await Promise.all(results.slice(0, MAX_PAGES).map(result => result.data()));
       return pages.flatMap(page => mapPagefindFragment(page, basePath)).slice(0, MAX_ROWS);
     });
