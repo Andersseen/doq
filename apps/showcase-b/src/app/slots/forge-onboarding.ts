@@ -12,6 +12,6 @@ import { RouterLink } from '@angular/router';
     li::before { content: counter(step); display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-right: .5rem; border-radius: 50%; background: var(--host-docs-primary); color: var(--host-docs-background); font-size: .8rem; font-weight: 700; }
     a { color: var(--host-docs-primary); font-weight: 600; }
   `,
-  template: `<section data-testid="forge-onboarding" aria-label="Onboarding path"><ol><li><a routerLink="/docs/onboarding/first-application">Create your first application</a></li><li><a routerLink="/docs/concepts/models">Model your content</a></li><li><a routerLink="/docs/reference/api">Call the delivery API</a></li></ol></section>`,
+  template: `<section data-testid="forge-onboarding" aria-label="Onboarding path"><ol><li><a routerLink="/onboarding/first-application">Create your first application</a></li><li><a routerLink="/concepts/models">Model your content</a></li><li><a routerLink="/reference/api">Call the delivery API</a></li></ol></section>`,
 })
 export class ForgeOnboardingComponent {}

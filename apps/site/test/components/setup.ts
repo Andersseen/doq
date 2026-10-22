@@ -9,3 +9,14 @@ getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting(),
 });
 
 afterEach(() => getTestBed().resetTestingModule());
+
+// jsdom has no IntersectionObserver; Angular Movement's in-view reveal needs one. A no-op keeps content in place.
+class IdleIntersectionObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+Object.defineProperty(globalThis, 'IntersectionObserver', { value: IdleIntersectionObserver, configurable: true });

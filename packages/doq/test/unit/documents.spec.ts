@@ -48,6 +48,11 @@ describe('UNIT-004 normalizeDoqDocument', () => {
     expect(normalizeDoqDocument(file(`${root}a.md`), 'docs', 'learn/here')?.routePath).toBe('/learn/here/a');
   });
 
+  it('UNIT-051: a root base path gives root-level routes', () => {
+    expect(normalizeDoqDocument(file(`${root}guides/routing.md`), 'docs', '/')?.routePath).toBe('/guides/routing');
+    expect(normalizeDoqDocument(file(`${root}a.md`, { slug: 'x/y' }), 'docs', '/')?.routePath).toBe('/x/y');
+  });
+
   it('accepts Unicode slugs', () => {
     expect(normalizeDoqDocument(file(`${root}a.md`, { slug: 'guía-rápida' }), 'docs', '/docs')?.routePath).toBe(
       '/docs/guía-rápida',

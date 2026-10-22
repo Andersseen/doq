@@ -38,7 +38,7 @@ def test_contract_041_static_html_renders_demos_between_sections_without_directi
     assert order == ["principles", "keyboard-operation", "focus-visibility", "examples", "vanta-contrast", "color-and-contrast", "announcements", "examples-1", "checklist"]
     assert 'aria-label="Vanta contrast checker"' in html
     assert "::demo[" not in html
-    api = _html(site_b, "/docs/reference/api")
+    api = _html(site_b, "/reference/api")
     assert 'data-doq-demo="forge-query"' in api and "/v1/entries?collection=product-guides&amp;limit=20" in api
     assert "::demo[" not in api
 
@@ -59,7 +59,7 @@ def test_contract_043_search_index_has_text_after_the_demo_but_not_its_controls(
     assert "should name what it destroys" in a["content"]  # before the demo
     for control_text in ("Sample text", "passes AA", "fails AA"):
         assert control_text not in a["content"], control_text
-    b = pages_b["/docs/reference/api/"]
+    b = pages_b["/reference/api/"]
     assert "unknown parameters are rejected" in b["content"]
     for control_text in ("Published only", "/v1/entries?collection"):
         assert control_text not in b["content"], control_text

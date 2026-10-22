@@ -1,6 +1,16 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/Andersseen/doqs/main/docs/assets/readme-banner.svg" alt="Doqs — Documentation that belongs in your app" width="100%" />
+
 # @doqs/analog
 
-Documentation that lives inside your Angular/[Analog](https://analogjs.org) app. Doq adds a Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks — and leaves your header, footer, routes, theme and components to you.
+**Documentation that lives inside your Angular and [Analog](https://analogjs.org) app.** A Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks, optional static search and live Angular components via `::demo[id]` — while your header, footer, routes, theme and components stay yours.
+
+[![npm](https://img.shields.io/npm/v/@doqs/analog?style=flat-square&logo=npm&label=npm&color=B83410)](https://www.npmjs.com/package/@doqs/analog)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22C55E?style=flat-square)](https://github.com/Andersseen/doqs/blob/main/LICENSE)
+[![Repository](https://img.shields.io/badge/GitHub-Andersseen%2Fdoqs-181717?style=flat-square&logo=github)](https://github.com/Andersseen/doqs)
+
+</div>
 
 Version **0.3.0**. Published on npm as [`@doqs/analog`](https://www.npmjs.com/package/@doqs/analog).
 
@@ -104,7 +114,7 @@ Without `slug`, `src/content/docs/guides/setup.md` is served at `/docs/guides/se
 | Option | Default | Purpose |
 | --- | --- | --- |
 | `contentDirectory` | required | Folder below `src/content`. |
-| `basePath` | `'/docs'` | Public mount path. |
+| `basePath` | `'/docs'` | Public mount path. Use `'/'` when the whole application is documentation (see below). |
 | `routeParam` | `'slug'` | Router parameter name (use the same config for `doqRoutes` and `provideDoq`). |
 | `contentWidth` | `'46rem'` | Article width, any CSS length. |
 | `sidebar` | `'left'` | `'left'`, `'right'` or `'hidden'`. |
@@ -171,6 +181,8 @@ Pick a package manager:
 - Styling: Doq adds only a block wrapper (`.doq-inline-demo`, margin and horizontal overflow containment). Your component brings its own styles; use the `--host-docs-*` tokens if it should follow the docs theme.
 - Public helpers `splitDoqInlineDemos()` and `DOQ_INLINE_DEMO_PATTERN` are exported for tooling and tests.
 
+Building a documentation-only site (Starlight or ngDoc style)? Set `basePath: '/'` in the shared paths: the documentation index is served at `/`, documents at `/<slug>` and the application has no other routes (do not add `pages/index.page.ts`). `DoqShellComponent` provides a neutral header and footer (`docsPath="/"`). Showcase B in this repository is that scenario; Showcase A mounts Doqs on a single `/docs` route of a product site.
+
 Moving documentation gradually? Mount Doq under another `basePath` (for example `/handbook`) while existing routes keep serving `/docs`; see [docs/guides/angular-movement-migration.md](../../docs/guides/angular-movement-migration.md).
 
 ## Search
@@ -224,7 +236,7 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `normalizeDoqPaths`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 

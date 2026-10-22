@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import { apps, expect, test } from './fixtures.ts';
 
 const accessibility = `${apps.a.url}/docs/guides/accessibility`;
-const api = `${apps.b.url}/docs/reference/api`;
+const api = `${apps.b.url}/reference/api`;
 const contrast = (page: Page) => page.getByRole('region', { name: 'Vanta contrast checker' });
 
 test.describe('E2E-040 inline Angular components in Markdown', () => {
@@ -49,9 +49,9 @@ test.describe('E2E-040 inline Angular components in Markdown', () => {
   test('a registered demo reused inline renders once next to the frontmatter demo of another page', async ({
     page,
   }) => {
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     await expect(page.getByRole('region', { name: 'Forge content model demo' })).toHaveCount(1);
-    await page.goto(`${apps.b.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.b.url}/onboarding/first-application`);
     await expect(page.getByRole('region', { name: 'Forge content model demo' })).toHaveCount(1);
   });
 

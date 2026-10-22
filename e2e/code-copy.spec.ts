@@ -28,7 +28,7 @@ test.describe('E2E-005 code copy', () => {
   });
 
   test('Showcase B copies a highlighted shell command verbatim', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.b.url}/onboarding/first-application`);
     const block = page.locator('.doq-markdown pre').first();
     await block.getByRole('button', { name: 'Copy code' }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('pnpm add @forgecms/client\n');

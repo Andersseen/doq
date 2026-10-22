@@ -1,8 +1,11 @@
-import { render, screen, within } from '@testing-library/angular';
+import { render, screen, waitFor, within } from '@testing-library/angular';
+import { TestBed } from '@angular/core/testing';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import HomePage from '../../src/app/pages/index.page';
 import { CopyCommand } from '../../src/app/copy-command';
+import { EnterDemo } from '../../src/app/enter-demo';
+import { ThemeController } from '../../src/app/theme';
 import { SiteFooter } from '../../src/app/site-footer';
 import { SiteHeader } from '../../src/app/site-header';
 import { installCommand, siteLinks } from '../../src/lib/site-config';
@@ -32,14 +35,43 @@ describe('COMP-020 landing page content', () => {
     expect(container.textContent).toMatch(/Doqs is not MDX/);
     const section = screen.getByRole('region', { name: 'Interactive components in Markdown' });
     expect(section.textContent).toContain('::demo[install-command]');
-    expect(section.textContent).toContain('demos: {');
+    expect(within(section).getByRole('heading', { level: 3, name: 'Rendered' })).toBeTruthy();
   });
 
-  it('shows the three setup steps using the real public API names', async () => {
+  it('COMP-060: switches code examples with accessible tabs and shows the real public API names', async () => {
+    const user = userEvent.setup();
+    await render(HomePage);
+    const tabs = screen.getByRole('tablist', { name: 'Setup steps' });
+    const names = within(tabs).getAllByRole('tab').map((tab) => tab.textContent?.trim());
+    expect(names).toEqual(['Shared paths', 'Analog prerender', 'Angular providers', 'Demo registration']);
+    expect(within(tabs).getByRole('tab', { selected: true }).textContent).toContain('Shared paths');
+    const expected = [
+      ['Analog prerender', 'doqPrerenderRoutes'],
+      ['Angular providers', 'defineDoqConfig'],
+      ['Angular providers', 'doqRoutes'],
+      ['Angular providers', 'provideDoq'],
+      ['Demo registration', "'enter-animation'"],
+    ] as const;
+    for (const [tab, api] of expected) {
+      await user.click(within(tabs).getByRole('tab', { name: tab }));
+      expect(screen.getByRole('tabpanel').textContent, `${tab}: ${api}`).toContain(api);
+    }
+    await user.click(within(tabs).getByRole('tab', { name: 'Shared paths' }));
+    await user.keyboard('{ArrowRight}');
+    expect(document.activeElement?.textContent).toContain('Analog prerender');
+  });
+
+  it('COMP-061: renders Volt primitives (cards, badge, buttons) and Lumen icons, with decorative icons hidden', async () => {
     const { container } = await render(HomePage);
-    const code = container.textContent ?? '';
-    for (const name of ['doqPrerenderRoutes', 'defineDoqConfig', 'doqRoutes', 'provideDoq'])
-      expect(code, name).toContain(name);
+    expect(container.querySelectorAll('volt-card').length).toBeGreaterThanOrEqual(9);
+    expect(container.querySelector('volt-badge')).toBeTruthy();
+    const cta = screen.getByRole('link', { name: 'Get Started' });
+    expect(cta.hasAttribute('voltbutton') || cta.className.includes('inline-flex')).toBe(true);
+    expect(container.querySelectorAll('lmn-puzzle-piece, lmn-code-bracket').length).toBeGreaterThan(0);
+    for (const icon of Array.from(container.querySelectorAll('[class*="lmn"], lmn-arrow-right'))) {
+      expect(icon.getAttribute('aria-label')).toBeNull();
+    }
+    expect(container.querySelector('lmn-arrow-right svg')?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('links the primary actions to the guide and the repository', async () => {
@@ -54,6 +86,7 @@ describe('COMP-021 navigation and external links', () => {
   it('offers named navigation with the required links', async () => {
     await render(SiteHeader);
     const nav = screen.getByRole('navigation', { name: 'Main' });
+    expect(within(nav).getByRole('link', { name: 'Interactive Markdown' }).getAttribute('href')).toBe('#interactive-markdown');
     expect(within(nav).getByRole('link', { name: 'Features' }).getAttribute('href')).toBe('#features');
     expect(within(nav).getByRole('link', { name: 'Getting started' }).getAttribute('href')).toBe('#getting-started');
     expect(within(nav).getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/Andersseen/doqs');
@@ -64,16 +97,16 @@ describe('COMP-021 navigation and external links', () => {
     const user = userEvent.setup();
     await render(SiteHeader);
     const toggle = screen.getByRole('button', { name: 'Menu' });
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(toggle.getAttribute('aria-controls')).toBe('site-nav');
+    expect(screen.queryByRole('dialog')).toBeNull();
     await user.click(toggle);
-    expect(screen.getByRole('button', { name: 'Close' }).getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById('site-nav')?.classList.contains('open')).toBe(true);
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('navigation', { name: 'Main' })).toBeTruthy();
     await user.keyboard('{Escape}');
-    expect(screen.getByRole('button', { name: 'Menu' }).getAttribute('aria-expanded')).toBe('false');
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     await user.click(screen.getByRole('button', { name: 'Menu' }));
-    await user.click(screen.getByRole('link', { name: 'Features' }));
-    expect(screen.getByRole('button', { name: 'Menu' }).getAttribute('aria-expanded')).toBe('false');
+    const reopened = await screen.findByRole('dialog');
+    await user.click(within(reopened).getByRole('link', { name: 'Features' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   it('gives the footer GitHub, npm, license and documentation links', async () => {
@@ -101,6 +134,7 @@ describe('COMP-022 install command copy', () => {
     expect(writeText).toHaveBeenCalledWith(installCommand);
     expect(screen.getByRole('status').textContent).toMatch(/copied/i);
     expect(screen.getByRole('button').textContent).toContain('Copied');
+    expect(screen.getByRole('button').querySelector('lmn-check')).toBeTruthy();
   });
 
   it('tells the reader to copy manually when the clipboard is unavailable', async () => {
@@ -111,5 +145,43 @@ describe('COMP-022 install command copy', () => {
     await render(CopyCommand, { inputs: { command: installCommand } });
     await user.click(screen.getByRole('button', { name: /copy/i }));
     expect(screen.getByText(/copy it manually/i)).toBeTruthy();
+  });
+});
+
+describe('COMP-062 theme toggle', () => {
+  it('is a named pressed-state button that applies Volt\'s dark class and remembers the choice', async () => {
+    const user = userEvent.setup();
+    document.documentElement.classList.remove('dark');
+    localStorage.removeItem('doqs-theme');
+    await render(SiteHeader);
+    const toggle = screen.getByRole('button', { name: 'Dark theme' });
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    await user.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(localStorage.getItem('doqs-theme')).toBe('dark');
+    await user.click(toggle);
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(localStorage.getItem('doqs-theme')).toBe('light');
+  });
+
+  it('exposes the state through the controller', async () => {
+    await render(SiteHeader);
+    expect(TestBed.inject(ThemeController).dark()).toBe(false);
+  });
+});
+
+describe('COMP-063 interactive Markdown demo', () => {
+  it('switches the Angular Movement preset and replays with Volt controls', async () => {
+    const user = userEvent.setup();
+    await render(EnterDemo);
+    const group = screen.getByRole('group', { name: 'Enter animation preset' });
+    expect(within(group).getByRole('radio', { name: 'fade-up' }).getAttribute('aria-checked')).toBe('true');
+    await user.click(within(group).getByRole('radio', { name: 'zoom-in' }));
+    expect(screen.getByTestId('enter-target').textContent).toContain('zoom-in');
+    expect(screen.getByRole('status').textContent).toContain('zoom-in');
+    const before = screen.getByTestId('enter-target');
+    await user.click(screen.getByRole('button', { name: /replay/i }));
+    expect(screen.getByTestId('enter-target')).not.toBe(before);
   });
 });

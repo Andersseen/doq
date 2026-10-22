@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import analog from '@analogjs/platform';
+import tailwindcss from '@tailwindcss/vite';
 import { buildRobots, buildSitemap, normalizeOrigin, originHeadTags, site } from './src/lib/site-config';
 
 // DOQ_SITE_ORIGIN (for example the production Pages URL or custom domain) enables canonical URLs and the sitemap.
@@ -22,5 +23,5 @@ function siteMetadata(): Plugin {
 export default defineConfig({
   build: { target: ['es2022'] },
   resolve: { mainFields: ['module'] },
-  plugins: [analog({ ssr: true, static: true, prerender: { routes: async () => [...site.routes] } }), siteMetadata()],
+  plugins: [analog({ ssr: true, static: true, prerender: { routes: async () => [...site.routes] } }), tailwindcss(), siteMetadata()],
 });

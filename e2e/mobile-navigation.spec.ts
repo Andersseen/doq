@@ -13,11 +13,11 @@ const cases = [
   },
   {
     name: 'Showcase B (sidebar right)',
-    url: `${apps.b.url}/docs/onboarding/first-application`,
+    url: `${apps.b.url}/onboarding/first-application`,
     side: 'right',
     group: 'Concepts',
     link: 'Content models',
-    target: '/docs/concepts/models',
+    target: '/concepts/models',
   },
 ] as const;
 

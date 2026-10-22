@@ -28,7 +28,7 @@ test.describe('E2E-014 previous and next documents', () => {
   });
 
   test('Showcase B pagination links use the public custom-slug URLs', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.b.url}/onboarding/first-application`);
     const hrefs = await page
       .getByRole('navigation', { name: 'Page navigation' })
       .getByRole('link')

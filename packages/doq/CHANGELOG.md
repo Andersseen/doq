@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `basePath: '/'` mounts the documentation at the application root, for sites that are documentation only. The index is served at `/` and documents at `/<slug>`; `doqRoutes`, `doqPrerenderRoutes`, document routes, pagination and search result URLs all honour it. `basePath: ''` is still rejected.
+- Export `joinDoqPath(basePath, slug)`, the single place that builds public document URLs.
+
 ## 0.3.0
 
 Interactive Markdown. Additive: every 0.2 configuration, document, route and `demo:` frontmatter key works unchanged, and documents without a directive render the same single Markdown region as before.

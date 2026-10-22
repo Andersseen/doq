@@ -9,7 +9,7 @@ const viewports = [
 
 const pages = [
   { name: 'Showcase A', url: `${apps.a.url}/docs/guides/routing`, side: 'left' },
-  { name: 'Showcase B', url: `${apps.b.url}/docs/onboarding/first-application`, side: 'right' },
+  { name: 'Showcase B', url: `${apps.b.url}/onboarding/first-application`, side: 'right' },
 ] as const;
 
 test.describe('E2E-009 responsive smoke', () => {

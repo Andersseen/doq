@@ -27,6 +27,8 @@ export const showcases: readonly Showcase[] = [
     codePath: '/docs/components/button',
     tocPath: '/docs/overview',
     v01: {
+      docsBase: '/docs',
+      hostRoute: true,
       hostTitle: 'Vanta UI — Components with good energy',
       hostDescription: 'Vanta UI is an Angular component library with sensible defaults.',
       suffix: 'Vanta UI',
@@ -40,20 +42,22 @@ export const showcases: readonly Showcase[] = [
     name: 'Showcase B',
     port: 4174,
     root: 'apps/showcase-b/dist/analog/public',
-    paths: ['/', '/docs', '/docs/onboarding/first-application', '/docs/concepts/models'],
-    doc: '/docs/onboarding/first-application',
-    nested: '/docs/architecture/content-delivery',
+    paths: ['/', '/onboarding/first-application', '/concepts/models'],
+    doc: '/onboarding/first-application',
+    nested: '/architecture/content-delivery',
     toc: false,
     side: 'right',
-    codePath: '/docs/onboarding/first-application',
+    codePath: '/onboarding/first-application',
     v01: {
+      docsBase: '',
+      hostRoute: false,
       hostTitle: 'ForgeCMS — Developer platform',
       hostDescription: 'ForgeCMS is a developer-first content platform.',
       suffix: 'ForgeCMS Developers',
       indexTitle: 'ForgeCMS developer hub',
       indexSlot: '[data-testid="forge-onboarding"]',
       docSlot: '[data-testid="forge-token-note"]',
-      noDescriptionPath: '/docs/reference/changelog',
+      noDescriptionPath: '/reference/changelog',
     },
   },
 ];
@@ -77,8 +81,8 @@ export const consumerApp: VerifiedApp | null = process.env['MVP_CONSUMER_ROOT']
       name: 'External consumer',
       port: 4175,
       distRoot: resolve(process.env['MVP_CONSUMER_ROOT']),
-      doc: '/docs/onboarding/first-application',
-      nested: '/docs/concepts/models',
+      doc: '/onboarding/first-application',
+      nested: '/concepts/models',
       // `pnpm consumer:build` produces a copy of Showcase B, so its expectations are the default.
       v01: process.env['MVP_CONSUMER_V01']
         ? (JSON.parse(process.env['MVP_CONSUMER_V01']) as V01Expectations)

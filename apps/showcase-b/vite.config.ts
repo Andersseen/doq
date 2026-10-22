@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
       ssr: true,
       static: true,
       content: { highlighter: 'prism' },
-      prerender: { routes: async () => ['/', ...doqPrerenderRoutes(doqPaths)] },
+      prerender: { routes: async () => [...doqPrerenderRoutes(doqPaths)] },
       ...(mode === 'nosearch' ? { nitro: { output: { dir: '{{ rootDir }}/dist/analog-nosearch', publicDir: '{{ output.dir }}/public' } } } : {}),
     }),
     tailwindcss(),

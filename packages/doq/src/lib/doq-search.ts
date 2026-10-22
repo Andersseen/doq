@@ -62,7 +62,8 @@ export function normalizeSearchResultUrl(url: string, basePath: string): string 
   if (!path.startsWith('/') || path.startsWith('//') || path.split('/').includes('..')) return undefined;
   path = path.replace(/\/index\.html$/, '').replace(/\.html$/, '').replace(/\/+$/, '');
   const base = `/${basePath.split('/').filter(Boolean).join('/')}`;
-  if (path !== base && !path.startsWith(`${base}/`)) return undefined;
+  if (path === '') path = '/';
+  if (base !== '/' && path !== base && !path.startsWith(`${base}/`)) return undefined;
   return fragment ? `${path}#${fragment}` : path;
 }
 

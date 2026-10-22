@@ -1,5 +1,9 @@
 /** Expectations for the Doq 0.1 presentation, slot and metadata check (`v01`). */
 export interface V01Expectations {
+  /** Public prefix of the documentation: '/docs' when Doqs is mounted on one route, '' when the whole app is documentation. */
+  docsBase: string;
+  /** True when the app has host routes outside the documentation (a landing page to leave to). */
+  hostRoute: boolean;
   hostTitle: string;
   hostDescription: string;
   suffix: string;

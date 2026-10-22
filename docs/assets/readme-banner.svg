@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="t d">
+  <title id="t">Doqs — Documentation that belongs in your app</title>
+  <desc id="d">Markdown documentation for Angular and Analog.js applications. The documentation region sits between your own header and footer.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#2a2621" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="fade" cx="0.75" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="m"><rect width="1280" height="420" fill="url(#fade)"/></mask>
+  </defs>
+  <rect width="1280" height="420" fill="#14120f"/>
+  <rect width="1280" height="420" fill="url(#grid)" mask="url(#m)"/>
+
+  <g font-family="Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif">
+    <text x="80" y="170" font-size="96" font-weight="700" letter-spacing="-4" fill="#f1ece4">doqs</text>
+    <circle cx="298" cy="160" r="9" fill="#ff8a5c"/>
+    <text x="80" y="236" font-size="34" fill="#f1ece4">Documentation that belongs in your app.</text>
+  </g>
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" fill="#b8afa3" font-size="18">
+    <text x="80" y="278">Markdown docs for Angular and Analog.js: SSR/SSG,</text>
+    <text x="80" y="304">sidebar, table of contents, optional static search</text>
+    <text x="80" y="330">and live Angular components inside Markdown.</text>
+  </g>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+    <rect x="80" y="352" width="176" height="34" rx="8" fill="#1c1915" stroke="#353029"/>
+    <text x="96" y="374" fill="#ff8a5c">::demo[your-id]</text>
+    <rect x="268" y="352" width="188" height="34" rx="8" fill="#1c1915" stroke="#353029"/>
+    <text x="284" y="374" fill="#b8afa3">@doqs/analog</text>
+  </g>
+
+  <!-- the documentation region between the host's own header and footer -->
+  <g transform="translate(770 80) scale(0.92)" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+    <rect width="500" height="280" rx="18" fill="#1c1915" stroke="#353029"/>
+    <rect x="16" y="16" width="468" height="40" rx="9" fill="none" stroke="#5e564e" stroke-dasharray="5 5"/>
+    <text x="250" y="41" text-anchor="middle" fill="#b8afa3">Your header, navigation and brand</text>
+
+    <rect x="16" y="68" width="468" height="148" rx="12" fill="none" stroke="#ff8a5c" stroke-width="2.5"/>
+    <text x="32" y="94" fill="#ff8a5c" font-weight="700">Sidebar</text>
+    <rect x="32" y="108" width="84" height="8" rx="4" fill="#353029"/>
+    <rect x="32" y="126" width="84" height="8" rx="4" fill="#353029"/>
+    <rect x="32" y="144" width="52" height="8" rx="4" fill="#353029"/>
+    <rect x="32" y="162" width="84" height="8" rx="4" fill="#353029"/>
+
+    <text x="140" y="94" fill="#ff8a5c" font-weight="700">Markdown page</text>
+    <rect x="140" y="108" width="210" height="8" rx="4" fill="#353029"/>
+    <rect x="140" y="126" width="196" height="8" rx="4" fill="#353029"/>
+    <rect x="140" y="144" width="120" height="8" rx="4" fill="#353029"/>
+    <rect x="140" y="166" width="210" height="38" rx="8" fill="#14120f" stroke="#ff8a5c" stroke-opacity="0.6"/>
+    <text x="245" y="190" text-anchor="middle" fill="#f1ece4">your Angular component</text>
+
+    <text x="372" y="94" fill="#ff8a5c" font-weight="700">On this page</text>
+    <rect x="372" y="108" width="84" height="8" rx="4" fill="#353029"/>
+    <rect x="372" y="126" width="64" height="8" rx="4" fill="#353029"/>
+    <rect x="372" y="144" width="76" height="8" rx="4" fill="#353029"/>
+
+    <rect x="16" y="228" width="468" height="36" rx="9" fill="none" stroke="#5e564e" stroke-dasharray="5 5"/>
+    <text x="250" y="251" text-anchor="middle" fill="#b8afa3">Your footer and routes</text>
+  </g>
+</svg>
