@@ -16,6 +16,10 @@ A content model describes the fields and relationships that make an entry useful
 | Body | Rich text | Render through your design system |
 | Related guides | Reference | Keep related material connected |
 
+Pick a field type to see how an editor would encounter it:
+
+::demo[forge-schema]
+
 ## Reuse with care
 
 Reusable models make delivery consistent. Keep editorial concepts understandable for the teams who maintain them.

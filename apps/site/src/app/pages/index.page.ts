@@ -8,15 +8,16 @@ const features = [
   ['SSR and SSG', 'doqPrerenderRoutes() feeds Analog’s prerenderer, so every page ships as static HTML and hydrates cleanly.'],
   ['Sidebar and table of contents', 'Grouped navigation, an “On this page” index, previous and next links and a mobile drawer.'],
   ['Pagefind full-text search', 'Optional and static: an index built from your prerendered output. No backend, off by default.'],
-  ['Host-owned themes and layout', 'Restyle with --host-docs-* CSS tokens. Doq sets no global html or body styles.'],
-  ['Consumer-owned demos', 'Register your own Angular components and attach one to a page with a demo frontmatter key.'],
+  ['Host-owned themes and layout', 'Restyle with --host-docs-* CSS tokens. Doqs sets no global html or body styles.'],
+  ['Angular components inside Markdown', 'Register your own standalone components once, then place them between paragraphs with a one-line ::demo[id] directive. Interactive, server-rendered and hydrated.'],
+  ['Consumer-owned demos', 'Components belong to your app. A demo frontmatter key still attaches one to the end of a page.'],
   ['Composition slots', 'Add your own standalone components after the docs index intro or after every document.'],
 ] as const;
 
 const steps = [
-  ['Install Doq', 'Add the package next to Analog’s content packages.'],
-  ['Configure the documentation region', 'Share the paths, prerender with Analog and register Doq in your app config.'],
-  ['Write Markdown', 'Drop files into src/content/docs. Routes, sidebar and table of contents follow.'],
+  ['Install Doqs', 'Add the package next to Analog’s content packages.'],
+  ['Configure the documentation region', 'Share the paths, prerender with Analog and register Doqs in your app config.'],
+  ['Write Markdown', 'Drop files into src/content/docs. Routes, sidebar and table of contents follow. Add ::demo[id] lines where a live component belongs.'],
   ['Build and deploy', 'vite build prerenders everything to static files you can host anywhere.'],
 ] as const;
 
@@ -34,7 +35,32 @@ analog({
   prerender: { routes: async () => ['/', ...doqPrerenderRoutes(doqPaths)] },
 });`;
 
-const appCode = `// src/app/app.config.ts — Doq configuration next to Analog's providers
+const markdownCode = `---
+title: Getting started
+---
+
+## Installation
+
+Pick a package manager and copy the command:
+
+::demo[install-command]
+
+## Try it
+
+::demo[enter-animation]
+
+The text after a demo is still ordinary, searchable Markdown.`;
+
+const demosCode = `// src/app/app.config.ts — one registry for inline and frontmatter demos
+const doqConfig = defineDoqConfig({
+  ...doqPaths,
+  demos: {
+    'install-command': InstallCommandComponent,
+    'enter-animation': EnterAnimationDemoComponent,
+  },
+});`;
+
+const appCode = `// src/app/app.config.ts — Doqs configuration next to Analog's providers
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { provideFileRouter, withExtraRoutes } from '@analogjs/router';
 import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
@@ -60,7 +86,7 @@ export const appConfig: ApplicationConfig = {
           <p class="eyebrow">Angular · Analog.js · Markdown</p>
           <h1 id="hero-title">Documentation that belongs in your app.</h1>
           <p class="lead">
-            Doq adds a Markdown-driven documentation region to the Angular and Analog.js application you already have.
+            Doqs adds a Markdown-driven documentation region to the Angular and Analog.js application you already have.
             Server-rendered and statically generated, with your branding, your routes and your Angular components left exactly where they are.
           </p>
           <p class="actions">
@@ -78,12 +104,12 @@ export const appConfig: ApplicationConfig = {
             </div>
             <div class="host-part">Your footer and routes</div>
           </div>
-          <figcaption>Doq renders only the documentation region. Everything around it is your application.</figcaption>
+          <figcaption>Doqs renders only the documentation region. Everything around it is your application.</figcaption>
         </figure>
       </section>
 
       <section id="features" class="container section" aria-labelledby="features-title">
-        <h2 id="features-title">What Doq 0.2 does</h2>
+        <h2 id="features-title">What Doqs 0.3 does</h2>
         <ul class="features">
           @for (feature of features; track feature[0]) {
             <li>
@@ -97,13 +123,13 @@ export const appConfig: ApplicationConfig = {
       <section id="getting-started" class="container section" aria-labelledby="start-title">
         <h2 id="start-title">Getting started</h2>
         <p class="section-lead">
-          Doq plugs into an Analog app. Analog keeps its own configuration; Doq adds its own. The two are separate on purpose.
+          Doqs plugs into an Analog app. Analog keeps its own configuration; Doqs adds its own. The two are separate on purpose.
         </p>
         <app-copy-command [command]="installCommand" />
         <div class="code-grid">
           <figure class="code"><figcaption>1 · Shared paths</figcaption><pre tabindex="0"><code>{{ pathsCode }}</code></pre></figure>
           <figure class="code"><figcaption>2 · Analog configuration</figcaption><pre tabindex="0"><code>{{ viteCode }}</code></pre></figure>
-          <figure class="code wide"><figcaption>3 · Doq configuration</figcaption><pre tabindex="0"><code>{{ appCode }}</code></pre></figure>
+          <figure class="code wide"><figcaption>3 · Doqs configuration</figcaption><pre tabindex="0"><code>{{ appCode }}</code></pre></figure>
         </div>
         <p class="note">
           Import <code>&#64;doqs/analog/styles.css</code> once in your global stylesheet. The complete guide lives in the
@@ -121,7 +147,19 @@ export const appConfig: ApplicationConfig = {
             </li>
           }
         </ol>
-        <p class="note">Interactive Angular demos are registered by your app and attached to pages through frontmatter. Doq 0.2 does not embed components inside Markdown text.</p>
+        <p class="note">Doqs is not MDX: there is no JavaScript in Markdown and no template compilation. A directive only names a component your application registered.</p>
+      </section>
+
+      <section id="interactive-markdown" class="container section" aria-labelledby="interactive-title">
+        <h2 id="interactive-title">Interactive components in Markdown</h2>
+        <p class="section-lead">
+          Put a line containing only <code>::demo[id]</code> where a live Angular component belongs. Directives inside code fences, lists and quotes stay literal text,
+          an unknown id shows a short notice instead of breaking the page, and headings, the table of contents and search keep working around every component.
+        </p>
+        <div class="code-grid">
+          <figure class="code"><figcaption>Markdown</figcaption><pre tabindex="0"><code>{{ markdownCode }}</code></pre></figure>
+          <figure class="code"><figcaption>Registration</figcaption><pre tabindex="0"><code>{{ demosCode }}</code></pre></figure>
+        </div>
       </section>
     </main>
   `,
@@ -134,4 +172,6 @@ export default class HomePage {
   protected readonly pathsCode = pathsCode;
   protected readonly viteCode = viteCode;
   protected readonly appCode = appCode;
+  protected readonly markdownCode = markdownCode;
+  protected readonly demosCode = demosCode;
 }

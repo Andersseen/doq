@@ -2,7 +2,7 @@
 
 Documentation that lives inside your Angular/[Analog](https://analogjs.org) app. Doq adds a Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks — and leaves your header, footer, routes, theme and components to you.
 
-Version **0.2.0**. Published on npm as [`@doqs/analog`](https://www.npmjs.com/package/@doqs/analog).
+Version **0.3.0**. Published on npm as [`@doqs/analog`](https://www.npmjs.com/package/@doqs/analog).
 
 ## What Analog requires vs. what Doq adds
 
@@ -110,7 +110,7 @@ Without `slug`, `src/content/docs/guides/setup.md` is served at `/docs/guides/se
 | `sidebar` | `'left'` | `'left'`, `'right'` or `'hidden'`. |
 | `sidebarWidth` | `'16rem'` | Sidebar width. |
 | `showTableOfContents` | `true` | The “On this page” index. |
-| `demos` | none | Registry of host components by frontmatter ID. |
+| `demos` | none | Registry of host components by ID, used by `demo:` frontmatter and `::demo[id]` in Markdown. |
 | `slots` | none | Host-owned components at two stable locations. |
 | `presentation` | none | Product-specific copy and title suffix. |
 | `search` | disabled | Optional static full-text search, see [Search](#search). |
@@ -128,10 +128,50 @@ Titles and descriptions are scoped: Doq captures your page's own title and descr
 
 ### Demos, slots, CSS tokens and the shell
 
-- **Demos** (`demos`) attach one interactive component to *one document* through its `demo:` frontmatter ID. Unknown IDs render an accessible fallback.
+- **Demos** (`demos`) are host components registered by ID. A `demo:` frontmatter ID appends one to the end of *one document*; a `::demo[id]` line places one anywhere in the Markdown ([below](#interactive-components-in-markdown)). Unknown IDs render an accessible fallback.
 - **Slots** (`slots`) add the *same* host component to *every* page of a kind: `indexAfterIntro` renders between the index introduction and the document cards; `documentAfterContent` renders after the Markdown content and demo of each document. They are created with `NgComponentOutlet`, receive no inputs (inject host services instead), need no wrapper or selectors, and have no effect when omitted. They are standalone Angular components owned by your app; Doq never imports them.
 - **CSS tokens** restyle Doq without code. Set these on an ancestor of the docs: `--host-docs-background`, `--host-docs-foreground`, `--host-docs-primary`, `--host-docs-secondary`, `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface`, `--host-docs-focus`, `--host-docs-code-background`, `--host-docs-code-foreground`. Doq sets no global `html`/`body` styles. Slots can use the same tokens.
 - **`DoqShellComponent`** is an optional neutral page shell for projects without one. Existing applications do not need it.
+
+## Interactive components in Markdown
+
+Register standalone Angular components once in `demos`, then place them between Markdown blocks:
+
+```ts
+const doqConfig = defineDoqConfig({
+  ...doqPaths,
+  demos: { 'install-command': InstallCommandComponent, 'enter-animation': EnterAnimationComponent },
+});
+```
+
+```markdown
+## Installation
+
+Pick a package manager:
+
+::demo[install-command]
+
+## Try it
+
+::demo[enter-animation]
+```
+
+**Syntax.** One line containing only `::demo[id]`, separated from neighbouring text by blank lines. The id uses letters, digits, `_` and `-` and must start with a letter or digit. There is no other form.
+
+**How it is parsed.** Analog renders Markdown to HTML at build time (`content: { highlighter: 'prism' | 'shiki' }` must be set in `analog()`, as in the Quick start). Doq then cuts that finished HTML at paragraphs that are exactly a directive and renders the pieces with `NgComponentOutlet`, so heading ids, duplicate-heading suffixes, syntax highlighting, the table of contents and copy buttons are exactly what they are without demos. Nothing is rewritten, evaluated or compiled; the directive only *names* a component your app registered.
+
+**What does not count as a directive** (it stays literal text): a directive in a fenced or indented code block, in inline code, inside a list item, blockquote or table, or inside other text (`see ::demo[x]`), and anything whose id does not match the pattern.
+
+**Behavior.**
+- The same id can appear several times; each occurrence is its own instance with its own state.
+- An unregistered id renders `Demo “id” is not registered by this application.` (`role="status"`) and the page keeps working.
+- A frontmatter `demo: id` that is also placed inline renders once, where the directive is. A frontmatter demo no directive uses still renders after the content, and `slots.documentAfterContent` is unchanged.
+- Components are created without inputs (inject host services), live in the Angular tree (signals, OnPush, zoneless, DI), are server-rendered and hydrated, and are destroyed on navigation. Revisiting a page starts from fresh instances.
+- Search: demos are wrapped in `data-pagefind-ignore`, so their controls are never indexed; the Markdown before and after them is. Copy buttons are added to Markdown code only, never to markup inside a demo.
+- Styling: Doq adds only a block wrapper (`.doq-inline-demo`, margin and horizontal overflow containment). Your component brings its own styles; use the `--host-docs-*` tokens if it should follow the docs theme.
+- Public helpers `splitDoqInlineDemos()` and `DOQ_INLINE_DEMO_PATTERN` are exported for tooling and tests.
+
+Moving documentation gradually? Mount Doq under another `basePath` (for example `/handbook`) while existing routes keep serving `/docs`; see [docs/guides/angular-movement-migration.md](../../docs/guides/angular-movement-migration.md).
 
 ## Search
 
@@ -184,7 +224,7 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `normalizeDoqPaths`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `normalizeDoqPaths`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 

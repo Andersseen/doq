@@ -35,14 +35,15 @@ pnpm pack:doq         # artifacts/doqs-analog-<version>.tgz — never publishes
 
 ## Tests: what each layer is for
 
-| Command                | Layer                                    | Proves                                                                                                     |
-| ---------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `pnpm test:unit`       | Vitest (node)                            | Path/slug/ordering/config logic, the SDD checker, repository invariants                                    |
-| `pnpm test:components` | Vitest + Angular Testing Library (jsdom) | Rendered behavior of the index, docs page, nav tree, shell, slots, drawer — found by role, label and text  |
-| `pnpm test:contract`   | pytest (stdlib only)                     | The packed tarball and the generated static site, checked from outside over HTTP                           |
-| `pnpm test:e2e`        | Playwright (Chromium)                    | Real-browser journeys on production builds, including a tarball-installed consumer                         |
-| `pnpm verify:mvp`      | CDP harness (existing)                   | The 24 MVP + 0.1 acceptance criteria; see [scripts/verification/README.md](scripts/verification/README.md) |
-| `pnpm verify:package`  | Package verifier (existing)              | Manifest, exports, declarations and an installed consumer                                                  |
+| Command                | Layer                                    | Proves                                                                                                                                                            |
+| ---------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:unit`       | Vitest (node)                            | Path/slug/ordering/config logic, the SDD checker, repository invariants                                                                                           |
+| `pnpm test:components` | Vitest + Angular Testing Library (jsdom) | Rendered behavior of the index, docs page, nav tree, shell, slots, drawer — found by role, label and text                                                         |
+| `pnpm test:contract`   | pytest (stdlib only)                     | The packed tarball and the generated static site, checked from outside over HTTP                                                                                  |
+| `pnpm test:e2e`        | Playwright (Chromium)                    | Real-browser journeys on production builds, including a tarball-installed consumer                                                                                |
+| `pnpm verify:mvp`      | CDP harness (existing)                   | The 24 MVP + 0.1 acceptance criteria; see [scripts/verification/README.md](scripts/verification/README.md)                                                        |
+| `pnpm verify:package`  | Package verifier (existing)              | Manifest, exports, declarations and an installed consumer                                                                                                         |
+| `pnpm verify:adoption` | Angular Movement proof (opt-in, network) | Clones the real Angular Movement site into a temp dir, adds a `/handbook` region from the packed tarball, runs `e2e/adoption.spec.ts`; not part of `quality:gate` |
 
 Component tests mock exactly one boundary: Analog's build-time content glob. Everything else (renderer, router, markdown component) is real. Do not snapshot large HTML or test private methods; assert what a user or consumer can observe.
 

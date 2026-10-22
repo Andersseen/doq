@@ -17,6 +17,10 @@ const result = await forge.entries.list({
 
 The response contains entries and an optional cursor for the next page.
 
+::demo[forge-query]
+
+Every parameter above is optional except the collection; unknown parameters are rejected rather than ignored.
+
 ## Read one entry
 
 Use a stable identifier or slug to load one entry. A missing or unpublished entry should be handled as a normal not-found result.

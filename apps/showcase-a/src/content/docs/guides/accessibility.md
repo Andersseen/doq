@@ -29,6 +29,10 @@ A labelled field announces its purpose before its value. Connect the label to th
 
 A destructive action should name what it destroys. "Delete project Atlas" is announced clearly; "OK" is not.
 
+::demo[vanta-contrast]
+
+After trying the pair above, keep the ratio you measured in your own tokens: contrast is a property of the pair, not of one color.
+
 ## Color and contrast
 
 Text uses at least a 4.5 to 1 contrast ratio against its background, and large text uses at least 3 to 1. Status is never communicated by color alone: errors also carry an icon and a text message.

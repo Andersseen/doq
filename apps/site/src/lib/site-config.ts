@@ -10,9 +10,9 @@ export const siteLinks = {
 export const installCommand = 'pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs';
 
 export const site = {
-  title: 'Doq — Documentation that lives in your Angular app',
+  title: 'Doqs — Documentation that lives in your Angular app',
   description:
-    'Doq adds Markdown documentation to an existing Angular and Analog.js app — SSR/SSG, sidebar, table of contents and search — while your branding, routing and Angular components stay yours.',
+    'Doqs adds Markdown documentation to an existing Angular and Analog.js app — SSR/SSG, sidebar, table of contents and search — while your branding, routing and Angular components stay yours.',
   /** Every route the build prerenders; the sitemap lists exactly these. */
   routes: ['/'],
 } as const;

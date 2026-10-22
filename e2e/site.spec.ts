@@ -6,13 +6,13 @@ const installCommand = 'pnpm add @doqs/analog @analogjs/content @analogjs/router
 test.describe('E2E-030 official website', () => {
   test('hero, install command and the integration example are visible', async ({ page }) => {
     await page.goto(apps.site.url);
-    await expect(page).toHaveTitle(/^Doq/);
+    await expect(page).toHaveTitle(/^Doqs/);
     await expect(
       page.getByRole('heading', { level: 1, name: 'Documentation that belongs in your app.' }),
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Get Started' })).toBeVisible();
     await expect(page.getByText(installCommand)).toBeVisible();
-    await expect(page.getByRole('heading', { level: 2 })).toHaveCount(3);
+    await expect(page.getByRole('heading', { level: 2 })).toHaveCount(4);
     await expect(page.locator('pre', { hasText: 'doqPrerenderRoutes' }).first()).toBeVisible();
   });
 
