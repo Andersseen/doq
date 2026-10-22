@@ -82,7 +82,7 @@
 .doq-search-result-excerpt mark { background: color-mix(in srgb,var(--doq-primary) 24%,transparent); color: var(--doq-foreground); border-radius: .2rem; padding: 0 .1rem; }
 .doq-doc-header { max-width: var(--doq-content-width); }
 .doq-eyebrow { color: var(--doq-primary); text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 750; }
-.doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; }
+.doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; overflow-wrap: anywhere; }
 .doq-description { color: var(--doq-muted); font-size: 1.15rem; line-height: 1.7; }
 .doq-markdown { display: block; max-width: var(--doq-content-width); line-height: 1.78; }
 .doq-markdown :is(h1,h2,h3,h4,h5,h6)[id] { scroll-margin-top: var(--doq-scroll-offset); }

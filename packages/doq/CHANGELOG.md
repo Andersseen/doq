@@ -14,6 +14,7 @@ Angular API reference generation. Additive and opt-in: nothing changes for a pro
 - Showcase A documents a standalone Angular component and directive (`apps/showcase-a/vanta-ui`); Showcase B documents a non-Angular SDK (`apps/showcase-b/forge-sdk`); both commit their generated pages and check them in `pnpm verify:change` / CI (`pnpm api:check`). The disposable Angular Movement proof generates and verifies the reference of its real public API.
 
 ### Fixed
+- A long unbroken title (a generated API page named `VantaAlertComponent`) overflowed a 375 px viewport on Linux fonts; document and index titles now wrap anywhere (`overflow-wrap`).
 - Release workflow: `verify-published` waited two minutes for npm to list a fresh version, but the registry took about six minutes to list `@doqs/analog@0.4.0` (published 09:51 UTC, visible 09:57 UTC on 2026-10-22), so the GitHub Release `v0.4.0` was not created. The window is now ten minutes or more (`PUBLISH_VISIBILITY`, regression test `UNIT-100`). The missing `v0.4.0` release is not created retroactively; see `docs/operations/release-and-deployment.md`.
 
 ### Compatibility and limits
