@@ -140,7 +140,7 @@ Titles and descriptions are scoped: Doq captures your page's own title and descr
 
 - **Demos** (`demos`) are host components registered by ID. A `demo:` frontmatter ID appends one to the end of *one document*; a `::demo[id]` line places one anywhere in the Markdown ([below](#interactive-components-in-markdown)). Unknown IDs render an accessible fallback.
 - **Slots** (`slots`) add the *same* host component to *every* page of a kind: `indexAfterIntro` renders between the index introduction and the document cards; `documentAfterContent` renders after the Markdown content and demo of each document. They are created with `NgComponentOutlet`, receive no inputs (inject host services instead), need no wrapper or selectors, and have no effect when omitted. They are standalone Angular components owned by your app; Doq never imports them.
-- **CSS tokens** restyle Doq without code. Set these on an ancestor of the docs: `--host-docs-background`, `--host-docs-foreground`, `--host-docs-primary`, `--host-docs-secondary`, `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface`, `--host-docs-focus`, `--host-docs-code-background`, `--host-docs-code-foreground`. Doq sets no global `html`/`body` styles. Slots can use the same tokens.
+- **CSS tokens** restyle Doq without code. Set these on an ancestor of the docs: `--host-docs-background`, `--host-docs-foreground`, `--host-docs-primary`, `--host-docs-secondary`, `--host-docs-muted`, `--host-docs-border`, `--host-docs-surface`, `--host-docs-focus`, `--host-docs-code-background`, `--host-docs-code-foreground`, and (0.4) `--host-docs-callout-note`, `-tip`, `-important`, `-warning`, `-caution`. Doq sets no global `html`/`body` styles. Slots can use the same tokens.
 - **`DoqShellComponent`** is an optional neutral page shell for projects without one. Existing applications do not need it.
 
 ## Interactive components in Markdown
@@ -155,6 +155,83 @@ const doqConfig = defineDoqConfig({
 ```
 
 ```markdown
+## Rich Markdown authoring
+
+Doq 0.4 adds the content patterns documentation keeps repeating, written in plain Markdown. They are built into Doq (no registration, no Angular component to write), accessible, server-rendered and searchable. Consumer Angular components stay what `::demo[id]` is for.
+
+### Callouts
+
+```markdown
+> [!NOTE]
+> This feature needs Angular 21 or later. Lists, [links](/docs/x) and `inline code` work inside.
+
+> [!WARNING]
+> Avoid browser-only APIs during server rendering.
+```
+
+Kinds: `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION` (case-insensitive; the marker must be alone on the first line). Each renders as `<div class="doq-callout" data-callout="warning" role="note">` with a visible title and a different glyph per kind. Ordinary blockquotes, unknown markers such as `[!DANGER]`, and markers inside code are left as written.
+
+### Tabs and code groups
+
+````markdown
+:::tabs Package manager
+
+:::tab npm
+
+```bash
+npm install @doqs/analog
+```
+
+:::tab pnpm
+
+```bash
+pnpm add @doqs/analog
+```
+
+:::
+````
+
+Tabs contain any Markdown (paragraphs, lists, callouts, steps, code). A group whose tabs contain only code is a *code group*: the same tabs, with flush code panels, so one keyboard system serves both. The optional text after `:::tabs` names the tab list for assistive technology. Arrow keys move and activate, Home and End jump; each group keeps its own selection (nothing is stored globally). All panels are in the static HTML, so the content is available without JavaScript and is indexed.
+
+### Steps
+
+```markdown
+:::steps
+
+1. **Install** the package.
+
+   ```bash
+   pnpm add @doqs/analog
+   ```
+
+2. **Register** the routes. Callouts and links can go inside a step.
+
+:::
+```
+
+The ordered list stays a native `<ol>` (the number is real list semantics, styled through `::marker`).
+
+### Titled code and language labels
+
+````markdown
+:::code app.config.ts
+
+```ts
+export const appConfig = { providers: [provideDoq(doqConfig)] };
+```
+````
+
+Every fenced block shows its language; `:::code <title>` immediately before a fence adds a caption (a `figure` with a `figcaption`). Analog drops fence metadata before Doq sees the HTML, so titles use this line instead of an info string.
+
+### Rules, limits and compatibility
+
+- Directive lines (`:::tabs`, `:::tab …`, `:::steps`, `:::code …`, `:::`) are paragraphs of their own: leave a blank line (or a code fence) around them. If a group does not parse exactly (unclosed, text glued to a marker, `:::tab` outside `:::tabs`, nested `:::tabs`, no ordered list in `:::steps`) the author's text stays on the page.
+- `::demo[id]` works at the top level of an article, around callouts, tabs and steps, but not inside a tab or step. `:::code` titles do not apply inside a list item.
+- Nothing is evaluated and no template is compiled; blocks are cut and wrapped from Analog's rendered HTML, so heading ids, duplicate suffixes, the table of contents and highlighting are unchanged.
+- **Search policy.** Callout bodies, steps, code and the content of inactive tab panels are indexed; tab labels and callout titles are not (`data-pagefind-ignore`). A result for text in an inactive tab opens the page; a fragment pointing at a heading inside an inactive tab activates that tab.
+- **Theming.** Rich blocks use the existing tokens plus optional `--host-docs-callout-note`, `-tip`, `-important`, `-warning`, `-caution`.
+- **Migrating from 0.3.** Nothing to change. Markdown lists in `.doq-markdown` now restore bullets and numbers even under a CSS reset such as Tailwind's preflight.
+
 ## Installation
 
 Pick a package manager:
@@ -236,7 +313,7 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 

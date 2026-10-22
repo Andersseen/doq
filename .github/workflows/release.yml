@@ -107,9 +107,10 @@ jobs:
       - run: node scripts/release/cli.ts preflight-publish
       - id: guard
         run: node scripts/release/cli.ts assert-unpublished
+      # The tarball is passed to npm as an absolute path: a bare `artifacts/x.tgz` was parsed as a GitHub package spec.
       - name: npm publish (provenance is generated automatically)
         if: steps.guard.outputs.publish == 'true'
-        run: npm publish artifacts/*.tgz --access public --provenance
+        run: node scripts/release/cli.ts publish artifacts/*.tgz
 
   github-release:
     name: GitHub Release

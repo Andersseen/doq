@@ -94,7 +94,7 @@ def test_contract_015_a_search_disabled_build_ships_no_search_assets_or_markup(s
 
 
 def test_contract_016_tarball_ships_the_indexer_without_a_pagefind_dependency(package_files, manifest):
-    """CONTRACT-016: the CLI and ./search-index entry exist, pagefind is only an optional peer, 0.3.0 is declared."""
+    """CONTRACT-016: the CLI and ./search-index entry exist, pagefind is only an optional peer, the package version is declared."""
     assert manifest["version"] == json.loads((REPO / "packages/doq/package.json").read_text())["version"]
     assert manifest["bin"] == {"doq-search": "./bin/doq-search.mjs"}
     entry = manifest["exports"]["./search-index"]

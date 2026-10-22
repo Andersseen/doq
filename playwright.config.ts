@@ -22,6 +22,11 @@ export const apps = {
     url: 'http://127.0.0.1:4275',
     root: resolve(process.env.DOQ_CONSUMER_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer'), 'dist/analog/public'),
   },
+  // The embedded scenario (Showcase A copy, documentation under /docs) built from the packed tarball.
+  consumerA: {
+    url: 'http://127.0.0.1:4279',
+    root: resolve(process.env.DOQ_CONSUMER_A_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-a'), 'dist/analog/public'),
+  },
 } as const;
 
 // E2E_SKIP_CONSUMER=1 (focused local runs) skips the tarball-installed consumer and its tests.
@@ -38,7 +43,7 @@ const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
 
 export default defineConfig({
   testDir: 'e2e',
-  testIgnore: [...(withConsumer ? [] : [/consumer\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
+  testIgnore: [...(withConsumer ? [] : [/consumer(-rich)?\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
   outputDir: 'test-results',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -56,7 +61,7 @@ export default defineConfig({
     server(apps.b, 4274),
     server(apps.noSearch, 4276),
     server(apps.site, 4277),
-    ...(withConsumer ? [server(apps.consumer, 4275)] : []),
+    ...(withConsumer ? [server(apps.consumer, 4275), server(apps.consumerA, 4279)] : []),
     ...(withAdoption ? [server(apps.adoption, 4278)] : []),
   ],
 });

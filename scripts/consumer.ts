@@ -1,13 +1,15 @@
 /**
  * Builds an independent consumer of the packed @doqs/analog tarball.
  *
- * The consumer is a copy of Showcase B's sources with its own manifest and lockfile, installed outside
+ * The consumer is a copy of a showcase's sources with its own manifest and lockfile, installed outside
  * this workspace from the tarball (`file:`), so nothing resolves through `workspace:` links or library sources.
+ * Showcase B (docs-first, mounted at the root) is the default; `--app=showcase-a` builds the embedded scenario
+ * (documentation under /docs inside a host site).
  *
- *   node scripts/consumer.ts [tarball] [outDir]
+ *   node scripts/consumer.ts [tarball] [outDir] [--app=showcase-a|showcase-b]
  *
- * Defaults: artifacts/doqs-analog-<version>.tgz and $DOQ_CONSUMER_DIR or <tmp>/doq-e2e-consumer.
- * The static output is written to <outDir>/dist/analog/public.
+ * Defaults: artifacts/doqs-analog-<version>.tgz and, for outDir, $DOQ_CONSUMER_DIR (B) or $DOQ_CONSUMER_A_DIR (A),
+ * else <tmp>/doq-e2e-consumer or <tmp>/doq-e2e-consumer-a. The static output is written to <outDir>/dist/analog/public.
  */
 import { spawnSync } from 'node:child_process';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -15,12 +17,21 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '..');
-const source = resolve(repo, 'apps/showcase-b');
+const flags = process.argv.slice(2).filter((arg) => arg.startsWith('--'));
+const positional = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+const app = flags.find((flag) => flag.startsWith('--app='))?.slice('--app='.length) ?? 'showcase-b';
+if (app !== 'showcase-a' && app !== 'showcase-b') throw new Error(`Unknown --app=${app}`);
+const source = resolve(repo, `apps/${app}`);
 const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
   version: string;
 };
-const tarball = resolve(process.argv[2] ?? `artifacts/doqs-analog-${version}.tgz`);
-const outDir = resolve(process.argv[3] ?? process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'));
+const tarball = resolve(positional[0] ?? `artifacts/doqs-analog-${version}.tgz`);
+const outDir = resolve(
+  positional[1] ??
+    (app === 'showcase-a'
+      ? (process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a'))
+      : (process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'))),
+);
 
 if (outDir === repo || outDir.startsWith(`${repo}/`))
   throw new Error(`The consumer must live outside the repository: ${outDir}`);
@@ -34,7 +45,7 @@ const skip = new Set(['node_modules', 'dist', '.turbo', '.angular', 'AGENTS.md',
 await cp(source, outDir, { recursive: true, filter: (path) => !skip.has(path.split('/').pop() ?? '') });
 
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
-manifest.name = 'doq-external-consumer';
+manifest.name = app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer';
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
 manifest.scripts = { build: 'vite build && doq-search index dist/analog/public' };
 await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);

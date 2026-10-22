@@ -10,3 +10,6 @@ export { normalizeDoqSearchConfig, normalizeSearchResultUrl } from './lib/doq-se
 export type { DoqSearchConfig, DoqResolvedSearchConfig, DoqSearchResult, DoqExcerptSegment } from './lib/doq-search';
 export { splitDoqInlineDemos, DOQ_INLINE_DEMO_PATTERN } from './lib/doq-inline-demos';
 export type { DoqContentSegment } from './lib/doq-inline-demos';
+export { parseDoqContent, DOQ_CALLOUT_TYPES } from './lib/doq-rich-content';
+export type { DoqRichSegment, DoqTab, DoqCalloutType } from './lib/doq-rich-content';
+export { DoqTabsComponent } from './lib/doq-tabs.component';

@@ -5,9 +5,10 @@
  *   node scripts/release/cli.ts preflight-publish            check OIDC prerequisites inside the publishing job
  *   node scripts/release/cli.ts assert-unpublished           output publish=false when the version is already on npm (safe re-runs)
  *   node scripts/release/cli.ts verify-published <tarball>   confirm npm serves exactly the validated artifact
+ *   node scripts/release/cli.ts publish <tarball>            npm publish the validated tarball by absolute path (OIDC + provenance)
  *   node scripts/release/cli.ts notes <version> <file>       write GitHub Release notes from CHANGELOG.md
  *
- * Reads no secrets and never publishes: `npm publish` is a separate, explicit workflow step.
+ * Reads no secrets. Only `publish` publishes, and it runs solely in the workflow's gated publish job.
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -15,6 +16,7 @@ import { resolve } from 'node:path';
 import {
   PACKAGE_NAME,
   changelogSection,
+  npmPublishArgs,
   checkPublished,
   fetchRegistryState,
   integrityOf,
@@ -145,6 +147,13 @@ async function verifyPublished(tarball: string) {
   console.log(`${PACKAGE_NAME}@${version} verified on npm.`);
 }
 
+function publish(tarball: string) {
+  const args = npmPublishArgs(tarball, process.cwd());
+  console.log(`npm ${args.join(' ')}`);
+  const result = spawnSync('npm', args, { stdio: 'inherit' });
+  process.exit(result.status ?? 1);
+}
+
 function notes(version: string, file: string) {
   const section = changelogSection(readFileSync(resolve(repo, 'packages/doq/CHANGELOG.md'), 'utf8'), version);
   writeFileSync(
@@ -158,10 +167,11 @@ if (command === 'plan' && first) await plan(first);
 else if (command === 'preflight-publish') preflight();
 else if (command === 'assert-unpublished') await assertUnpublished();
 else if (command === 'verify-published' && first) await verifyPublished(first);
+else if (command === 'publish' && first) publish(first);
 else if (command === 'notes' && first && second) notes(first, second);
 else {
   console.error(
-    'usage: cli.ts plan <tarball> | preflight-publish | assert-unpublished | verify-published <tarball> | notes <version> <file>',
+    'usage: cli.ts plan <tarball> | preflight-publish | assert-unpublished | verify-published <tarball> | publish <tarball> | notes <version> <file>',
   );
   process.exit(2);
 }

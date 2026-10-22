@@ -1,10 +1,32 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
+
+Rich documentation authoring. Additive: every 0.3 configuration, document, route and `::demo[id]` directive works unchanged, and a document without rich blocks renders as one Markdown region exactly as before. No configuration option was added; the blocks are always on and only recognise the exact syntax below.
 
 ### Added
+- **Callouts**: GitHub-style alerts, `> [!NOTE]`, `TIP`, `IMPORTANT`, `WARNING` and `CAUTION` (case-insensitive, marker alone on the first line of a blockquote). They render as `div.doq-callout[role="note"]` with a visible title and a distinct glyph per kind, so meaning never depends on colour alone, and work at any nesting depth (including inside steps and tabs). Ordinary blockquotes, unknown markers (`[!DANGER]`) and markers in code stay as written.
+- **Tabs**: `:::tabs [label]`, `:::tab Label` per tab, `:::` to close. WAI-ARIA tabs (`tablist` / `tab` / `tabpanel`, `aria-selected`, `aria-controls` / `aria-labelledby`, roving tabindex) with Arrow, Home and End keys. Every panel is in the prerendered HTML (inactive ones `hidden`); each group keeps its own selection and ids are stable between server and browser. A group whose tabs only contain code renders as a **code group** with flush code panels, using the same component.
+- **Steps**: `:::steps` around an ordered list renders a native `<ol>` with a rail and styled markers (`::marker`, no custom counters), so numbering stays real list semantics. Nested code, links and callouts work.
+- **Code presentation**: a visible language label on every fenced block (`data-language`, drawn by CSS so it is not searchable text) and `:::code file.ts` before a fence for a titled block (`figure.doq-code` + `figcaption`). The copy button copies the block's exact text.
+- **Search policy**: callout bodies, steps, titled code and the content of inactive tab panels are indexed; the tab strip and callout titles are `data-pagefind-ignore`.
+- **CSS tokens** (optional, all with defaults): `--host-docs-callout-note`, `-tip`, `-important`, `-warning`, `-caution`.
+- Exports: `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqTabsComponent`.
+- A fragment that points at a heading inside an inactive tab activates that tab before scrolling.
 - `basePath: '/'` mounts the documentation at the application root, for sites that are documentation only. The index is served at `/` and documents at `/<slug>`; `doqRoutes`, `doqPrerenderRoutes`, document routes, pagination and search result URLs all honour it. `basePath: ''` is still rejected.
 - Export `joinDoqPath(basePath, slug)`, the single place that builds public document URLs.
+
+### Changed
+- Markdown lists inside `.doq-markdown` now restore `list-style` (`disc` / `decimal`) and a left padding, so a host reset such as Tailwind's preflight no longer removes bullets and numbers.
+- The copy button reads `textContent` of the code element (identical text in browsers, and testable without layout).
+
+### Fixed
+- Release workflow: `npm publish artifacts/<file>.tgz` was parsed by npm 11 as a GitHub repository spec and failed before publishing. The tarball is now passed as an absolute path by `scripts/release/cli.ts publish` (regression test `UNIT-070`). The 0.3.0 publication never reached npm; see `docs/operations/release-and-deployment.md`.
+
+### Compatibility and limits
+- Directive lines (`:::...`) must be paragraphs of their own: put a blank line (or a code fence) before and after them. Text glued to a marker, an unclosed group, a `:::tab` outside `:::tabs`, nested `:::tabs`, or a steps group without an ordered list leave the original text on the page; nothing is dropped.
+- `::demo[id]` is recognised at the top level of the article, not inside a tab or step. `:::code` titles apply at the top level, in tabs and in steps' top-level paragraphs, not inside a list item.
+- Fence metadata (`ts title="x"`) is dropped by Analog before Doqs sees the HTML, which is why a title is a `:::code` line rather than part of the fence.
 
 ## 0.3.0
 

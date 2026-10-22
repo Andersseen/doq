@@ -26,7 +26,8 @@ test.describe('E2E-009 responsive smoke', () => {
         expect(overflow, 'horizontal page overflow in px').toBeLessThanOrEqual(0);
         const articleBox = (await article.boundingBox())!;
         for (const pre of await page.locator('.doq-markdown pre').all()) {
-          const box = (await pre.boundingBox())!;
+          const box = await pre.boundingBox();
+          if (!box) continue; // code in an inactive tab panel is not rendered
           expect(box.x + box.width).toBeLessThanOrEqual(articleBox.x + articleBox.width + 1);
         }
 

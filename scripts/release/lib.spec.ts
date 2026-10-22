@@ -7,6 +7,7 @@ import {
   integrityOf,
   planRelease,
   publishPrerequisites,
+  npmPublishArgs,
   type FetchLike,
   type PlanInput,
   type RegistryState,
@@ -193,5 +194,26 @@ describe('UNIT-022 publishing prerequisites and verification', () => {
     expect(changelogSection(changelog, '0.2.0')).toBe('Search.\n\n### Added\n- a');
     expect(changelogSection(changelog, '0.1.0')).toBe('First.');
     expect(changelogSection(changelog, '9.9.9')).toBeUndefined();
+  });
+});
+
+describe('UNIT-070 npm publish command construction (0.3.0 release regression)', () => {
+  it('passes npm an absolute file path, never a bare relative spec', () => {
+    const args = npmPublishArgs('artifacts/doqs-analog-0.3.0.tgz', '/work/repo');
+    expect(args).toEqual([
+      'publish',
+      '/work/repo/artifacts/doqs-analog-0.3.0.tgz',
+      '--access',
+      'public',
+      '--provenance',
+    ]);
+    // The broken command passed `artifacts/<file>.tgz`, which npm 11 resolved as the GitHub repository artifacts/<file>.tgz.
+    expect(args[1]).not.toBe('artifacts/doqs-analog-0.3.0.tgz');
+    expect(args[1]).toMatch(/^\//);
+  });
+
+  it('keeps an already absolute path and refuses anything that is not a tarball', () => {
+    expect(npmPublishArgs('/tmp/x/doqs-analog-0.4.0.tgz', '/work')[1]).toBe('/tmp/x/doqs-analog-0.4.0.tgz');
+    expect(() => npmPublishArgs('artifacts/pkg', '/work')).toThrow(/Not a package tarball/);
   });
 });
