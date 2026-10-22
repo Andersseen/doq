@@ -134,7 +134,7 @@ const pnpm = (args: string[], expected = 0) => {
 };
 pnpm(['install', ...(angular ? ['--config.strict-peer-dependencies=true'] : [])]);
 if (skipApi) {
-  pnpm(['build']);
+  if (!flags.includes('--no-build')) pnpm(['build']);
   console.log(`consumer ready: ${resolve(outDir, 'dist/analog/public')}`);
   process.exit(0);
 }

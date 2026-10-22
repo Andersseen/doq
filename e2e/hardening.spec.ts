@@ -33,9 +33,9 @@ test.describe('E2E-130 reader environment', () => {
       const escaping = await page.evaluate(() => {
         const limit = window.innerWidth + 1;
         const scrollers = '.doq-tablist, pre, table';
-        return [
-          ...document.querySelectorAll('.doq-root, .doq-root :is(p, h1, h2, h3, li, figcaption, summary, a, button)'),
-        ]
+        return Array.from(
+          document.querySelectorAll('.doq-root, .doq-root :is(p, h1, h2, h3, li, figcaption, summary, a, button)'),
+        )
           .filter(
             (el) =>
               !el.closest(scrollers) &&

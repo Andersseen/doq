@@ -9,7 +9,7 @@
  * Needs network access to clone the repository.
  */
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
@@ -59,8 +59,10 @@ await edit('vite.config.ts', (text) =>
   text
     .replace(
       "import { resolve } from 'path';",
-      "import { resolve } from 'path';\nimport { doqPrerenderRoutes } from '@doqs/analog';\nimport { doqPaths } from './src/doq.paths';",
+      "import { resolve } from 'path';\nimport { doqPrerenderRoutes } from '@doqs/analog';\nimport { doqDeterministicMarkdown } from '@doqs/analog/vite';\nimport { doqPaths } from './src/doq.paths';",
     )
+    // Deterministic heading ids (Doqs 0.7): Markdown files are rendered one at a time, so no rebuild lottery is needed.
+    .replace('    }),\n  ],\n  test: {', '    }),\n    doqDeterministicMarkdown(),\n  ],\n  test: {')
     .replace('content: {\n        prismOptions', "content: {\n        highlighter: 'prism',\n        prismOptions")
     .replace(
       '      ssr: true,\n',
@@ -173,27 +175,12 @@ if ((await readFile(archiveManifest, 'utf8')) !== archiveBefore)
   throw new Error('adoption: current regeneration changed the archive manifest');
 expectStatus('archive check after current regeneration', doqApi('check', archiveApiArgs).status, 0);
 
-// Known upstream issue (docs/guides/angular-movement-migration.md, "Known limits"): Analog 2.9's shared heading slugger
-// intermittently gives a page numeric suffixes (`usage-2`) in one of the two bundles. It is independent of Doqs, so the
-// proof rebuilds (up to twelve times; roughly half of the builds hit it once the checkout holds two handbooks) until the prerendered ids are canonical instead of hiding the problem in the tests.
-const headingIdsAreCanonical = async () => {
-  const publicDir = resolve(outDir, 'dist/analog/public');
-  const html = await readFile(resolve(publicDir, 'handbook/introduction/index.html'), 'utf8');
-  if (!/<h2 id="why-angular-movement"/.test(html) || !/<h2 id="usage-1"/.test(html)) return false;
-  // The browser bundle can be wrong while the prerendered HTML is right: look for suffixed ids in its chunks too.
-  for (const file of await readdir(resolve(publicDir, 'assets'), { recursive: true })) {
-    if (!String(file).endsWith('.js')) continue;
-    if ((await readFile(resolve(publicDir, 'assets', String(file)), 'utf8')).includes('id="why-angular-movement-1"'))
-      return false;
-  }
-  return true;
-};
-for (let attempt = 1; ; attempt++) {
-  run('pnpm', ['run', 'build'], outDir);
-  if (await headingIdsAreCanonical()) break;
-  console.log(`adoption: build ${attempt} hit the upstream heading-id race (non-canonical ids)`);
-  if (attempt === 12) throw new Error('adoption: twelve builds in a row produced non-canonical heading ids');
-}
+// Heading ids: the upstream race (concurrent Markdown renders share marked-gfm-heading-id's slugger, see docs/repro) is contained
+// by doqDeterministicMarkdown() in the patched vite.config.ts, so ONE build must already be canonical. `docs:check` compares every
+// prerendered handbook page with a strictly sequential render of that page and validates routes, TOC fragments and links; there
+// is no retry loop. The disposable checkout is built exactly once.
+run('pnpm', ['run', 'build'], outDir);
+run('node', ['scripts/docs-check.ts', `--dist=${resolve(outDir, 'dist/analog/public')}`, `--source=${outDir}`], repo);
 console.log(`adoption: ready ${resolve(outDir, 'dist/analog/public')} (Angular Movement ${sha})`);
 
 if (process.argv.includes('--test')) {

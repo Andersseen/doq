@@ -68,6 +68,10 @@ jobs:
           DOQ_SITE_ORIGIN: ${{ vars.DOQ_SITE_ORIGIN }}
       - run: pnpm pack:doq
       - run: pnpm verify:package "artifacts/doqs-analog-$(node -p "require('./packages/doq/package.json').version").tgz"
+      # Static integrity of the prerendered output (heading ids vs a sequential render, TOC fragments, links, routes, canonicals)
+      # and the measured size budgets (perf-budgets.json).
+      - run: pnpm docs:check
+      - run: pnpm perf:check
       - uses: actions/upload-artifact@v7
         with:
           name: builds
@@ -160,3 +164,95 @@ jobs:
         run: pnpm verify:mvp
         env:
           MVP_CONSUMER_ROOT: ${{ runner.temp }}/doq-consumer/dist/analog/public
+
+  e2e-browsers:
+    name: Playwright cross-browser (Firefox, WebKit)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: builds
+      - run: PLAYWRIGHT_BROWSERS_PATH=0 pnpm exec playwright install --with-deps firefox webkit
+      - run: pnpm test:e2e:browsers
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces-browsers
+          retention-days: 7
+          path: |
+            test-results
+            playwright-report
+
+  determinism:
+    name: Deterministic builds (repeated clean builds, guard control)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:doq
+      - run: pnpm pack:doq
+      - name: Five clean builds of the stress consumer agree on every heading id
+        run: pnpm verify:determinism --builds=5 --docs=60
+      - name: The same stress without doqDeterministicMarkdown() is detected as inconsistent
+        run: pnpm verify:determinism --builds=3 --docs=60 --control
+
+  compat:
+    name: Angular ${{ matrix.angular }} compatibility
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 21: the primary environment of the repository (also covered by the full suite). 22: Angular 22 with TypeScript 6.
+        angular: ['21', '22']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:doq
+      - run: pnpm pack:doq
+      - run: PLAYWRIGHT_BROWSERS_PATH=0 pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:compat --angular=${{ matrix.angular }}
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-traces-compat-${{ matrix.angular }}
+          retention-days: 7
+          path: |
+            test-results
+            playwright-report
+
+  scale:
+    name: Content scaling budget (generated fixtures)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:doq
+      - run: pnpm pack:doq
+      - name: 20 and 200 generated documents (plus archives) build, and one more document costs a bounded amount of JavaScript
+        run: pnpm perf:scale --sizes=20,200 --navigations=0 --check

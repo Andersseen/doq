@@ -1,6 +1,6 @@
 import { Component, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router, RouterOutlet } from '@angular/router';
+import { Route, Router, RouterOutlet } from '@angular/router';
 import { ContentRenderer } from '@analogjs/content';
 import { render } from '@testing-library/angular';
 import { contentState, FakeDoc } from './content-state';
@@ -22,11 +22,11 @@ class FixtureRenderer extends ContentRenderer {
 @Component({ selector: 'doq-test-host', imports: [RouterOutlet], template: '<router-outlet />' })
 class HostComponent {}
 
-export async function renderDocs(options: { docs: FakeDoc[]; config?: Partial<DoqConfig>; url: string; providers?: Provider[] }) {
+export async function renderDocs(options: { docs: FakeDoc[]; config?: Partial<DoqConfig>; url: string; providers?: Provider[]; hostRoutes?: Route[] }) {
   contentState.docs = options.docs;
   const config: DoqConfig = { contentDirectory: 'docs', ...options.config };
   const view = await render(HostComponent, {
-    routes: doqRoutes(config),
+    routes: [...doqRoutes(config), ...(options.hostRoutes ?? [])],
     providers: [provideDoq(config), { provide: ContentRenderer, useClass: FixtureRenderer }, ...(options.providers ?? [])],
   });
   const router = TestBed.inject(Router);

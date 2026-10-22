@@ -1,0 +1,96 @@
+{
+  "_comment": "Raise a budget only in a pull request whose verification report explains why. See scripts/perf.ts.",
+  "budgets": [
+    {
+      "target": "doq-core",
+      "metric": "stylesGzip",
+      "baseline": 4952,
+      "max": 5300,
+      "reason": "The core stylesheet ships to every consumer unconditionally; 0.7 adds a forced-colors block of about 0.3 KB."
+    },
+    {
+      "target": "doq-core",
+      "metric": "stylesBytes",
+      "baseline": 24705,
+      "max": 26200,
+      "reason": "Unminified source size of packages/doq/styles.css, the file consumers import."
+    },
+    {
+      "target": "showcase-a",
+      "metric": "initialJsGzip",
+      "baseline": 202274,
+      "max": 212400,
+      "reason": "JavaScript loaded before a documentation page is interactive (entry + modulepreload chunks). Includes the host's Volt UI, Lumen Icons and Angular Movement; Doqs's own share is the part that grows with the library."
+    },
+    {
+      "target": "showcase-a",
+      "metric": "allJsGzip",
+      "baseline": 218346,
+      "max": 229300,
+      "reason": "All JavaScript of the embedded showcase including lazy per-document chunks; grows with content, so a jump without new content is a regression."
+    },
+    {
+      "target": "showcase-a",
+      "metric": "initialCssGzip",
+      "baseline": 14224,
+      "max": 15400,
+      "reason": "Stylesheet linked by a documentation page (host styles + Doqs core)."
+    },
+    {
+      "target": "showcase-a",
+      "metric": "searchIndexBytes",
+      "baseline": 22203,
+      "max": 24500,
+      "reason": "Pagefind index, fragments and filters for the committed documents; scales with content and versions, not with library code."
+    },
+    {
+      "target": "showcase-a",
+      "metric": "staticPages",
+      "baseline": 21,
+      "max": 21,
+      "reason": "Pages prerendered for the committed content and its archive; an unexpected extra page means a duplicate route."
+    },
+    {
+      "target": "showcase-b",
+      "metric": "initialJsGzip",
+      "baseline": 185103,
+      "max": 194400,
+      "reason": "JavaScript loaded before a documentation page is interactive in the docs-first showcase (no host UI libraries)."
+    },
+    {
+      "target": "showcase-b",
+      "metric": "allJsGzip",
+      "baseline": 199073,
+      "max": 209100,
+      "reason": "All JavaScript of the docs-first showcase including lazy per-document chunks."
+    },
+    {
+      "target": "showcase-b",
+      "metric": "initialCssGzip",
+      "baseline": 6308,
+      "max": 6900,
+      "reason": "Stylesheet linked by a documentation page in the docs-first showcase."
+    },
+    {
+      "target": "showcase-b",
+      "metric": "searchIndexBytes",
+      "baseline": 18911,
+      "max": 20900,
+      "reason": "Pagefind index, fragments and filters for the committed documents."
+    },
+    {
+      "target": "showcase-b",
+      "metric": "staticPages",
+      "baseline": 25,
+      "max": 25,
+      "reason": "Pages prerendered for the committed content, its archive and the not-found view."
+    },
+    {
+      "target": "scale",
+      "metric": "initialJsGzipBytesPerDocument",
+      "baseline": 52,
+      "max": 70,
+      "reason": "Analog bundles the frontmatter and a loader of every Markdown file of every version into the first-loaded JavaScript; Doqs cannot lazy-load that through a supported Analog API. Measured 20 -> 200 generated documents (+ half as many archived): 52 B gzip per document; 20 -> 1000: 46 B. A jump means Doqs added per-document work to the browser bundle."
+    }
+  ]
+}

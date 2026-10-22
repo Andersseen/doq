@@ -1,8 +1,8 @@
 /**
  * One command per gate, deterministic and independent of any AI model.
  *
- *   pnpm verify:change   fast local gate: format, types, specs, Agentyx lock, unit, components, builds, package, contract, negative controls
- *   pnpm quality:gate    mandatory pre-PR gate: verify:change + tarball consumer, Playwright E2E and the CDP acceptance harness
+ *   pnpm verify:change   fast local gate: format, types, specs, Agentyx lock, unit, components, builds, docs:check, perf:check, package, contract, negative controls
+ *   pnpm quality:gate    mandatory pre-PR gate: verify:change + tarball consumer, Playwright E2E (Chromium, then Firefox and WebKit), determinism, Angular 21/22 compatibility and the CDP acceptance harness
  *
  * Steps run in order and stop at the first failure. E2E and harness steps need a browser (see CONTRIBUTING.md).
  */
@@ -40,6 +40,8 @@ const steps: Step[] = [
   pnpm('test:unit'),
   pnpm('test:components'),
   pnpm('build'),
+  pnpm('docs:check'),
+  pnpm('perf:check'),
   pnpm('pack:doq'),
   { name: `pnpm verify:package ${tarball}`, args: ['verify:package', tarball] },
   pnpm('test:contract'),
@@ -55,6 +57,13 @@ if (mode === 'full') {
       env: { DOQ_REQUIRE_LEGACY: '1' },
     },
     pnpm('test:e2e'),
+    pnpm('test:e2e:browsers'),
+    // Heading determinism (repeated clean builds and the guard-removed control) and the Angular 21 / 22 consumer matrix.
+    { name: 'pnpm perf:scale --check', args: ['perf:scale', '--sizes=20,200', '--navigations=0', '--check'] },
+    { name: 'pnpm verify:determinism', args: ['verify:determinism', '--builds=5', '--docs=60'] },
+    { name: 'pnpm verify:determinism --control', args: ['verify:determinism', '--builds=3', '--docs=60', '--control'] },
+    { name: 'pnpm verify:compat --angular=21', args: ['verify:compat', '--angular=21'] },
+    { name: 'pnpm verify:compat --angular=22', args: ['verify:compat', '--angular=22'] },
     {
       name: 'pnpm verify:mvp (with tarball consumer)',
       args: ['verify:mvp'],
