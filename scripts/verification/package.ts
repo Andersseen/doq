@@ -65,7 +65,7 @@ try {
   check('exports map points at existing entries', () => {
     assert.deepEqual(
       Object.keys(manifest.exports),
-      ['.', './search-index', './api-reference', './styles.css', './package.json'].filter(
+      ['.', './search-index', './vite', './api-reference', './styles.css', './package.json'].filter(
         (key) => key in manifest.exports,
       ),
     );
@@ -96,6 +96,13 @@ try {
       assert.ok((await readFile(join(root, file), 'utf8')).length > 0, file);
     assert.match(await readFile(join(root, 'bin/api-reference.d.mts'), 'utf8'), /generateApiReference/);
     assert.ok(!/generateApiReference|buildApiReference|checkApiReference/.test(declarations));
+  });
+  check('the deterministic-Markdown Vite helper is a Node-only entry point with declarations', async () => {
+    assert.deepEqual(manifest.exports['./vite'], { types: './bin/vite.d.mts', default: './bin/vite.mjs' });
+    assert.match(await readFile(join(root, 'bin/vite.d.mts'), 'utf8'), /doqDeterministicMarkdown/);
+    assert.match(await readFile(join(root, 'bin/vite.mjs'), 'utf8'), /doqDeterministicMarkdown/);
+    assert.ok(!/doqDeterministicMarkdown/.test(declarations));
+    assert.ok(!manifest.dependencies?.vite && !manifest.peerDependencies?.vite);
   });
   check('TypeScript is an optional peer, never a dependency, and no browser bundle imports it', async () => {
     assert.deepEqual(manifest.peerDependenciesMeta?.typescript, { optional: true });

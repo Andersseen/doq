@@ -31,6 +31,7 @@
   "exports": {
     ".": { "types": "./dist/types/doqs-analog.d.ts", "default": "./dist/fesm2022/doqs-analog.mjs" },
     "./search-index": { "types": "./bin/search-index.d.mts", "default": "./bin/search-index.mjs" },
+    "./vite": { "types": "./bin/vite.d.mts", "default": "./bin/vite.mjs" },
     "./api-reference": { "types": "./bin/api-reference.d.mts", "default": "./bin/api-reference.mjs" },
     "./styles.css": "./styles.css"
   },
@@ -53,6 +54,7 @@
     "@testing-library/user-event": "^14.6.8",
     "jsdom": "^27.4.0",
     "marked": "15.0.12",
+    "marked-gfm-heading-id": "4.1.4",
     "pagefind": "1.5.2",
     "ng-packagr": "^21.2.2",
     "rxjs": "^7.8.0",

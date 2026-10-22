@@ -16,6 +16,7 @@ import { spawnSync } from 'node:child_process';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { writeDocsFixture } from './fixtures/docs.ts';
 
 const repo = resolve(import.meta.dirname, '..');
 const flags = process.argv.slice(2).filter((arg) => arg.startsWith('--'));
@@ -27,6 +28,13 @@ const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/packag
   version: string;
 };
 const unversioned = flags.includes('--unversioned');
+// --stress=<n>: add n generated documents (with duplicate headings and rich Markdown) to the current docs and to each archive.
+const stress = Number(flags.find(flag => flag.startsWith('--stress='))?.slice('--stress='.length) ?? 0);
+const skipApi = flags.includes('--skip-api');
+// --slow-markdown: add an asynchronous marked step, like Shiki's, so Markdown renders really interleave (determinism stress).
+// --without-deterministic-markdown: the control; remove the guard from vite.config.ts.
+const slowMarkdown = flags.includes('--slow-markdown');
+const withoutGuard = flags.includes('--without-deterministic-markdown');
 const tarball = resolve(positional[0] ?? `artifacts/doqs-analog-${version}.tgz`);
 const outDir = resolve(
   positional[1] ??
@@ -61,6 +69,27 @@ if (unversioned) {
     await rm(resolve(outDir, archive), { recursive: true, force: true });
 }
 
+if (stress > 0) {
+  const demo = app === 'showcase-a' ? 'vanta-button' : 'forge-schema';
+  await writeDocsFixture(resolve(outDir, 'src/content/docs'), { count: stress, demo, label: 'current' });
+  if (!unversioned) {
+    await writeDocsFixture(resolve(outDir, 'src/content/docs-v1'), { count: Math.ceil(stress / 2), demo, label: 'archive' });
+  }
+}
+
+if (slowMarkdown || withoutGuard) {
+  const configFile = resolve(outDir, 'vite.config.ts');
+  let config = await readFile(configFile, 'utf8');
+  if (withoutGuard) config = config.replace(/import \{ doqDeterministicMarkdown \}[^\n]*\n/, '').replace(/\s*\/\/ Renders Markdown one file[^\n]*\n\s*doqDeterministicMarkdown\(\),/, '');
+  if (slowMarkdown) {
+    config = config.replace(
+      "content: { highlighter: 'prism' }",
+      "content: { highlighter: 'prism', markedOptions: { extensions: [{ async: true, walkTokens: () => new Promise<void>(done => setTimeout(done, 1)) }] } }",
+    );
+  }
+  await writeFile(configFile, config);
+}
+
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
 manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer'}${unversioned ? '-unversioned' : ''}`;
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
@@ -84,6 +113,11 @@ const pnpm = (args: string[], expected = 0) => {
   }
 };
 pnpm(['install']);
+if (skipApi) {
+  pnpm(['build']);
+  console.log(`consumer ready: ${resolve(outDir, 'dist/analog/public')}`);
+  process.exit(0);
+}
 
 // API reference through the installed `doq-api` binary and the consumer's own TypeScript: the committed pages must be
 // current, a public API change must make `check` fail until `generate` runs, and regenerating restores the pages.

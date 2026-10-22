@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
 import { doqPrerenderRoutes } from '@doqs/analog';
+import { doqDeterministicMarkdown } from '@doqs/analog/vite';
 import { doqPaths } from './src/doq.paths';
 
 // `vite build --mode nosearch` builds the search-disabled variant into its own directory (see src/app/app.config.ts).
@@ -16,6 +17,8 @@ export default defineConfig(({ mode }) => ({
       prerender: { routes: async () => [...doqPrerenderRoutes(doqPaths)] },
       ...(mode === 'nosearch' ? { nitro: { output: { dir: '{{ rootDir }}/dist/analog-nosearch', publicDir: '{{ output.dir }}/public' } } } : {}),
     }),
+    // Renders Markdown one file at a time so duplicate-heading ids stay identical between builds.
+    doqDeterministicMarkdown(),
     tailwindcss(),
   ],
 }));
