@@ -6,17 +6,20 @@ import { waitFor } from '../lib/wait.ts';
 export async function clipboard(page: Page, app: Showcase) {
   await page.viewport(1280, 800);
   await page.navigate(`http://127.0.0.1:${app.port}${app.codePath}`);
+  // Code in an inactive tab panel (0.4 rich blocks) is not rendered, so only visible blocks are clicked; every block must have a button.
+  const all = await page.evaluate<number>("document.querySelectorAll('.doq-markdown pre').length");
   const blocks = await page.evaluate<{ text: string; buttons: number; language?: string }[]>(
-    "[...document.querySelectorAll('.doq-markdown pre')].map((p,i)=>({text:p.querySelector('code')?.innerText??p.innerText,buttons:p.querySelectorAll('.doq-code-copy').length,language:p.querySelector('code')?.className}))",
+    "[...document.querySelectorAll('.doq-markdown pre')].filter(p=>p.getClientRects().length).map((p,i)=>{p.setAttribute('data-mvp-block',String(i));return {text:p.querySelector('code')?.textContent??p.textContent,buttons:p.querySelectorAll('.doq-code-copy').length,language:p.querySelector('code')?.className}})",
   );
+  assert.ok(all >= blocks.length);
   assert.ok(blocks.length >= 1);
   assert.ok(
     blocks.every((x) => x.buttons === 1),
     'each code block should have one copy button',
   );
   for (let i = 0; i < blocks.length; i++) {
-    await page.click(`.doq-markdown pre:nth-of-type(${i + 1}) .doq-code-copy`);
-    const button = `.doq-markdown pre:nth-of-type(${i + 1}) .doq-code-copy`;
+    const button = `.doq-markdown pre[data-mvp-block="${i}"] .doq-code-copy`;
+    await page.click(button);
     await waitFor(
       async () => await page.evaluate(`document.querySelector(${JSON.stringify(button)})?.textContent==='Copied'`),
       'clipboard feedback',

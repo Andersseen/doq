@@ -29,7 +29,10 @@ for (const output of ['showcase-a/dist/analog', 'showcase-b/dist/analog', 'showc
   }
 }
 
-const consumerDir = resolve(process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'));
+const consumers = [
+  { app: 'showcase-b', dir: resolve(process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer')) },
+  { app: 'showcase-a', dir: resolve(process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a')) },
+];
 if (!skipConsumer) {
   const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
     version: string;
@@ -40,16 +43,19 @@ if (!skipConsumer) {
     console.error('e2e: no tarball. Run "pnpm pack:doq" first (or pass --skip-consumer).');
     process.exit(1);
   }
-  const builtTime = await mtime(resolve(consumerDir, 'dist/analog/public/index.html'));
-  if (builtTime === undefined || builtTime < tarballTime) {
-    const status = run('node', ['scripts/consumer.ts', tarball, consumerDir]);
-    if (status !== 0) process.exit(status);
+  for (const consumer of consumers) {
+    const builtTime = await mtime(resolve(consumer.dir, 'dist/analog/public/index.html'));
+    if (builtTime === undefined || builtTime < tarballTime) {
+      const status = run('node', ['scripts/consumer.ts', tarball, consumer.dir, `--app=${consumer.app}`]);
+      if (status !== 0) process.exit(status);
+    }
   }
 }
 
 const status = run('pnpm', ['exec', 'playwright', 'test', ...passthrough], {
   PLAYWRIGHT_BROWSERS_PATH: process.env['PLAYWRIGHT_BROWSERS_PATH'] ?? '0',
-  DOQ_CONSUMER_DIR: consumerDir,
+  DOQ_CONSUMER_DIR: consumers[0]!.dir,
+  DOQ_CONSUMER_A_DIR: consumers[1]!.dir,
   ...(skipConsumer ? { E2E_SKIP_CONSUMER: '1' } : {}),
 });
 process.exit(status);

@@ -14,9 +14,35 @@ The live control below is a Vanta-owned Angular component using signal state. Th
 
 ## Example
 
+Use the button in a template, and handle its `pressed` output in the component class:
+
+:::tabs Usage
+
+:::tab save.component.html
+
 ```html
 <vnt-button variant="solid" (pressed)="save()">Save changes</vnt-button>
 ```
+
+:::tab save.component.ts
+
+```ts
+@Component({
+  selector: 'app-save',
+  imports: [VntButton],
+  templateUrl: './save.component.html',
+})
+export class SaveComponent {
+  save(): void {
+    // persist the form
+  }
+}
+```
+
+:::
+
+> [!TIP]
+> Give the button a verb that names the result, such as "Save changes", so its accessible name needs no extra context.
 
 ## Behavior
 

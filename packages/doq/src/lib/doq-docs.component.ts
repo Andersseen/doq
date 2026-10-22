@@ -10,14 +10,15 @@ import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
 import { DoqSearchComponent } from './doq-search.component';
-import { splitDoqInlineDemos } from './doq-inline-demos';
+import { parseDoqContent } from './doq-rich-content';
+import { DoqTabsComponent } from './doq-tabs.component';
 
 interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; demo?: string; }
 
 @Component({
   selector: 'doq-docs',
   standalone: true,
-  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, NgComponentOutlet],
+  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (document(); as doc) {
@@ -40,6 +41,7 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
           <div class="doq-content">
             @for (segment of segments(); track $index) {
               @if (segment.kind === 'html') { <analog-markdown class="doq-markdown" [content]="segment.html" /> }
+              @else if (segment.kind === 'tabs') { <doq-tabs [uid]="'doq-tabs-' + $index" [label]="segment.label" [tabs]="segment.tabs" [codeOnly]="segment.codeOnly" /> }
               @else {
                 <div class="doq-region doq-inline-demo" data-pagefind-ignore [attr.data-doq-demo]="segment.id">
                 @if (demoComponent(segment.id); as demo) { <ng-container *ngComponentOutlet="demo" /> }
@@ -176,8 +178,8 @@ export class DoqDocsComponent {
     }),
   ), { initialValue: undefined });
   demoComponent(id: string): Type<unknown> | undefined { return id === 'button' ? DoqButtonDemoComponent : this.config.demos?.[id]; }
-  /** The rendered document cut at its `::demo[id]` directives; a document without directives is one HTML segment. */
-  readonly segments = computed(() => splitDoqInlineDemos(this.document()?.content ?? ''));
+  /** The rendered document cut at its `::demo[id]` directives and `:::tabs` groups; plain Markdown is one HTML segment. */
+  readonly segments = computed(() => parseDoqContent(this.document()?.content ?? ''));
   /** The frontmatter demo, unless the Markdown already places that same demo inline. */
   readonly trailingDemo = computed(() => {
     const id = this.document()?.attributes.demo;
@@ -233,6 +235,12 @@ export class DoqDocsComponent {
     const target = fragment && markdown ? this.findFragmentTarget(markdown, fragment) : undefined;
     const focusTarget = this.arrival;
     this.arrival = false;
+    // A heading inside an inactive tab: activate that tab first so the target can be scrolled to and focused.
+    const hiddenPanel = target?.closest<HTMLElement>('[role="tabpanel"][hidden]');
+    if (hiddenPanel) {
+      this.hostElement.querySelector<HTMLElement>(`[role="tab"][aria-controls="${hiddenPanel.id}"]`)?.click();
+      hiddenPanel.hidden = false;
+    }
     if (this.restorePosition !== undefined) {
       view?.scrollTo({ top: this.restorePosition, behavior: 'instant' });
       this.restorePosition = undefined;
@@ -273,7 +281,7 @@ export class DoqDocsComponent {
       const copy = async () => {
         try {
           if (!globalThis.navigator?.clipboard) throw new Error('Clipboard unavailable');
-          await globalThis.navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
+          await globalThis.navigator.clipboard.writeText((pre.querySelector('code') ?? pre).textContent ?? '');
           button.textContent = 'Copied'; button.setAttribute('aria-label', 'Code copied');
         } catch { button.textContent = 'Copy unavailable'; button.setAttribute('aria-label', 'Clipboard access unavailable'); }
       };

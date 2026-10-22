@@ -57,7 +57,8 @@ describe('UNIT-023 workflow permission and trust invariants', () => {
   it('uses no persistent npm token and publishes the CI tarball through npm with provenance', async () => {
     const workflow = await releaseWorkflow();
     expect(workflow).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN|_authToken|registry-url|secrets\./);
-    expect(job(workflow, 'publish')).toMatch(/npm publish artifacts\/\*\.tgz --access public --provenance/);
+    expect(job(workflow, 'publish')).toMatch(/node scripts\/release\/cli\.ts publish artifacts\/\*\.tgz/);
+    expect(job(workflow, 'publish')).not.toMatch(/npm publish artifacts/);
     expect(job(workflow, 'publish')).toContain('sha256sum --check');
     expect(job(workflow, 'publish')).toMatch(/run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
     expect(job(workflow, 'publish')).not.toMatch(/pnpm (install|build|pack)/);

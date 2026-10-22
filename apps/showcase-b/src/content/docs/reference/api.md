@@ -7,6 +7,10 @@ order: 4
 
 ## Read a collection
 
+Pass the collection and, optionally, a page size and cursor:
+
+:::code src/app/entries.ts
+
 ```ts
 const result = await forge.entries.list({
   collection: 'product-guides',

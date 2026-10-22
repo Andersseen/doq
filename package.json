@@ -10,7 +10,7 @@
     "dev:site": "pnpm --filter site dev",
     "build:doq": "pnpm --filter @doqs/analog build",
     "pack:doq": "pnpm --filter @doqs/analog run pack",
-    "consumer:build": "node scripts/consumer.ts",
+    "consumer:build": "node scripts/consumer.ts && node scripts/consumer.ts --app=showcase-a",
     "typecheck:scripts": "tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

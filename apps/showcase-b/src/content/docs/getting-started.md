@@ -28,6 +28,28 @@ const entry = await forge.entries.get({
 
 The response is structured data. Render it using the components and typography your product already uses.
 
+> [!TIP]
+> Request only the fields a page renders. Smaller responses are faster to deliver and easier to cache.
+
+The same request over HTTP, for scripts and other runtimes:
+
+:::tabs Request style
+
+:::tab TypeScript client
+
+```ts
+const entry = await forge.entries.get({ collection: 'product-guides', slug: 'first-release' });
+```
+
+:::tab HTTP
+
+```bash
+curl -H "Authorization: Bearer $FORGE_TOKEN" \
+  "https://api.forgecms.example/v1/product-guides/first-release"
+```
+
+:::
+
 ## Continue
 
 - [Understand the content model](/concepts/models)

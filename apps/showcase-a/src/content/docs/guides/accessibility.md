@@ -15,6 +15,9 @@ Every interactive component documents the same four things: how it is reached wi
 
 Tab moves forward through interactive controls in the order they appear on the page, and Shift+Tab moves backward. Components never trap focus unless they are modal, and modal components always provide an Escape key and a visible close control.
 
+> [!IMPORTANT]
+> A modal must return focus to the control that opened it when it closes. Without this, keyboard users are dropped at the top of the page.
+
 Composite widgets such as tab lists and menus use a single tab stop. Arrow keys move between items, Home and End jump to the first and last item, and the active item is announced as it changes.
 
 ## Focus visibility
@@ -22,6 +25,13 @@ Composite widgets such as tab lists and menus use a single tab stop. Arrow keys 
 Focus must always be visible. Vanta UI draws a three pixel outline using the focus token, with an offset so it never touches the control's own border. The outline meets the contrast requirement against both the dark and the light theme.
 
 Do not remove the outline to achieve a cleaner appearance. If a control needs a different focus style, change the token and keep the contrast.
+
+> [!WARNING]
+> `outline: none` without a replacement makes a control unusable by keyboard. Before you ship a custom style:
+>
+> - Check it against both the dark and the light theme.
+> - Tab through the page and confirm the ring is always visible.
+> - Read the [theme guide](/docs/guides/theming) for the focus token.
 
 ## Examples
 
@@ -44,6 +54,9 @@ Verify contrast in both themes. A pairing that passes on the dark surface can fa
 Live regions announce changes without moving focus. Use a polite status region for results counts and saved confirmations, and reserve assertive alerts for errors that block the task.
 
 Keep announcements short and specific. A search that returns four matches announces "4 results", not a description of the layout.
+
+> [!CAUTION]
+> Never announce a result by moving focus unexpectedly. A live region reports the change; focus stays where the user put it.
 
 ## Examples
 

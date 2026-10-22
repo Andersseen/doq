@@ -3,6 +3,7 @@
  * unit-tested with mocked registry responses. `cli.ts` wires this to files, env and GitHub Actions outputs.
  */
 import { createHash } from 'node:crypto';
+import { isAbsolute, resolve } from 'node:path';
 
 export const PACKAGE_NAME = '@doqs/analog';
 export const REGISTRY = 'https://registry.npmjs.org';
@@ -202,4 +203,15 @@ export function checkPublished(
   if (registry.integrity !== tarballIntegrity) problems.push('registry integrity differs from the validated tarball');
   if (requireAttestations && !registry.hasAttestations) problems.push('registry lists no provenance attestations');
   return { ok: problems.length === 0, problems };
+}
+
+/**
+ * The argv for `npm publish` of a local tarball. npm treats a bare relative argument such as `artifacts/x.tgz` as a
+ * package spec and may resolve it as a GitHub shorthand (`artifacts/x.tgz` -> `github:artifacts/x.tgz`), which is how
+ * the 0.3.0 publication failed. An absolute path is always a file, so the argument can never be read as a spec.
+ */
+export function npmPublishArgs(tarball: string, cwd: string): string[] {
+  if (!tarball.endsWith('.tgz')) throw new Error(`Not a package tarball: ${tarball}`);
+  const absolute = isAbsolute(tarball) ? tarball : resolve(cwd, tarball);
+  return ['publish', absolute, '--access', 'public', '--provenance'];
 }
