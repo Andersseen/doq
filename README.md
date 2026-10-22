@@ -82,7 +82,7 @@ The packed tarball is also installed into a separate consumer project outside th
 
 ## Development
 
-Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3 and Vite 8.
+Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3 and Vite 8. Angular 22.2.x with TypeScript 6 is verified by `pnpm verify:compat --angular=22` (focused smoke suite, not the full suite); Firefox and WebKit by `pnpm test:e2e:browsers` (the engine-dependent journeys). Details and limits: [Verified environments](packages/doq/README.md#verified-environments-and-limits-07).
 
 ```sh
 pnpm install
@@ -93,13 +93,15 @@ pnpm verify:change   # fast local gate
 pnpm quality:gate    # full pre-PR gate: static checks, unit, component, builds, package, contract, E2E, MVP harness
 ```
 
-| Layer                   | Command                | Proves                                                  |
-| ----------------------- | ---------------------- | ------------------------------------------------------- |
-| Vitest unit             | `pnpm test:unit`       | paths, slugs, ordering, config defaults, SDD checker    |
-| Angular Testing Library | `pnpm test:components` | rendered component behavior by role, label and text     |
-| Playwright E2E          | `pnpm test:e2e`        | real-browser journeys on production builds              |
-| pytest contract         | `pnpm test:contract`   | the packed tarball and the generated static HTTP output |
-| CDP harness             | `pnpm verify:mvp`      | the 24-criterion MVP and 0.1 acceptance run             |
+| Layer                   | Command                                                                               | Proves                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Vitest unit             | `pnpm test:unit`                                                                      | paths, slugs, ordering, config defaults, SDD checker                                                          |
+| Angular Testing Library | `pnpm test:components`                                                                | rendered component behavior by role, label and text                                                           |
+| Playwright E2E          | `pnpm test:e2e`                                                                       | real-browser journeys on production builds                                                                    |
+| Playwright browsers     | `pnpm test:e2e:browsers`                                                              | the engine-dependent journeys in Firefox and WebKit                                                           |
+| pytest contract         | `pnpm test:contract`                                                                  | the packed tarball and the generated static HTTP output                                                       |
+| Static / compat / perf  | `pnpm docs:check`, `pnpm verify:compat`, `pnpm verify:determinism`, `pnpm perf:check` | heading ids, links and canonicals of the output; Angular 21/22 consumers; repeated clean builds; size budgets |
+| CDP harness             | `pnpm verify:mvp`                                                                     | the 24-criterion MVP and 0.1 acceptance run                                                                   |
 
 Changes follow spec-driven development: see [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/specs](docs/specs/README.md). Releases and the official site deployment are described in [docs/operations/release-and-deployment.md](docs/operations/release-and-deployment.md); the preview server serves `dist/analog/public`, and production hosts configure their own 404 behavior.
 

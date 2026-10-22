@@ -35,7 +35,7 @@ const openSearch = async (page: Page) => {
   return dialog;
 };
 
-test.describe('COMPAT-01 Angular integration of the packed package', () => {
+test.describe('E2E-132 Angular integration of the packed package', () => {
   test('runs on the Angular version under test, zoneless, and hydrates', async ({ page }) => {
     await page.goto('/onboarding/first-application');
     const version = await page.locator('[ng-version]').first().getAttribute('ng-version');

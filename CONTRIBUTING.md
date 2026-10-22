@@ -63,6 +63,25 @@ PW_CHANNEL=chrome pnpm test:e2e     # use installed Google Chrome instead
 
 On some macOS setups the downloaded headless shell never produces animation frames and click actions time out; `PW_CHANNEL=chrome` avoids that. Failures keep traces and screenshots in `test-results/` (`pnpm exec playwright show-trace <trace.zip>`).
 
+**Cross-browser (0.7).** `pnpm test:e2e` is the complete suite in Chromium. `pnpm test:e2e:browsers` runs the engine-dependent journeys (routing, history, fragments, TOC, search, versions, tabs, copy, drawer, themes, overflow, axe, hardening) in Firefox and WebKit on the same production assets:
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=0 pnpm exec playwright install firefox webkit   # add --with-deps on Linux CI
+pnpm test:e2e:browsers                                                    # or: pnpm test:e2e e2e/toc.spec.ts --project=webkit
+```
+
+Adapt a test to an engine only for a real platform limit and say why in the test: Firefox and WebKit cannot grant `clipboard-read` (`expectClipboard` in `e2e/fixtures.ts` annotates the gap), Safari's default Tab skips links (`nextFocusKey`), engines word a legitimate 404 differently (`EXPECTED_404_NOISE`). Never delete a product assertion to turn an engine green.
+
+**Static integrity, determinism, compatibility and budgets (0.7).**
+
+| Command                               | Proves                                                                                                                                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm docs:check`                     | Prerendered output: heading ids equal a sequential render, unique ids, TOC fragments, same-site links and fragments, canonicals, a route for every Markdown file |
+| `pnpm verify:determinism [--control]` | Repeated clean builds of a stress consumer agree on every heading id; `--control` removes `doqDeterministicMarkdown()` and must be detected                      |
+| `pnpm verify:compat --angular=21\|22` | The packed tarball on Angular 21.2 / Angular 22.2 + TypeScript 6 (strict peers, no Zone.js): build, `doq-api`, search, `docs:check`, `e2e/compat.spec.ts`        |
+| `pnpm perf:check`                     | Size budgets in `perf-budgets.json` (first-loaded JS, total JS, CSS, search index, pages). Raise one only in a PR that explains why                              |
+| `pnpm perf:scale [--check]`           | Generated 20/200/1000-document fixtures: build, bytes, median navigation latency; `--check` guards the per-document JavaScript growth                            |
+
 **Contract tests.** `pnpm test:contract` creates `.venv` and installs the pinned `tests/contract/requirements.txt` on first run. Run `pnpm build && pnpm pack:doq` first; the suite never builds anything.
 
 ## Spec-driven workflow

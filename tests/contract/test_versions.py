@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import REPO, _serve
+from conftest import LIBRARY_VERSION, REPO, _serve
 from test_http import ARCHIVES, BASE_PATH, expected_archive_routes
 from test_search import _fragments
 
@@ -135,8 +135,8 @@ def test_contract_076_archived_reference_pages_are_served_and_differ_from_curren
 
 
 def test_contract_077_package_exports_the_versioning_api(package_files, manifest):
-    """CONTRACT-077: version 0.6.0 ships the versioning types, the selector and the filter name; no new runtime dependency."""
-    assert manifest["version"] == "0.6.0"
+    """CONTRACT-077: the package ships the versioning types, the selector and the filter name; no new runtime dependency."""
+    assert manifest["version"] == LIBRARY_VERSION
     declarations = package_files["types/doqs-analog.d.ts"].decode()
     for name in ("DoqVersioning", "DoqArchiveConfig", "DoqVersionSwitcherComponent", "doqVersionLinks", "DOQ_VERSION_FILTER", "versioning?"):
         assert name in declarations, name
