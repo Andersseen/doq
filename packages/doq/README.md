@@ -1,6 +1,16 @@
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/Andersseen/doqs/main/docs/assets/readme-banner.svg" alt="Doqs — Documentation that belongs in your app" width="100%" />
+
 # @doqs/analog
 
-Documentation that lives inside your Angular/[Analog](https://analogjs.org) app. Doq adds a Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks — and leaves your header, footer, routes, theme and components to you.
+**Documentation that lives inside your Angular and [Analog](https://analogjs.org) app.** A Markdown-driven documentation region — routing, sidebar, table of contents, index, code blocks, optional static search and live Angular components via `::demo[id]` — while your header, footer, routes, theme and components stay yours.
+
+[![npm](https://img.shields.io/npm/v/@doqs/analog?style=flat-square&logo=npm&label=npm&color=B83410)](https://www.npmjs.com/package/@doqs/analog)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22C55E?style=flat-square)](https://github.com/Andersseen/doqs/blob/main/LICENSE)
+[![Repository](https://img.shields.io/badge/GitHub-Andersseen%2Fdoqs-181717?style=flat-square&logo=github)](https://github.com/Andersseen/doqs)
+
+</div>
 
 Version **0.3.0**. Published on npm as [`@doqs/analog`](https://www.npmjs.com/package/@doqs/analog).
 

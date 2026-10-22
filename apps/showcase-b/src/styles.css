@@ -8,3 +8,5 @@ button { font:inherit; }
 .forge-site[data-theme="dark"] { color-scheme:dark; --host-docs-background:#19171c; --host-docs-foreground:#eee9f1; --host-docs-primary:#c0a1ff; --host-docs-secondary:#c3b9c9; --host-docs-muted:#a69baa; --host-docs-border:#39323f; --host-docs-surface:#211e25; --host-docs-focus:#8cb8ff; --host-docs-code-background:#211c28; --host-docs-code-foreground:#e6d7ff; background:#151318; color:#eee9f1; }
 .theme-toggle { width:2rem; height:2rem; border:1px solid var(--host-docs-border); border-radius:.55rem; background:transparent; color:inherit; cursor:pointer; }
 .theme-toggle:focus-visible { outline:3px solid var(--host-docs-focus); outline-offset:2px; }
+/* In a docs-first app the "Documentation" link only repeats the brand link; drop it where the header gets tight. */
+@media (max-width: 26rem) { .doq-shell-header nav a[href="/"] { display: none; } }
