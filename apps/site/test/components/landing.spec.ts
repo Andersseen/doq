@@ -16,16 +16,16 @@ describe('COMP-020 landing page content', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/belongs in your app/i);
     expect(screen.getByRole('main')).toBeTruthy();
-    for (const name of ['What Doqs 0.5 does', 'Getting started', 'How it works'])
+    for (const name of ['What Doqs 0.6 does', 'Getting started', 'How it works'])
       expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
   });
 
-  it('lists the real 0.5 features', async () => {
+  it('lists the real 0.6 features', async () => {
     await render(HomePage);
-    const section = screen.getByRole('region', { name: 'What Doqs 0.5 does' });
+    const section = screen.getByRole('region', { name: 'What Doqs 0.6 does' });
     const names = within(section).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
     expect(names).toEqual(
-      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'API reference from source', 'SSR and SSG', 'Angular components inside Markdown']),
+      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'API reference from source', 'Versioned documentation', 'SSR and SSG', 'Angular components inside Markdown']),
     );
   });
 

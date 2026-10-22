@@ -46,11 +46,21 @@ const steps: Step[] = [
   pnpm('verify:negative-controls'),
 ];
 if (mode === 'full') {
-  steps.push(pnpm('consumer:build'), pnpm('test:e2e'), {
-    name: 'pnpm verify:mvp (with tarball consumer)',
-    args: ['verify:mvp'],
-    env: { MVP_CONSUMER_ROOT: resolve(consumerDir, 'dist/analog/public') },
-  });
+  // The unversioned (0.5-style) tarball consumers exist after consumer:build, so the contract suite must require them here.
+  steps.push(
+    pnpm('consumer:build'),
+    {
+      name: 'pnpm test:contract (with unversioned consumers)',
+      args: ['test:contract'],
+      env: { DOQ_REQUIRE_LEGACY: '1' },
+    },
+    pnpm('test:e2e'),
+    {
+      name: 'pnpm verify:mvp (with tarball consumer)',
+      args: ['verify:mvp'],
+      env: { MVP_CONSUMER_ROOT: resolve(consumerDir, 'dist/analog/public') },
+    },
+  );
 }
 
 const results: { name: string; seconds: number; ok: boolean }[] = [];

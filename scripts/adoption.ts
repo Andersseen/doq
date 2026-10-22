@@ -100,9 +100,9 @@ const apiArgs = [
   '--title',
   'Movement API reference',
 ];
-const doqApi = (command: 'generate' | 'check') => {
+const doqApi = (command: 'generate' | 'check', extraArgs = apiArgs) => {
   const started = Date.now();
-  const result = spawnSync('pnpm', ['exec', 'doq-api', command, ...apiArgs], { cwd: outDir, encoding: 'utf8' });
+  const result = spawnSync('pnpm', ['exec', 'doq-api', command, ...extraArgs], { cwd: outDir, encoding: 'utf8' });
   console.log(
     `adoption: doq-api ${command} exit ${result.status} in ${Date.now() - started} ms\n${result.stdout}${result.stderr}`,
   );
@@ -118,6 +118,38 @@ const typescriptVersion = spawnSync('pnpm', ['exec', 'tsc', '--version'], {
 console.log(`adoption: checkout compiler: ${typescriptVersion}`);
 expectStatus('generate', doqApi('generate').status, 0);
 expectStatus('check right after generate', doqApi('check').status, 0);
+// Versioned documentation (Doqs 0.6): a GENUINE historical source. The upstream tag below is cloned, its library project is
+// placed next to the current one and documented by the same installed doq-api into a separate archive directory. Nothing is
+// invented: the archive's generated pages are whatever that tag's public API really was.
+const archiveRef = process.env['AM_ARCHIVE_REF'] ?? 'v0.9.0';
+const history = resolve(outDir, '..', `${outDir.split('/').pop()}-history`);
+await rm(history, { recursive: true, force: true });
+run('git', ['clone', '--depth', '1', '--branch', archiveRef, source, history], repo);
+await cp(resolve(history, 'projects/movement'), resolve(outDir, 'projects/movement-v0-9'), {
+  recursive: true,
+  filter: (path) => !path.includes('node_modules'),
+});
+await rm(history, { recursive: true, force: true });
+const archiveApiArgs = [
+  '--project',
+  'projects/movement-v0-9/tsconfig.lib.json',
+  '--entry',
+  'projects/movement-v0-9/src/public-api.ts',
+  '--content-dir',
+  'src/content/handbook-v0-9',
+  '--out',
+  'src/content/handbook-v0-9/api',
+  '--base-path',
+  '/handbook/v/0.9',
+  '--group',
+  'API reference',
+  '--title',
+  'Movement API reference',
+];
+expectStatus('archive generate', doqApi('generate', archiveApiArgs).status, 0);
+expectStatus('archive check', doqApi('check', archiveApiArgs).status, 0);
+const archiveManifest = resolve(outDir, 'src/content/handbook-v0-9/api/.doq-api.json');
+const archiveBefore = await readFile(archiveManifest, 'utf8');
 const provide = resolve(outDir, 'projects/movement/src/lib/providers/provide-movement.ts');
 const original = await readFile(provide, 'utf8');
 const changed = original.replace(
@@ -136,10 +168,14 @@ expectStatus('check after regeneration', doqApi('check').status, 0);
 await writeFile(provide, original);
 expectStatus('generate after restoring the source', doqApi('generate').status, 0);
 expectStatus('check after restoring the source', doqApi('check').status, 0);
+// Regenerating the current reference never touches the archive's pages or manifest, and the archive still checks clean.
+if ((await readFile(archiveManifest, 'utf8')) !== archiveBefore)
+  throw new Error('adoption: current regeneration changed the archive manifest');
+expectStatus('archive check after current regeneration', doqApi('check', archiveApiArgs).status, 0);
 
 // Known upstream issue (docs/guides/angular-movement-migration.md, "Known limits"): Analog 2.9's shared heading slugger
 // intermittently gives a page numeric suffixes (`usage-2`) in one of the two bundles. It is independent of Doqs, so the
-// proof rebuilds (up to five times) until the prerendered ids are canonical instead of hiding the problem in the tests.
+// proof rebuilds (up to twelve times; roughly half of the builds hit it once the checkout holds two handbooks) until the prerendered ids are canonical instead of hiding the problem in the tests.
 const headingIdsAreCanonical = async () => {
   const publicDir = resolve(outDir, 'dist/analog/public');
   const html = await readFile(resolve(publicDir, 'handbook/introduction/index.html'), 'utf8');
@@ -156,7 +192,7 @@ for (let attempt = 1; ; attempt++) {
   run('pnpm', ['run', 'build'], outDir);
   if (await headingIdsAreCanonical()) break;
   console.log(`adoption: build ${attempt} hit the upstream heading-id race (non-canonical ids)`);
-  if (attempt === 5) throw new Error('adoption: five builds in a row produced non-canonical heading ids');
+  if (attempt === 12) throw new Error('adoption: twelve builds in a row produced non-canonical heading ids');
 }
 console.log(`adoption: ready ${resolve(outDir, 'dist/analog/public')} (Angular Movement ${sha})`);
 

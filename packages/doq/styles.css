@@ -202,3 +202,21 @@
   .doq-pagination { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .doq-root *, .doq-index *, .doq-shell * { scroll-behavior: auto!important; transition-duration: .01ms!important; animation-duration: .01ms!important; } }
+
+/* Versioned documentation: selector and archive notice */
+.doq-version { position: relative; margin: 0 0 .75rem; font-size: .875rem; }
+.doq-version-summary { display: flex; align-items: center; gap: .4rem; min-height: 2.5rem; padding: .4rem .8rem; border: 1px solid var(--doq-border); border-radius: .6rem; background: var(--doq-surface); color: var(--doq-foreground); cursor: pointer; list-style: none; }
+.doq-version-summary::-webkit-details-marker { display: none; }
+.doq-version-summary::after { content: "▾"; margin-left: auto; }
+.doq-version-summary:hover { border-color: var(--doq-primary); }
+.doq-version-summary:focus-visible,.doq-version-link:focus-visible { outline: 3px solid var(--doq-focus); outline-offset: 2px; }
+.doq-version-prefix { color: var(--doq-foreground); opacity: .85; }
+.doq-version-list { list-style: none; margin: .35rem 0 0; padding: .3rem; border: 1px solid var(--doq-border); border-radius: .6rem; background: var(--doq-background); }
+.doq-version-link { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .55rem .7rem; border-radius: .45rem; color: var(--doq-foreground); text-decoration: none; }
+.doq-version-link:hover { background: var(--doq-surface); }
+.doq-version-link.is-active { font-weight: 700; color: var(--doq-primary); }
+.doq-version-link small { color: inherit; opacity: .85; font-weight: 400; }
+.doq-topbar .doq-version { margin: 0; }
+.doq-topbar .doq-version-list { position: absolute; z-index: 20; min-width: 15rem; box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .15); }
+.doq-version-notice { margin: 0 0 1.5rem; padding: .7rem .9rem; border: 1px solid var(--doq-callout-warning); border-radius: .6rem; background: var(--doq-surface); font-size: .9rem; }
+.doq-index > .doq-version-notice { max-width: 65rem; }

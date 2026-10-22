@@ -29,7 +29,7 @@ def _generated(app: str) -> Path:
 def _script_flags(app: str, script: str) -> list[str]:
     command = json.loads((REPO / f"apps/{app}/package.json").read_text())["scripts"][script]
     parts = shlex.split(command)
-    assert parts[:2] == ["doq-api", "check" if script == "api:check" else "generate"], command
+    assert parts[:2] == ["doq-api", "check" if script.startswith("api:check") else "generate"], command
     return parts[2:]
 
 
@@ -101,7 +101,7 @@ def test_contract_062_generated_markdown_is_valid_owned_and_free_of_machine_path
 @pytest.mark.parametrize("app", APPS)
 def test_contract_063_packed_cli_check_agrees_with_the_committed_reference(app, packed_cli):
     """CONTRACT-063: the CLI from the tarball regenerates exactly the committed files (deterministic, not stale)."""
-    result = _run(packed_cli, "check", *_script_flags(app, "api:check"), cwd=REPO / f"apps/{app}")
+    result = _run(packed_cli, "check", *_script_flags(app, "api:check:latest"), cwd=REPO / f"apps/{app}")
     assert result.returncode == 0, result.stderr
     assert "are up to date" in result.stdout
 

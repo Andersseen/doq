@@ -32,6 +32,17 @@ for (const output of ['showcase-a/dist/analog', 'showcase-b/dist/analog', 'showc
 const consumers = [
   { app: 'showcase-b', dir: resolve(process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer')) },
   { app: 'showcase-a', dir: resolve(process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a')) },
+  // Doqs 0.5-style configuration (no versioning) built from the same tarball: backward compatibility proof.
+  {
+    app: 'showcase-a',
+    unversioned: true,
+    dir: resolve(process.env['DOQ_CONSUMER_LEGACY_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a')),
+  },
+  {
+    app: 'showcase-b',
+    unversioned: true,
+    dir: resolve(process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b')),
+  },
 ];
 if (!skipConsumer) {
   const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
@@ -46,7 +57,13 @@ if (!skipConsumer) {
   for (const consumer of consumers) {
     const builtTime = await mtime(resolve(consumer.dir, 'dist/analog/public/index.html'));
     if (builtTime === undefined || builtTime < tarballTime) {
-      const status = run('node', ['scripts/consumer.ts', tarball, consumer.dir, `--app=${consumer.app}`]);
+      const status = run('node', [
+        'scripts/consumer.ts',
+        tarball,
+        consumer.dir,
+        `--app=${consumer.app}`,
+        ...('unversioned' in consumer ? ['--unversioned'] : []),
+      ]);
       if (status !== 0) process.exit(status);
     }
   }
@@ -56,6 +73,8 @@ const status = run('pnpm', ['exec', 'playwright', 'test', ...passthrough], {
   PLAYWRIGHT_BROWSERS_PATH: process.env['PLAYWRIGHT_BROWSERS_PATH'] ?? '0',
   DOQ_CONSUMER_DIR: consumers[0]!.dir,
   DOQ_CONSUMER_A_DIR: consumers[1]!.dir,
+  DOQ_CONSUMER_LEGACY_A_DIR: consumers[2]!.dir,
+  DOQ_CONSUMER_LEGACY_B_DIR: consumers[3]!.dir,
   ...(skipConsumer ? { E2E_SKIP_CONSUMER: '1' } : {}),
 });
 process.exit(status);

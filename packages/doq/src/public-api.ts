@@ -13,3 +13,6 @@ export type { DoqContentSegment } from './lib/doq-inline-demos';
 export { parseDoqContent, DOQ_CALLOUT_TYPES } from './lib/doq-rich-content';
 export type { DoqRichSegment, DoqTab, DoqCalloutType } from './lib/doq-rich-content';
 export { DoqTabsComponent } from './lib/doq-tabs.component';
+export { DoqVersionSwitcherComponent } from './lib/doq-version-switcher.component';
+export { DOQ_VERSION_FILTER, doqVersionLinks } from './lib/doq-versions';
+export type { DoqVersioning, DoqVersionConfig, DoqArchiveConfig, DoqResolvedVersioning, DoqVersion, DoqVersionLink } from './lib/doq-versions';

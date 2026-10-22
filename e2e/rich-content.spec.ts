@@ -59,9 +59,12 @@ test.describe('rich Markdown authoring (0.4)', () => {
   test('E2E-062: copying after a tab switch copies the active code', async ({ page }) => {
     await page.goto(install);
     await page.getByRole('tab', { name: 'yarn' }).click();
+    // A click before hydration is replayed by Angular afterwards: wait for the tab state instead of racing it.
+    await expect(page.getByRole('tab', { name: 'yarn' })).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('yarn dlx voltui add button\n');
     await page.getByRole('tab', { name: 'npm', exact: true }).click();
+    await expect(page.getByRole('tab', { name: 'npm', exact: true })).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('npx voltui add button\n');
   });

@@ -4,12 +4,15 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
-import { injectDoqDocuments, resolveDoqCopy } from './doq-catalog';
+import { injectDoqCatalogs, injectDoqDocuments, injectDoqVersion, resolveDoqCopy } from './doq-catalog';
 import { DOQ_CONFIG } from './doq-config';
 import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
 import { DoqSearchComponent } from './doq-search.component';
+import { DoqVersionSwitcherComponent } from './doq-version-switcher.component';
+import { doqCanonicalUrl, doqVersionLinks } from './doq-versions';
+import { normalizeDoqPaths } from './doq-paths';
 import { parseDoqContent } from './doq-rich-content';
 import { DoqTabsComponent } from './doq-tabs.component';
 
@@ -18,24 +21,29 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
 @Component({
   selector: 'doq-docs',
   standalone: true,
-  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, NgComponentOutlet],
+  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, DoqVersionSwitcherComponent, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (document(); as doc) {
       @if (doc.attributes.title) {
-      <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar">
+      <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar" [attr.data-doq-version]="versioned ? version.id : null">
         @if (config.sidebar !== 'hidden') {
         <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">{{ copy.label }} menu</button>
         <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" [attr.aria-label]="copy.label" (keydown.escape)="closeMobileNavigation()">
           <button class="doq-mobile-close" type="button" (click)="closeMobileNavigation()">Close navigation</button>
-          <a class="doq-overview" [routerLink]="config.basePath" (click)="closeMobileNavigation()">Overview</a>
+          @if (versionLinks().length > 1) { <doq-version-switcher [versions]="versionLinks()" (chosen)="closeMobileNavigation()" /> }
+          <a class="doq-overview" [routerLink]="version.basePath" (click)="closeMobileNavigation()">Overview</a>
           <doq-nav-tree [nodes]="navigationTree()" (navigate)="closeMobileNavigation()" />
         </nav>
         }
-        <article class="doq-article" data-pagefind-body>
+        <article class="doq-article" data-pagefind-body [attr.data-pagefind-filter]="versioned ? versionFilter : null">
+          @if (versioned && !version.current) {
+            <p class="doq-version-notice" role="note" data-pagefind-ignore>You are reading the <strong>{{ version.label }}</strong> documentation, an archived version. <a [routerLink]="versionLinks()[0]?.href">View {{ versions[0]?.label }}</a></p>
+          }
           <div class="doq-topbar" data-pagefind-ignore>
-            <div class="doq-breadcrumb"><a [routerLink]="config.basePath">{{ copy.breadcrumbRoot }}</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
-            @if (config.search?.enabled) { <doq-search /> }
+            <div class="doq-breadcrumb"><a [routerLink]="version.basePath">{{ copy.breadcrumbRoot }}@if (versioned && !version.current) { ({{ version.label }}) }</a><span>/</span><span>{{ doc.attributes.title }}</span></div>
+            @if (versionLinks().length > 1 && config.sidebar === 'hidden') { <doq-version-switcher [versions]="versionLinks()" /> }
+            @if (config.search?.enabled) { <doq-search [version]="searchVersion" /> }
           </div>
           <header class="doq-doc-header"><p class="doq-eyebrow" data-pagefind-ignore>{{ doc.attributes.group || copy.label }}</p><h1 tabindex="-1">{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
           <div class="doq-content">
@@ -66,13 +74,19 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
           </nav>
         </article>
       </div>
-      } @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="config.basePath">Browse documentation</a></main> }
+      } @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="version.basePath">Browse documentation</a></main> }
     } @else if (document() === undefined) { <div class="doq-loading" aria-live="polite">Loading documentation…</div> }
-    @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="config.basePath">Browse documentation</a></main> }
+    @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="version.basePath">Browse documentation</a></main> }
   `,
 })
 export class DoqDocsComponent {
   readonly config = inject(DOQ_CONFIG);
+  private readonly versionContext = injectDoqVersion(this.config);
+  readonly version = this.versionContext.version;
+  readonly versions = this.versionContext.versions;
+  readonly versioned = this.versionContext.versioned;
+  readonly versionFilter = `doqsVersion:${this.version.id}`;
+  readonly searchVersion = this.versioned ? this.version : undefined;
   readonly activeHeading = signal('');
   readonly mobileNavigationOpen = signal(false);
   private readonly route = inject(ActivatedRoute);
@@ -111,7 +125,11 @@ export class DoqDocsComponent {
     }
   });
   readonly copy = resolveDoqCopy(this.config);
-  readonly documents = injectDoqDocuments(this.config);
+  private readonly canonicalVersioning = normalizeDoqPaths(this.config).versioning;
+  readonly documents = this.versionContext.unknown ? [] : injectDoqDocuments(this.config, this.version.id);
+  private readonly catalogs = this.versioned && !this.versionContext.unknown ? injectDoqCatalogs(this.config) : {};
+  /** Where each version leads from this page: the same public slug when it exists there, otherwise that version's index. */
+  readonly versionLinks = computed(() => this.versioned ? doqVersionLinks(this.versions, this.version.id, this.ownSlug(), this.catalogs) : []);
   private readonly contentMap = injectContentFilesMap();
   private readonly renderer = inject(ContentRenderer);
   private readonly pendingTasks = inject(PendingTasks);
@@ -155,12 +173,12 @@ export class DoqDocsComponent {
   readonly document = toSignal(this.route.paramMap.pipe(
     map(params => params.get(this.config.routeParam ?? 'slug') ?? ''),
     switchMap(slug => {
-      const entry = this.documents.find(doc => doc.slug === slug);
+      const entry = this.versionContext.unknown ? undefined : this.documents.find(doc => doc.slug === slug);
       if (!slug || !entry) return of(null);
       // Analog's injectContentFilesMap intentionally re-keys loaders by the
       // frontmatter slug. The canonical catalog resolves that public slug to
       // its source entry; use the matching Analog alias to load its module.
-      const contentBase = `src/content/${this.config.contentDirectory.replace(/^\/+|\/+$/g, '')}/${entry.slug}`;
+      const contentBase = `src/content/${this.version.contentDirectory}/${entry.slug}`;
       const candidates = new Set([`${contentBase}.md`, `${contentBase}/index.md`]);
       const key = Object.keys(this.contentMap).find(candidate => candidates.has(this.canonicalFilename(candidate)));
       const load = key ? this.contentMap[key] : undefined;
@@ -177,6 +195,7 @@ export class DoqDocsComponent {
       );
     }),
   ), { initialValue: undefined });
+  private ownSlug(): string | null { const slug = this.routeSlug(); return slug && this.documents.some(doc => doc.slug === slug) ? slug : null; }
   demoComponent(id: string): Type<unknown> | undefined { return id === 'button' ? DoqButtonDemoComponent : this.config.demos?.[id]; }
   /** The rendered document cut at its `::demo[id]` directives and `:::tabs` groups; plain Markdown is one HTML segment. */
   readonly segments = computed(() => parseDoqContent(this.document()?.content ?? ''));
@@ -192,8 +211,14 @@ export class DoqDocsComponent {
     const doc = this.document();
     if (doc === undefined) return;
     const title = doc?.attributes.title;
-    if (!title) this.metadata.set(doqPageTitle('Page not found', this.copy.pageTitleSuffix));
-    else this.metadata.set(doqPageTitle(title, this.copy.pageTitleSuffix), doc?.attributes.description);
+    const label = this.versioned && !this.version.current ? this.version.label : undefined;
+    if (!title) {
+      this.metadata.set(doqPageTitle('Page not found', this.copy.pageTitleSuffix, label));
+      this.metadata.setCanonical(undefined);
+    } else {
+      this.metadata.set(doqPageTitle(title, this.copy.pageTitleSuffix, label), doc?.attributes.description);
+      this.metadata.setCanonical(doqCanonicalUrl(this.canonicalVersioning, `${this.version.basePath === '/' ? '' : this.version.basePath}/${this.routeSlug()}`));
+    }
   });
   private readonly enhancementEffect = effect(onCleanup => {
     const doc = this.document();
@@ -221,7 +246,7 @@ export class DoqDocsComponent {
   });
   toggleMobileNavigation(): void {
     this.mobileNavigationOpen.update(open => !open);
-    if (this.mobileNavigationOpen()) globalThis.setTimeout(() => this.hostElement.querySelector<HTMLElement>('.doq-sidebar a')?.focus(), 0);
+    if (this.mobileNavigationOpen()) globalThis.setTimeout(() => this.hostElement.querySelector<HTMLElement>('.doq-sidebar .doq-version-summary, .doq-sidebar .doq-overview')?.focus(), 0);
     else this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
   }
   closeMobileNavigation(): void {
@@ -264,7 +289,7 @@ export class DoqDocsComponent {
   }
   private canonicalFilename(filename: string): string {
     const normalized = filename.replace(/\\/g, '/');
-    const marker = `src/content/${this.config.contentDirectory}/`;
+    const marker = `src/content/${this.version.contentDirectory}/`;
     const index = normalized.lastIndexOf(marker);
     return index < 0 ? normalized : normalized.slice(index);
   }

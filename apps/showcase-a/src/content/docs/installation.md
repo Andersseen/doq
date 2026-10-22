@@ -84,3 +84,7 @@ Then wire the copied component into your application:
 ## Next steps
 
 Open the [button guide](/docs/components/button) to try a configurable Angular preview.
+
+## Before you ship
+
+Run the harbor-signal check in your pipeline so every release follows the same route.

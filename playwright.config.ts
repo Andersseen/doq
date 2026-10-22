@@ -27,6 +27,21 @@ export const apps = {
     url: 'http://127.0.0.1:4279',
     root: resolve(process.env.DOQ_CONSUMER_A_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-a'), 'dist/analog/public'),
   },
+  // Doqs 0.5-style consumers (no `versioning`), built from the same tarball: they must behave exactly as in 0.5.
+  consumerLegacyA: {
+    url: 'http://127.0.0.1:4280',
+    root: resolve(
+      process.env.DOQ_CONSUMER_LEGACY_A_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a'),
+      'dist/analog/public',
+    ),
+  },
+  consumerLegacyB: {
+    url: 'http://127.0.0.1:4281',
+    root: resolve(
+      process.env.DOQ_CONSUMER_LEGACY_B_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b'),
+      'dist/analog/public',
+    ),
+  },
 } as const;
 
 // E2E_SKIP_CONSUMER=1 (focused local runs) skips the tarball-installed consumer and its tests.
@@ -43,7 +58,10 @@ const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
 
 export default defineConfig({
   testDir: 'e2e',
-  testIgnore: [...(withConsumer ? [] : [/consumer(-rich|-api)?\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
+  testIgnore: [
+    ...(withConsumer ? [] : [/consumer(-rich|-api)?\.spec/, /legacy\.spec/]),
+    ...(withAdoption ? [] : [/adoption\.spec/]),
+  ],
   outputDir: 'test-results',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -61,7 +79,14 @@ export default defineConfig({
     server(apps.b, 4274),
     server(apps.noSearch, 4276),
     server(apps.site, 4277),
-    ...(withConsumer ? [server(apps.consumer, 4275), server(apps.consumerA, 4279)] : []),
+    ...(withConsumer
+      ? [
+          server(apps.consumer, 4275),
+          server(apps.consumerA, 4279),
+          server(apps.consumerLegacyA, 4280),
+          server(apps.consumerLegacyB, 4281),
+        ]
+      : []),
     ...(withAdoption ? [server(apps.adoption, 4278)] : []),
   ],
 });

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.6.0
+
+Versioned documentation. Additive and opt-in: a 0.5 configuration (no `versioning`) produces the same routes, the same markup, the same search calls and the same prerendered files as before; this is verified with a 0.5-style consumer built from the packed tarball.
+
+### Added
+- **`versioning` in `DoqPaths`/`DoqConfig`**: `{ current: { id, label }, archives: [{ id, label, contentDirectory }], pathSegment?, canonicalOrigin? }`. The top-level `contentDirectory` stays the current version at its existing URLs; every archive is an independent catalog in its own folder, mounted at `<basePath>/<pathSegment>/<id>` (`/docs/v/1.3`, or `/v/1.3` for a docs-first site). Validated with one-line diagnostics: id syntax, duplicates (case-insensitive), overlapping or unsafe content directories, the reserved URL segment, empty archives and origins.
+- **Routing**: `doqRoutes()` adds an index and a document route per archive (before the current routes), never lets the current routes capture the reserved prefix, and sends unknown versions to the not-found view. Route data carries the version; no second router.
+- **Prerendering**: `doqPrerenderRoutes()` returns an index and a content route for every version, with the same slug rules; the reserved prefix is rejected for current documents.
+- **Catalogs**: `injectDoqDocuments(config, versionId?)` reads only that version's folder; sidebar, index cards, breadcrumbs, previous/next and counts follow the active version. Content is resolved by version and public slug (Analog's slug-keyed content map), so equal slugs in two versions never load each other's Markdown.
+- **`DoqVersionSwitcherComponent`** and `doqVersionLinks()`: native `<details>` selector of real links in the sidebar/drawer (top bar when the sidebar is hidden, and on index pages); `aria-current`, current/archived labels, Escape returns focus; switching keeps the public slug or opens the target version's index; archived pages show a notice.
+- **Search**: indexed pages carry `data-pagefind-filter="doqsVersion:<id>"`; the dialog filters at Pagefind search time with the version being read and reports a version that was never indexed. Unversioned sites use no filter.
+- **SEO**: archive titles end with the version label; optional `canonicalOrigin` makes each page declare its own canonical URL (a host-authored canonical link is never replaced, Doqs's link is removed with the last Doqs page). No origin is hard-coded.
+- **API reference**: no generator change was needed; `--content-dir`, `--out` and `--base-path` already produce independent archived references with independent manifests (verified, including that regenerating the current reference cannot touch an archive).
+- Showcase A (embedded `/docs`, archive `v1.x` with its own generated reference), Showcase B (docs-first, archive `1.x`) and the Angular Movement adoption proof (archive built from the real upstream tag `v0.9.0`) exercise the same public API.
+
+### Changed
+- `normalizeDoqPaths()` additionally returns the resolved `versioning` when configured. New exports: `DOQ_VERSION_FILTER`, `doqVersionLinks`, `DoqVersionSwitcherComponent` and the version types.
+- `DoqSearchService.search()` takes an optional `versionId` (fourth parameter) and rejects with `DoqVersionNotIndexedError` when the index has no such version.
+- CSS: new selectors `.doq-version*` and `.doq-version-notice`; no token was added or changed.
+
+### Fixed
+- `scripts/preview-static.ts` crashed on a directory without `index.html` (such as the bare `/docs/v` prefix) because it had already sent a 200 header when reading failed; it now answers 404.
+
+### Compatibility and limits
+- Node and peer ranges unchanged; no new dependency. Frontmatter of all versions is in the browser bundle (Analog's content list), bodies load lazily per page.
+- Not included: localization, automatic snapshots, remote content, per-version themes, semantic API diffing.
+
 ## 0.5.0
 
 Angular API reference generation. Additive and opt-in: nothing changes for a project that does not run `doq-api`; no configuration option, route, frontmatter key read by the runtime or CSS token was added or changed, and the Angular entry point imports neither Node nor TypeScript.

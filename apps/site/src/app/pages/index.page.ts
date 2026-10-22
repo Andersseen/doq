@@ -47,6 +47,7 @@ const features: readonly Feature[] = [
   { icon: LmnViewColumnsIcon, title: 'Sidebar and table of contents', text: 'Grouped navigation, an “On this page” index, previous and next links and a mobile drawer.' },
   { icon: LmnMagnifyingGlassIcon, title: 'Pagefind full-text search', text: 'Optional and static: an index built from your prerendered output. No backend, off by default.' },
   { icon: LmnSwatchIcon, title: 'Host-owned themes and layout', text: 'Restyle with --host-docs-* CSS tokens. Doqs sets no global html or body styles.' },
+  { icon: LmnCodeBracketIcon, title: 'Versioned documentation', text: 'Keep older releases readable at stable /v/<id> URLs. An accessible version selector, context-preserving switching, per-version prerendering and version-filtered search, all optional.' },
   { icon: LmnCodeBracketIcon, title: 'API reference from source', text: 'doq-api reads your library’s public TypeScript API, with signal inputs, outputs, models and JSDoc, and writes ordinary Markdown pages. A check command fails CI when they are stale.' },
   { icon: LmnSquaresPlusIcon, title: 'Composition slots', text: 'Add your own standalone components after the docs index intro or after every document.' },
 ];
@@ -64,7 +65,15 @@ const examples: readonly CodeExample[] = [
     tab: 'Shared paths',
     file: 'src/doq.paths.ts',
     code: `// shared by vite.config.ts, so no Angular components here
-export const doqPaths = { contentDirectory: 'docs', basePath: '/docs' } as const;`,
+export const doqPaths = {
+  contentDirectory: 'docs',
+  basePath: '/docs',
+  // optional: keep older releases readable at /docs/v/1.3
+  versioning: {
+    current: { id: 'latest', label: 'Latest' },
+    archives: [{ id: '1.3', label: 'v1.3', contentDirectory: 'docs-v1-3' }],
+  },
+} as const;`,
   },
   {
     id: 'analog',
@@ -217,7 +226,7 @@ The text after a demo is still ordinary, searchable Markdown.`;
       </section>
 
       <section id="features" class="mx-auto w-[min(100%-2rem,70rem)] border-t border-border py-14 sm:py-20" aria-labelledby="features-title">
-        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs 0.5 does</h2>
+        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs 0.6 does</h2>
         <ul class="mt-8 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4" moveStagger moveStaggerStep="60ms">
           @for (feature of features; track feature.title) {
             <li [class]="feature.featured ? 'sm:col-span-2 lg:row-span-2' : ''" moveInView="fade-up">
