@@ -16,6 +16,15 @@
     <meta name="twitter:title" content="Doqs — Documentation that lives in your Angular app" />
     <meta name="twitter:description" content="Markdown documentation for an existing Angular and Analog.js app, with your branding, routing and components intact." />
     <!-- origin-tags -->
+    <script>
+      // Apply the stored or system theme before first paint; Volt's provider takes over once Angular boots.
+      try {
+        var stored = localStorage.getItem('doqs-theme');
+        var dark = stored === 'dark' || (stored !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>

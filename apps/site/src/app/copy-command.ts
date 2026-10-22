@@ -1,40 +1,22 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, input, signal } from '@angular/core';
-
-type CopyState = 'idle' | 'copied' | 'failed';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { VoltCard, VoltCardContent } from '@voltui/components';
+import { LmnCommandLineIcon } from 'lumen-icons/command-line';
+import { CopyButton } from './copy-button';
 
 @Component({
   selector: 'app-copy-command',
+  imports: [VoltCard, VoltCardContent, CopyButton, LmnCommandLineIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="command">
-      <code>{{ command() }}</code>
-      <button type="button" (click)="copy()">{{ state() === 'copied' ? 'Copied' : 'Copy' }}<span class="sr-only"> install command</span></button>
-    </div>
-    <p class="sr-only" role="status">{{ message() }}</p>
-    @if (state() === 'failed') {
-      <p class="command-error">Copying is not available here. Select the command and copy it manually.</p>
-    }
+    <volt-card class="bg-muted">
+      <volt-card-content class="flex items-center gap-3 p-2 pl-4">
+        <lmn-command-line class="shrink-0 text-muted-foreground" [size]="20" />
+        <code class="min-w-0 flex-1 overflow-x-auto py-2 font-mono text-sm whitespace-nowrap">{{ command() }}</code>
+        <app-copy-button [text]="command()" label="install command" announcement="Install command copied to the clipboard." />
+      </volt-card-content>
+    </volt-card>
   `,
 })
 export class CopyCommand {
   readonly command = input.required<string>();
-  protected readonly state = signal<CopyState>('idle');
-  protected readonly message = () =>
-    this.state() === 'copied' ? 'Install command copied to the clipboard.' : '';
-  private timer: ReturnType<typeof setTimeout> | undefined;
-
-  constructor() {
-    inject(DestroyRef).onDestroy(() => clearTimeout(this.timer));
-  }
-
-  protected async copy() {
-    clearTimeout(this.timer);
-    try {
-      await navigator.clipboard.writeText(this.command());
-      this.state.set('copied');
-    } catch {
-      this.state.set('failed');
-    }
-    this.timer = setTimeout(() => this.state.set('idle'), 2500);
-  }
 }
