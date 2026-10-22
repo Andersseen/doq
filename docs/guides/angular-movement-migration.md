@@ -36,6 +36,22 @@ In the checkout, with `@doqs/analog@0.3.0` installed **from the packed tarball**
 12. **Deploy.** The existing `wrangler pages deploy dist/analog/public --project-name=angular-movement` publishes the Pagefind bundle with the rest of the output; serve `/pagefind/*` as static files.
 13. **Check before switching.** Run the host's own checks plus: one `<h1>` per page, canonical heading ids, Back/Forward, keyboard path through the drawer and search, 320 px width, light and dark, and `view-source:` shows the Markdown text and the demos' server-rendered markup.
 
+## API reference generated from the real source (Doqs 0.5)
+
+Status: **proof only**; nothing was written to the Angular Movement repository. `scripts/adoption.ts` now runs the packed `doq-api` against `projects/movement/src/public-api.ts` of the disposable checkout, with the checkout's own TypeScript (6.0.3) and `tsconfig.lib.json`:
+
+```sh
+pnpm exec doq-api generate --project projects/movement/tsconfig.lib.json --entry projects/movement/src/public-api.ts \
+  --content-dir src/content/handbook --out src/content/handbook/api --base-path /handbook \
+  --group "API reference" --title "Movement API reference"
+```
+
+**Findings** (checkout `4e71e2f`): 73 public symbols and 74 pages in about one second. `MoveEnterDirective` lists exactly the six signal inputs of its source (`moveEnter`, `moveDuration`, `moveEasing`, `moveDelay`, `moveDisabled`, `moveSpring`), and the transformed ones (`optionalTimeAttribute('moveDuration')`, `optionalBooleanAttribute`) show the accepted binding type `unknown` together with the type the signal reads. `MoveDragDirective` lists its eight inputs and its three `output<MoveDragEvent>()` outputs and is marked `experimental` (from `@stability experimental`); `provideMovement` shows `config?: MovementConfigInput` and `EnvironmentProviders` and links `MovementConfigInput`. The same 74 files are produced under TypeScript 5.9.3 and 6.0.3. Changing the `provideMovement` signature in the checkout makes `doq-api check` exit 1 (`modified provide-movement.md`) until `generate` runs. `E2E-100`..`E2E-103` compare the rendered tables with the declarations read from the checkout's source files, and check search, the host token mapping, axe in both themes and 320 px.
+
+**What it means for a migration.** Add `doq-api generate`/`check` scripts, commit the generated pages and run `check` in CI; keep narrative pages as Markdown and link to the generated ones (`/handbook/api/move-enter-directive`). The generated `ApiStabilityTable` equivalent is per-symbol (`Stability:` line from `@stability`), not a single table; the hand-written table remains a host component if you want the overview. `@stability`/`@experimental` become documentation metadata, nothing more. `{@link}` becomes a link when the target is public.
+
+**Limits seen.** Four `input()` transforms are inline arrow functions and are shown as "(inline function)". `MOVEMENT_STABLE_DIRECTIVES`-style constants have very long tuple types, which are shortened. The numeric heading-id suffix race described above also affects the extra pages' builds at the same rate (2 of 8 builds with the 74 generated pages, 1 of 8 without); the proof rebuilds until the ids are canonical, and it needed three builds in its last run.
+
 ## Known limits
 
 - **Upstream heading-id race (intermittent, Angular Movement checkout only).** Analog 2.9 parses Markdown with a shared `marked-gfm-heading-id` slugger. In that checkout about one build in three produced heading ids with a spurious numeric suffix (for example `usage-2`/`usage-3` for the first `Usage` headings) in the client or the server bundle while the other bundle was correct; then prerendered HTML, Pagefind anchors and the client DOM disagree. It was not seen in the showcases' repeated builds, is independent of `::demo[...]` (Doqs never rewrites heading HTML) and was not worked around here. Compare `dist/client/assets/<page>-*.js` with the prerendered HTML after a build, rebuild if they differ, and treat it as an Analog issue to report upstream before migrating; `E2E-050` fails on a bad build rather than hiding it, except that the search anchor accepts an optional numeric suffix.

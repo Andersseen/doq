@@ -114,6 +114,8 @@ test.describe('E2E-030 official website', () => {
     await expect(panel).toContainText('doqPrerenderRoutes');
     await tabs.getByRole('tab', { name: 'Angular providers' }).focus();
     await page.keyboard.press('ArrowRight');
+    await expect(tabs.getByRole('tab', { name: 'API reference' })).toBeFocused();
+    await page.keyboard.press('ArrowRight');
     await expect(tabs.getByRole('tab', { name: 'Demo registration' })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(panel).toContainText("'enter-animation'");

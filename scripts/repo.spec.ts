@@ -105,6 +105,7 @@ describe('UNIT-009 agent instructions have one canonical source', () => {
     for (const command of [
       'sdd:new',
       'sdd:check',
+      'api:check',
       'test:unit',
       'test:components',
       'test:e2e',

@@ -3,7 +3,7 @@
 // Usage: node scripts/verification/package.ts <tarball> [consumer-directory]
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
@@ -32,12 +32,20 @@ const publicNames = [
   'normalizeSearchResultUrl',
 ];
 const checks: ['PASS' | 'FAIL', string][] = [];
-const check = (name: string, fn: () => void) => {
+const pending: Promise<void>[] = [];
+// A check may be asynchronous; its result keeps the position it was registered at and is awaited before reporting.
+const check = (name: string, fn: () => unknown) => {
+  const slot = checks.push(['FAIL', `${name}: did not finish`]) - 1;
+  const settle = (error?: unknown) => {
+    checks[slot] =
+      error === undefined ? ['PASS', name] : ['FAIL', `${name}: ${error instanceof Error ? error.message : error}`];
+  };
   try {
-    fn();
-    checks.push(['PASS', name]);
+    const result = fn();
+    if (result instanceof Promise) pending.push(result.then(() => settle(), settle));
+    else settle();
   } catch (error) {
-    checks.push(['FAIL', `${name}: ${error instanceof Error ? error.message : error}`]);
+    settle(error);
   }
 };
 
@@ -57,16 +65,50 @@ try {
   check('exports map points at existing entries', () => {
     assert.deepEqual(
       Object.keys(manifest.exports),
-      ['.', './search-index', './styles.css', './package.json'].filter((key) => key in manifest.exports),
+      ['.', './search-index', './api-reference', './styles.css', './package.json'].filter(
+        (key) => key in manifest.exports,
+      ),
     );
     assert.ok(manifest.exports['.'].types && manifest.exports['.'].default);
   });
   check('the indexer is a Node-only entry point, not part of the browser declarations', () => {
     assert.equal(manifest.exports['./search-index'].default, './bin/search-index.mjs');
-    assert.deepEqual(manifest.bin, { 'doq-search': './bin/doq-search.mjs' });
+    assert.deepEqual(manifest.bin, { 'doq-search': './bin/doq-search.mjs', 'doq-api': './bin/doq-api.mjs' });
     assert.ok(!/indexDoqSearch/.test(declarations));
     assert.deepEqual(manifest.peerDependenciesMeta?.pagefind, { optional: true });
     assert.ok(!manifest.dependencies?.pagefind);
+  });
+  check('the API reference generator is a Node-only entry point with its own declarations and CLI', async () => {
+    assert.deepEqual(manifest.exports['./api-reference'], {
+      types: './bin/api-reference.d.mts',
+      default: './bin/api-reference.mjs',
+    });
+    for (const file of [
+      'bin/doq-api.mjs',
+      'bin/api-reference.mjs',
+      'bin/api-reference.d.mts',
+      'bin/api-reference/extract.mjs',
+      'bin/api-reference/render.mjs',
+      'bin/api-reference/output.mjs',
+      'bin/api-reference/typescript.mjs',
+      'bin/api-reference/errors.mjs',
+    ])
+      assert.ok((await readFile(join(root, file), 'utf8')).length > 0, file);
+    assert.match(await readFile(join(root, 'bin/api-reference.d.mts'), 'utf8'), /generateApiReference/);
+    assert.ok(!/generateApiReference|buildApiReference|checkApiReference/.test(declarations));
+  });
+  check('TypeScript is an optional peer, never a dependency, and no browser bundle imports it', async () => {
+    assert.deepEqual(manifest.peerDependenciesMeta?.typescript, { optional: true });
+    assert.ok(!manifest.dependencies?.typescript && !manifest.devDependencies);
+    for (const file of await readdir(join(root, 'fesm2022'), { recursive: true })) {
+      if (!String(file).endsWith('.mjs')) continue;
+      const text = await readFile(join(root, 'fesm2022', String(file)), 'utf8');
+      assert.ok(
+        !/from ['"](typescript|node:[a-z/]+|fs|path)['"]|require\(['"]typescript/.test(text),
+        `${file} imports a Node/TypeScript module`,
+      );
+      assert.ok(!/ts\.createProgram|getTypeChecker/.test(text), `${file} contains compiler API calls`);
+    }
   });
   for (const name of publicNames)
     check(`type declarations export ${name}`, () => assert.match(declarations, new RegExp(`\\b${name}\\b`)));
@@ -141,6 +183,7 @@ try {
       assert.equal(routes.length, 2);
     });
   }
+  await Promise.all(pending);
 } finally {
   await rm(temp, { recursive: true, force: true });
 }

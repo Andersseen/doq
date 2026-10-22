@@ -15,6 +15,7 @@ import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   PACKAGE_NAME,
+  PUBLISH_VISIBILITY,
   changelogSection,
   npmPublishArgs,
   checkPublished,
@@ -127,10 +128,10 @@ async function verifyPublished(tarball: string) {
   const version = packageVersion();
   const integrity = integrityOf(readFileSync(tarball));
   let result = { ok: false, problems: ['not checked'] as string[] };
-  // The registry can lag a few seconds behind a successful publish.
-  for (let attempt = 1; attempt <= 12 && !result.ok; attempt++) {
+  // The registry can lag minutes behind a successful publish (0.4.0 took about six).
+  for (let attempt = 1; attempt <= PUBLISH_VISIBILITY.attempts && !result.ok; attempt++) {
     result = checkPublished(await fetchRegistryState(PACKAGE_NAME, version, fetchJson), integrity, true);
-    if (!result.ok) await new Promise((done) => setTimeout(done, 10_000));
+    if (!result.ok) await new Promise((done) => setTimeout(done, PUBLISH_VISIBILITY.intervalMs));
   }
   if (!result.ok) {
     console.error(`::error::${PACKAGE_NAME}@${version} is not verifiable on npm: ${result.problems.join('; ')}`);

@@ -21,3 +21,6 @@ coverage/
 .env.*
 !.env.example
 .agentyx/state/
+
+# API reference generator test projects
+packages/doq/test/.work/

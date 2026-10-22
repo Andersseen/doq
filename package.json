@@ -14,6 +14,8 @@
     "typecheck:scripts": "tsc -p scripts/tsconfig.json && tsc -p e2e/tsconfig.json",
     "deploy:site": "pnpm --filter site build && pnpm --filter site exec wrangler pages deploy --branch=main",
     "deploy:site:preview": "pnpm --filter site build && pnpm --filter site exec wrangler pages deploy --branch=preview",
+    "api": "pnpm --filter showcase-a api && pnpm --filter showcase-b api",
+    "api:check": "pnpm --filter showcase-a api:check && pnpm --filter showcase-b api:check",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "sdd:new": "node scripts/sdd/new.ts",

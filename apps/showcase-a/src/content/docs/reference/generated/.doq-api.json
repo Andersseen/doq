@@ -1,0 +1,9 @@
+{
+  "generator": "doq-api",
+  "files": {
+    "index.md": "6af562f74b616a001c932dd468cc1830c9e4ecb10bd42f4ebcfb6e36d9acfad2",
+    "vanta-alert-component.md": "8cd3281794b832e12db519a4fcbbf532b496f0359fe5a7ec7cd4741194a0e571",
+    "vanta-tone.md": "91d18b819da58966dbc5d093907c9730db21ace4039fdaff2d7a7d1f75ac8039",
+    "vanta-tooltip-directive.md": "8a4fb81cb2f559cc80668eb4cc337c7e95928da567b894bf6f58deb6b555ae67"
+  }
+}

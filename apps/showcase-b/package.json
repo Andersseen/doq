@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": { "node": ">=22.22.3" },
-  "scripts": { "dev": "vite", "start": "pnpm dev", "build": "vite build --mode nosearch && vite build && doq-search index dist/analog/public", "preview": "node ../../scripts/preview-static.ts dist/analog/public" },
+  "scripts": { "api": "doq-api generate --project forge-sdk/tsconfig.json --entry forge-sdk/src/public-api.ts --out src/content/docs/reference/generated --base-path / --group \"SDK reference\" --title \"SDK reference\" --strict", "api:check": "doq-api check --project forge-sdk/tsconfig.json --entry forge-sdk/src/public-api.ts --out src/content/docs/reference/generated --base-path / --group \"SDK reference\" --title \"SDK reference\" --strict", "dev": "vite", "start": "pnpm dev", "build": "vite build --mode nosearch && vite build && doq-search index dist/analog/public", "preview": "node ../../scripts/preview-static.ts dist/analog/public" },
   "dependencies": {
     "@doqs/analog": "workspace:*",
     "@analogjs/content": "^2.9.0", "@analogjs/router": "^2.9.0",

@@ -1,0 +1,15 @@
+{
+  "generator": "doq-api",
+  "files": {
+    "create-forge-client.md": "14c3cc0c965473f81e2c7035eae380e2132c882463eef90f941e6b47d844d51d",
+    "define-forge-config.md": "630959df1bda336cd340ecb1f80c4d0197249564f67a6fba50bf683b7ac5bc2c",
+    "forge-client.md": "36c1d2575293b2218acd9d239f52a76ceceb024e9b9c1775fcadde3d9d2a4798",
+    "forge-config.md": "0c75aca3e829f3a653e483ed7627e21ab60c4ee387b9852ba1f67eda58ea733b",
+    "forge-entry.md": "a28a95acccd61387b92b63251dc6b5de631f87551bf51594adc0f315d5539516",
+    "forge-environment.md": "33e4def642db59d70029de4154355f23ab8b80cbc747b856f35c5449a6a9d6ab",
+    "forge-error-code.md": "01166966261aa344494c7365ba88e8330c4ce636cecea5fd28f6ae236de6afb1",
+    "forge-page.md": "7025edbda57bfabd01f348a2ebcaf84e4d321f8286471655e48aa7aa9141a3fb",
+    "forge-query.md": "2dbeba1986974de5c344c845d960983447bf6b8b7805e660d3a55a878b4e2104",
+    "index.md": "d22238812c4b2c4c6f55e5ee60b255d5306856ba82474830252a3a3a44740981"
+  }
+}

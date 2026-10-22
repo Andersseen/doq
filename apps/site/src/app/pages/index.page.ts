@@ -47,7 +47,7 @@ const features: readonly Feature[] = [
   { icon: LmnViewColumnsIcon, title: 'Sidebar and table of contents', text: 'Grouped navigation, an “On this page” index, previous and next links and a mobile drawer.' },
   { icon: LmnMagnifyingGlassIcon, title: 'Pagefind full-text search', text: 'Optional and static: an index built from your prerendered output. No backend, off by default.' },
   { icon: LmnSwatchIcon, title: 'Host-owned themes and layout', text: 'Restyle with --host-docs-* CSS tokens. Doqs sets no global html or body styles.' },
-  { icon: LmnPuzzlePieceIcon, title: 'Consumer-owned demos', text: 'Components belong to your app. A demo frontmatter key still attaches one to the end of a page.' },
+  { icon: LmnCodeBracketIcon, title: 'API reference from source', text: 'doq-api reads your library’s public TypeScript API, with signal inputs, outputs, models and JSDoc, and writes ordinary Markdown pages. A check command fails CI when they are stale.' },
   { icon: LmnSquaresPlusIcon, title: 'Composition slots', text: 'Add your own standalone components after the docs index intro or after every document.' },
 ];
 
@@ -100,6 +100,16 @@ export const appConfig: ApplicationConfig = {
     provideDoq(doqConfig),
   ],
 };`,
+  },
+  {
+    id: 'api',
+    tab: 'API reference',
+    file: 'package.json',
+    code: `// optional: reference pages generated from your public TypeScript API
+"scripts": {
+  "api": "doq-api generate --entry src/public-api.ts",
+  "api:check": "doq-api check --entry src/public-api.ts"
+}`,
   },
   {
     id: 'demos',
@@ -207,7 +217,7 @@ The text after a demo is still ordinary, searchable Markdown.`;
       </section>
 
       <section id="features" class="mx-auto w-[min(100%-2rem,70rem)] border-t border-border py-14 sm:py-20" aria-labelledby="features-title">
-        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs 0.4 does</h2>
+        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs 0.5 does</h2>
         <ul class="mt-8 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4" moveStagger moveStaggerStep="60ms">
           @for (feature of features; track feature.title) {
             <li [class]="feature.featured ? 'sm:col-span-2 lg:row-span-2' : ''" moveInView="fade-up">

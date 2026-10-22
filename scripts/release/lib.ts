@@ -215,3 +215,9 @@ export function npmPublishArgs(tarball: string, cwd: string): string[] {
   const absolute = isAbsolute(tarball) ? tarball : resolve(cwd, tarball);
   return ['publish', absolute, '--access', 'public', '--provenance'];
 }
+
+/**
+ * How long a release waits for npm to serve a version it just published. The 0.4.0 publication succeeded at 09:51 UTC
+ * but the registry listed the version only at 09:57, so a two-minute window failed the GitHub Release step.
+ */
+export const PUBLISH_VISIBILITY = { attempts: 60, intervalMs: 10_000 } as const;

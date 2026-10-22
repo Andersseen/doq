@@ -11,6 +11,7 @@ Shared instructions for coding agents (Codex, Claude Code, Kimi Code) and humans
 - **Public contract first.** Exports of `packages/doq/src/public-api.ts`, the config object, frontmatter keys, route shapes and `--host-docs-*` CSS tokens are public. Do not break them without an explicit, documented decision. Update `packages/doq/README.md` and `packages/doq/CHANGELOG.md` for any public change.
 - **Consumer independence.** The library must not import showcase code; showcases share only the package. The packed tarball must work in a project outside this workspace (`pnpm consumer:build`).
 - **Angular / Analog.** Standalone components, signals, `OnPush`, no NgModules. Content comes from Analog's `injectContentFiles`; routes through `doqRoutes()`. `defineDoqConfig()`/`doqPrerenderRoutes()` stay build-safe (no Angular components in `doq.paths.ts`).
+- **API reference.** `doq-api` (`packages/doq/bin/doq-api.mjs`, `@doqs/analog/api-reference`) is a Node-only generator: it must never be imported by the browser entry, must resolve TypeScript from the consumer project (optional peer, never a dependency) and must only write inside its `--out` directory (manifest `.doq-api.json`; never overwrite or delete files it does not own). Showcase fixtures `apps/showcase-a/vanta-ui` and `apps/showcase-b/forge-sdk` have committed generated pages: after changing a fixture or the generator run `pnpm api`, and `pnpm api:check` must pass. Output must stay deterministic (no timestamps, no absolute paths).
 - **Search.** Optional and static (Pagefind). `pagefind` stays an optional peer dependency; the Node-only indexer lives in `packages/doq/bin` (`doq-search`, `@doqs/analog/search-index`) and must never be imported by the browser entry. Each app indexes its own prerendered output after `vite build`; keep `data-pagefind-body`/`data-pagefind-ignore` on Doq markup in step with what should be searchable.
 - **SSR/SSG.** Every user-visible page must render correctly prerendered and after hydration, with no console errors or warnings. Do not touch `window`/`document` outside browser-guarded code.
 - **Accessibility.** Native elements first, accessible names on landmarks and controls, keyboard operation, visible focus, one `<h1>` per page.
@@ -39,7 +40,7 @@ Test observable contracts, not private methods. No large HTML snapshots. Mock on
 
 ## Verify before opening a PR
 
-- Iterating: `pnpm verify:change` (format, types, SDD, Agentyx lock, unit, components, builds, package, contract).
+- Iterating: `pnpm verify:change` (format, types, SDD, API reference check, Agentyx lock, unit, components, builds, package, contract).
 - Before the PR is ready: `pnpm quality:gate` (adds the tarball consumer, Playwright E2E and the CDP harness). Report real results; mark anything not run as NOT RUN.
 - Playwright needs a browser: see `CONTRIBUTING.md` (`PW_CHANNEL=chrome` uses installed Chrome).
 

@@ -100,6 +100,7 @@
 .doq-code-copy:hover { color: var(--doq-primary); border-color: var(--doq-primary); }
 .doq-markdown :not(pre)>code { background: var(--doq-code-background); border-radius: .25rem; padding: .12rem .35rem; font-size: .9em; }
 .doq-markdown table { border-collapse: collapse; display: block; overflow: auto; width: 100%; }
+.doq-markdown table:focus-visible { outline: 2px solid var(--doq-focus); outline-offset: 2px; }
 .doq-markdown th,.doq-markdown td { border: 1px solid var(--doq-border); padding: .65rem .8rem; text-align: left; }
 .doq-markdown th { background: var(--doq-surface); }
 .doq-toc { position: absolute; left: calc(100% + 2rem); top: 8rem; display: grid; gap: .7rem; width: 11rem; font-size: .78rem; color: var(--doq-muted); }

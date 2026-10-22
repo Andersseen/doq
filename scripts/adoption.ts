@@ -9,7 +9,7 @@
  * Needs network access to clone the repository.
  */
 import { spawnSync } from 'node:child_process';
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
@@ -82,7 +82,82 @@ await edit('package.json', (text) =>
 
 run('pnpm', ['install', '--ignore-scripts', '--no-frozen-lockfile'], outDir);
 run('pnpm', ['add', `file:${tarball}`, 'pagefind@1.5.2', '--ignore-scripts'], outDir);
-run('pnpm', ['run', 'build'], outDir);
+// API reference (Doqs 0.5): generated from the real public entry point with the checkout's own TypeScript, then
+// proven stale-sensitive. The checkout is disposable; nothing is committed to the Angular Movement repository.
+const apiArgs = [
+  '--project',
+  'projects/movement/tsconfig.lib.json',
+  '--entry',
+  'projects/movement/src/public-api.ts',
+  '--content-dir',
+  'src/content/handbook',
+  '--out',
+  'src/content/handbook/api',
+  '--base-path',
+  '/handbook',
+  '--group',
+  'API reference',
+  '--title',
+  'Movement API reference',
+];
+const doqApi = (command: 'generate' | 'check') => {
+  const started = Date.now();
+  const result = spawnSync('pnpm', ['exec', 'doq-api', command, ...apiArgs], { cwd: outDir, encoding: 'utf8' });
+  console.log(
+    `adoption: doq-api ${command} exit ${result.status} in ${Date.now() - started} ms\n${result.stdout}${result.stderr}`,
+  );
+  return result;
+};
+const expectStatus = (what: string, actual: number | null, expected: number) => {
+  if (actual !== expected) throw new Error(`adoption: ${what}: expected exit ${expected}, got ${actual}`);
+};
+const typescriptVersion = spawnSync('pnpm', ['exec', 'tsc', '--version'], {
+  cwd: outDir,
+  encoding: 'utf8',
+}).stdout.trim();
+console.log(`adoption: checkout compiler: ${typescriptVersion}`);
+expectStatus('generate', doqApi('generate').status, 0);
+expectStatus('check right after generate', doqApi('check').status, 0);
+const provide = resolve(outDir, 'projects/movement/src/lib/providers/provide-movement.ts');
+const original = await readFile(provide, 'utf8');
+const changed = original.replace(
+  'export function provideMovement(config: MovementConfigInput = {}): EnvironmentProviders',
+  'export function provideMovement(config: MovementConfigInput = {}, label?: string): EnvironmentProviders',
+);
+if (changed === original)
+  throw new Error('adoption: provideMovement signature changed upstream; update the stale-check probe.');
+await writeFile(provide, changed);
+const stale = doqApi('check');
+expectStatus('check after a public API change', stale.status, 1);
+if (!/modified\s+provide-movement\.md/.test(stale.stderr))
+  throw new Error('adoption: stale check did not name provide-movement.md');
+expectStatus('generate after the change', doqApi('generate').status, 0);
+expectStatus('check after regeneration', doqApi('check').status, 0);
+await writeFile(provide, original);
+expectStatus('generate after restoring the source', doqApi('generate').status, 0);
+expectStatus('check after restoring the source', doqApi('check').status, 0);
+
+// Known upstream issue (docs/guides/angular-movement-migration.md, "Known limits"): Analog 2.9's shared heading slugger
+// intermittently gives a page numeric suffixes (`usage-2`) in one of the two bundles. It is independent of Doqs, so the
+// proof rebuilds (up to five times) until the prerendered ids are canonical instead of hiding the problem in the tests.
+const headingIdsAreCanonical = async () => {
+  const publicDir = resolve(outDir, 'dist/analog/public');
+  const html = await readFile(resolve(publicDir, 'handbook/introduction/index.html'), 'utf8');
+  if (!/<h2 id="why-angular-movement"/.test(html) || !/<h2 id="usage-1"/.test(html)) return false;
+  // The browser bundle can be wrong while the prerendered HTML is right: look for suffixed ids in its chunks too.
+  for (const file of await readdir(resolve(publicDir, 'assets'), { recursive: true })) {
+    if (!String(file).endsWith('.js')) continue;
+    if ((await readFile(resolve(publicDir, 'assets', String(file)), 'utf8')).includes('id="why-angular-movement-1"'))
+      return false;
+  }
+  return true;
+};
+for (let attempt = 1; ; attempt++) {
+  run('pnpm', ['run', 'build'], outDir);
+  if (await headingIdsAreCanonical()) break;
+  console.log(`adoption: build ${attempt} hit the upstream heading-id race (non-canonical ids)`);
+  if (attempt === 5) throw new Error('adoption: five builds in a row produced non-canonical heading ids');
+}
 console.log(`adoption: ready ${resolve(outDir, 'dist/analog/public')} (Angular Movement ${sha})`);
 
 if (process.argv.includes('--test')) {
