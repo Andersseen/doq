@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, nextFocusKey, EXPECTED_404_NOISE } from './fixtures.ts';
 
 const dialogOf = (page: Page) => page.getByRole('dialog', { name: 'Search documentation' });
 const openSearch = async (page: Page) => {
@@ -132,7 +132,11 @@ test.describe('E2E-012 full-text search', () => {
     expect(tags.filter((tag) => !['li', 'a', 'span', 'mark'].includes(tag))).toEqual([]);
   });
 
-  test('a missing search index shows an unavailable state and the page keeps working', async ({ page, problems }) => {
+  test('a missing search index shows an unavailable state and the page keeps working', async ({
+    page,
+    problems,
+    browserName,
+  }) => {
     await page.route('**/pagefind/pagefind.js', (route) => route.fulfill({ status: 404, body: 'Not found' }));
     await page.goto(`${apps.a.url}/docs/overview`);
     const dialog = await searchFor(page, 'button');
@@ -142,10 +146,15 @@ test.describe('E2E-012 full-text search', () => {
     await page.getByRole('navigation', { name: 'Vanta UI docs' }).getByRole('link', { name: 'Installation' }).click();
     await expect(page).toHaveURL(/\/docs\/installation$/);
     // The missing bundle is logged by the browser as a failed 404 module load; nothing else may be reported.
-    expect(problems.splice(0)).toEqual([
-      'console.error: Failed to load resource: the server responded with a status of 404 (Not Found)',
-      `requestfailed: ${apps.a.url}/pagefind/pagefind.js net::ERR_ABORTED`,
-    ]);
+    const reported = problems.splice(0);
+    if (browserName === 'chromium') {
+      expect(reported).toEqual([
+        'console.error: Failed to load resource: the server responded with a status of 404 (Not Found)',
+        `requestfailed: ${apps.a.url}/pagefind/pagefind.js net::ERR_ABORTED`,
+      ]);
+    } else {
+      expect(reported.filter((problem) => !EXPECTED_404_NOISE.test(problem))).toEqual([]);
+    }
   });
 });
 
@@ -168,7 +177,7 @@ test.describe('E2E-012 search accessibility', () => {
       expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
       // The modal dialog makes the page behind it inert: Tab may leave for the browser UI, never for page content.
       for (let i = 0; i < 8; i++) {
-        await page.keyboard.press('Tab');
+        await page.keyboard.press(nextFocusKey(page));
         expect(
           await page.evaluate(
             () => document.activeElement === document.body || !!document.activeElement?.closest('dialog'),

@@ -1,4 +1,4 @@
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, expectClipboard } from './fixtures.ts';
 
 test.describe('E2E-005 code copy', () => {
   test('copies the exact code text to the clipboard', async ({ page }) => {
@@ -8,7 +8,7 @@ test.describe('E2E-005 code copy', () => {
     const copy = block.getByRole('button', { name: 'Copy code' });
     await copy.click();
     await expect(block.getByRole('button', { name: 'Code copied' })).toHaveText('Copied');
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    await expectClipboard(page, expected);
     expect(expected).toContain('src/content/docs/');
   });
 
@@ -31,6 +31,6 @@ test.describe('E2E-005 code copy', () => {
     await page.goto(`${apps.b.url}/onboarding/first-application`);
     const block = page.locator('.doq-markdown pre').first();
     await block.getByRole('button', { name: 'Copy code' }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('pnpm add @forgecms/client\n');
+    await expectClipboard(page, 'pnpm add @forgecms/client\n');
   });
 });

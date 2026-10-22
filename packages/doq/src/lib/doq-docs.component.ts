@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, untracked, PLATFORM_ID, Type } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, NavigationStart, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
 import { injectDoqCatalogs, injectDoqDocuments, injectDoqVersion, resolveDoqCopy } from './doq-catalog';
@@ -105,13 +105,16 @@ export class DoqDocsComponent {
   private arrival = this.router.navigated && this.router.currentNavigation()?.trigger === 'imperative';
   private readonly trackNavigation = this.router.events.pipe(takeUntilDestroyed()).subscribe(event => {
     if (event instanceof NavigationStart) {
-      // On Back/Forward the browser has usually restored the destination's scroll by now, so use the position seen at popstate.
-      const leavingScroll = event.navigationTrigger === 'popstate' ? this.scrollAtPopstate : this.documentRef.defaultView?.scrollY ?? 0;
+      // On Back/Forward the browser may already have restored the destination's scroll, so use the last position the reader had.
+      const leavingScroll = event.navigationTrigger === 'popstate' ? this.lastScrollY : this.documentRef.defaultView?.scrollY ?? 0;
       if (this.currentNavigationId !== undefined) this.scrollPositions.set(this.currentNavigationId, leavingScroll);
       this.navigationTrigger = event.navigationTrigger;
       this.restoreNavigationId = event.restoredState?.navigationId;
       this.restorePosition = undefined;
+    } else if (event instanceof NavigationCancel || event instanceof NavigationError) {
+      this.traversing = false;
     } else if (event instanceof NavigationEnd) {
+      this.traversing = false;
       this.currentNavigationId = event.id;
       const slug = this.routeSlug();
       const documentChanged = slug !== this.lastSlug;
@@ -138,13 +141,22 @@ export class DoqDocsComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly metadata = inject(DoqPageMetadata);
   private readonly claimMetadata = this.metadata.claim(inject(DestroyRef));
-  private scrollAtPopstate = 0;
-  private readonly trackPopstate = (() => {
+  /**
+   * The reader's last known scroll position, from scroll events, frozen while a Back/Forward traversal is under way.
+   * Engines restore the destination's scroll at different moments (WebKit before `popstate`, Chromium right after it), so
+   * `scrollY` at NavigationStart is the destination's position there; this is where the reader was leaving from.
+   */
+  private lastScrollY = 0;
+  private traversing = false;
+  private readonly trackScroll = (() => {
     const view = isPlatformBrowser(this.platformId) ? this.documentRef.defaultView : null;
     if (!view) return;
-    const listener = () => { this.scrollAtPopstate = view.scrollY; };
-    view.addEventListener('popstate', listener);
-    inject(DestroyRef).onDestroy(() => view.removeEventListener('popstate', listener));
+    this.lastScrollY = view.scrollY;
+    const onScroll = () => { if (!this.traversing) this.lastScrollY = view.scrollY; };
+    const onPopstate = () => { this.traversing = true; };
+    view.addEventListener('scroll', onScroll, { passive: true });
+    view.addEventListener('popstate', onPopstate);
+    inject(DestroyRef).onDestroy(() => { view.removeEventListener('scroll', onScroll); view.removeEventListener('popstate', onPopstate); });
   })();
   readonly navigation = computed(() => this.documents.map(document => ({ ...document, href: document.routePath })));
   readonly navigationTree = computed(() => {
@@ -255,6 +267,11 @@ export class DoqDocsComponent {
     this.hostElement.querySelector<HTMLElement>('.doq-mobile-trigger')?.focus();
   }
   private reveal(fragment: string | null): void {
+    this.revealTarget(fragment);
+    // The position the reader now has is the one to leave from, even when the browser reported no scroll event for it.
+    this.lastScrollY = this.documentRef.defaultView?.scrollY ?? 0;
+  }
+  private revealTarget(fragment: string | null): void {
     const view = this.documentRef.defaultView;
     const markdown = this.hostElement.querySelector<HTMLElement>('.doq-content');
     const target = fragment && markdown ? this.findFragmentTarget(markdown, fragment) : undefined;

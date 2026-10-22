@@ -48,6 +48,12 @@ export const apps = {
 const withConsumer = !process.env.E2E_SKIP_CONSUMER;
 const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
 
+// Specs that run in Firefox and WebKit as well as Chromium: routing, history, fragments, TOC, search, versions, tabs,
+// copy, drawer, focus, themes, overflow and axe. The rest of the suite is engine-independent and stays Chromium-only.
+const crossBrowserSpecs = [
+  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening/,
+];
+
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
   command: `node scripts/preview-static.ts ${app.root}`,
   url: app.url,
@@ -70,10 +76,22 @@ export default defineConfig({
   use: {
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    permissions: ['clipboard-read', 'clipboard-write'],
   },
-  // PW_CHANNEL=chrome runs the installed Google Chrome instead of the downloaded Chromium build.
-  projects: [{ name: 'chromium', use: { browserName: 'chromium', channel: process.env.PW_CHANNEL || undefined } }],
+  projects: [
+    // The complete suite. PW_CHANNEL=chrome runs the installed Google Chrome instead of the downloaded Chromium build.
+    // Only Chromium can grant clipboard permissions, so only here the copy test reads the clipboard back.
+    {
+      name: 'chromium',
+      use: {
+        browserName: 'chromium',
+        channel: process.env.PW_CHANNEL || undefined,
+        permissions: ['clipboard-read', 'clipboard-write'],
+      },
+    },
+    // The focused cross-browser matrix (`pnpm test:e2e:browsers`): the journeys whose behavior depends on the engine.
+    { name: 'firefox', testMatch: crossBrowserSpecs, use: { browserName: 'firefox' } },
+    { name: 'webkit', testMatch: crossBrowserSpecs, use: { browserName: 'webkit' } },
+  ],
   webServer: [
     server(apps.a, 4273),
     server(apps.b, 4274),

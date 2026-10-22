@@ -28,14 +28,23 @@ export interface PageFacts {
   readonly links: readonly string[];
 }
 
-const ENTITIES: Readonly<Record<string, string>> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", '#39': "'", nbsp: ' ' };
+const ENTITIES: Readonly<Record<string, string>> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  '#39': "'",
+  nbsp: ' ',
+};
 export const decodeEntities = (value: string): string =>
   value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, name: string) => {
     if (name.startsWith('#x')) return String.fromCodePoint(parseInt(name.slice(2), 16));
     if (name.startsWith('#') && name !== '#39') return String.fromCodePoint(Number(name.slice(1)));
     return ENTITIES[name.toLowerCase()] ?? match;
   });
-const stripTags = (html: string): string => decodeEntities(html.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]*>/g, ''));
+const stripTags = (html: string): string =>
+  decodeEntities(html.replace(/<!--[\s\S]*?-->/g, '').replace(/<[^>]*>/g, ''));
 
 const attribute = (tag: string, name: string): string | undefined => {
   const match = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i').exec(tag);
@@ -46,10 +55,12 @@ const attribute = (tag: string, name: string): string | undefined => {
 export function extractPageFacts(html: string): PageFacts {
   const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
   const canonicals = [...html.matchAll(/<link\b[^>]*>/gi)]
-    .map(match => match[0])
-    .filter(tag => attribute(tag, 'rel')?.toLowerCase().split(/\s+/).includes('canonical'))
-    .map(tag => attribute(tag, 'href') ?? '');
-  const ids = new Set([...html.matchAll(/<[a-z][^>]*?\sid\s*=\s*"([^"]*)"[^>]*>/gi)].map(match => decodeEntities(match[1]!)));
+    .map((match) => match[0])
+    .filter((tag) => attribute(tag, 'rel')?.toLowerCase().split(/\s+/).includes('canonical'))
+    .map((tag) => attribute(tag, 'href') ?? '');
+  const ids = new Set(
+    [...html.matchAll(/<[a-z][^>]*?\sid\s*=\s*"([^"]*)"[^>]*>/gi)].map((match) => decodeEntities(match[1]!)),
+  );
   const h1Count = [...html.matchAll(/<h1[\s>]/gi)].length;
 
   const markdownHeadings: PageHeading[] = [];
@@ -61,11 +72,18 @@ export function extractPageFacts(html: string): PageFacts {
   }
 
   const toc = /<aside\b[^>]*class="[^"]*\bdoq-toc\b[^"]*"[^>]*>([\s\S]*?)<\/aside>/i.exec(html);
-  const tocFragments = toc ? [...toc[1]!.matchAll(/<a\b[^>]*>/gi)].map(match => attribute(match[0], 'href') ?? '').filter(href => href.includes('#')).map(href => href.slice(href.indexOf('#') + 1)) : [];
+  const tocFragments = toc
+    ? [...toc[1]!.matchAll(/<a\b[^>]*>/gi)]
+        .map((match) => attribute(match[0], 'href') ?? '')
+        .filter((href) => href.includes('#'))
+        .map((href) => href.slice(href.indexOf('#') + 1))
+    : [];
 
   const article = /<article\b[^>]*class="[^"]*\bdoq-article\b[^"]*"[^>]*>([\s\S]*?)<\/article>/i.exec(html);
   const articleBody = article ? article[1]!.replace(/<(script|style|dialog)\b[\s\S]*?<\/\1>/gi, '') : '';
-  const links = [...html.matchAll(/<a\b[^>]*>/gi)].map(match => attribute(match[0], 'href')).filter((href): href is string => href !== undefined);
+  const links = [...html.matchAll(/<a\b[^>]*>/gi)]
+    .map((match) => attribute(match[0], 'href'))
+    .filter((href): href is string => href !== undefined);
   return {
     title: titleMatch ? stripTags(titleMatch[1]!).trim() : '',
     canonicals,
@@ -81,14 +99,27 @@ export function extractPageFacts(html: string): PageFacts {
 }
 
 /** The id marked-gfm-heading-id gives a heading: the slug of its text, lower-cased, made unique in document order. */
-export function expectedHeadingIds(texts: readonly string[], createSlugger: () => { slug(value: string): string }): string[] {
+export function expectedHeadingIds(
+  texts: readonly string[],
+  createSlugger: () => { slug(value: string): string },
+): string[] {
   const slugger = createSlugger();
-  return texts.map(text => slugger.slug(text.trim().toLowerCase()));
+  return texts.map((text) => slugger.slug(text.trim().toLowerCase()));
 }
 
 export type DiagnosticKind =
-  | 'empty-page' | 'missing-h1' | 'multiple-h1' | 'duplicate-id' | 'heading-id' | 'toc-fragment' | 'toc-missing'
-  | 'broken-link' | 'broken-fragment' | 'canonical' | 'missing-route' | 'unexpected-route';
+  | 'empty-page'
+  | 'missing-h1'
+  | 'multiple-h1'
+  | 'duplicate-id'
+  | 'heading-id'
+  | 'toc-fragment'
+  | 'toc-missing'
+  | 'broken-link'
+  | 'broken-fragment'
+  | 'canonical'
+  | 'missing-route'
+  | 'unexpected-route';
 
 export interface Diagnostic {
   readonly kind: DiagnosticKind;
@@ -108,58 +139,99 @@ export interface PageChecks {
 }
 
 /** Rules that depend only on one page. */
-export function checkPage({ route, facts, createSlugger, canonicalOrigin, minimumArticleText = 40 }: PageChecks): Diagnostic[] {
+export function checkPage({
+  route,
+  facts,
+  createSlugger,
+  canonicalOrigin,
+  minimumArticleText = 40,
+}: PageChecks): Diagnostic[] {
   const out: Diagnostic[] = [];
   const add = (kind: DiagnosticKind, message: string) => out.push({ kind, page: route, message });
   if (!facts.isDocumentation) return out;
   if (facts.h1Count === 0) add('missing-h1', 'The documentation page has no <h1>.');
   if (facts.h1Count > 1) add('multiple-h1', `The documentation page has ${facts.h1Count} <h1> elements.`);
   if (facts.articleTextLength < minimumArticleText) {
-    add('empty-page', `The article holds ${facts.articleTextLength} characters of text; a successful page must not be empty.`);
+    add(
+      'empty-page',
+      `The article holds ${facts.articleTextLength} characters of text; a successful page must not be empty.`,
+    );
   }
 
   const seen = new Set<string>();
   for (const heading of facts.markdownHeadings) {
-    if (seen.has(heading.id)) add('duplicate-id', `Heading id "${heading.id}" (${heading.text}) appears more than once.`);
+    if (seen.has(heading.id))
+      add('duplicate-id', `Heading id "${heading.id}" (${heading.text}) appears more than once.`);
     seen.add(heading.id);
   }
-  const expected = expectedHeadingIds(facts.markdownHeadings.map(heading => heading.text), createSlugger);
+  const expected = expectedHeadingIds(
+    facts.markdownHeadings.map((heading) => heading.text),
+    createSlugger,
+  );
   facts.markdownHeadings.forEach((heading, index) => {
     if (heading.id !== expected[index]) {
-      add('heading-id', `Heading #${index + 1} "${heading.text}" has id "${heading.id}" but a sequential render of this page gives "${expected[index]}".`);
+      add(
+        'heading-id',
+        `Heading #${index + 1} "${heading.text}" has id "${heading.id}" but a sequential render of this page gives "${expected[index]}".`,
+      );
     }
   });
 
   for (const fragment of facts.tocFragments) {
-    if (!facts.ids.has(fragment)) add('toc-fragment', `The table of contents links to #${fragment}, which is not an id on the page.`);
+    if (!facts.ids.has(fragment))
+      add('toc-fragment', `The table of contents links to #${fragment}, which is not an id on the page.`);
   }
-  if (facts.hasToc && facts.tocFragments.length !== facts.markdownHeadings.filter(heading => heading.level >= 2 && heading.level <= 3).length) {
-    add('toc-missing', `The table of contents lists ${facts.tocFragments.length} headings but the article has ${facts.markdownHeadings.filter(heading => heading.level >= 2 && heading.level <= 3).length} h2/h3 headings.`);
+  if (
+    facts.hasToc &&
+    facts.tocFragments.length !==
+      facts.markdownHeadings.filter((heading) => heading.level >= 2 && heading.level <= 3).length
+  ) {
+    add(
+      'toc-missing',
+      `The table of contents lists ${facts.tocFragments.length} headings but the article has ${facts.markdownHeadings.filter((heading) => heading.level >= 2 && heading.level <= 3).length} h2/h3 headings.`,
+    );
   }
 
-  if (facts.canonicals.length > 1) add('canonical', `${facts.canonicals.length} canonical links; exactly one is allowed.`);
+  if (facts.canonicals.length > 1)
+    add('canonical', `${facts.canonicals.length} canonical links; exactly one is allowed.`);
   for (const canonical of facts.canonicals) {
     let url: URL | undefined;
-    try { url = new URL(canonical); } catch { /* handled below */ }
+    try {
+      url = new URL(canonical);
+    } catch {
+      /* handled below */
+    }
     if (!url) add('canonical', `Canonical "${canonical}" is not an absolute URL.`);
     else {
-      if (canonicalOrigin && url.origin !== new URL(canonicalOrigin).origin) add('canonical', `Canonical origin ${url.origin} differs from the configured ${canonicalOrigin}.`);
-      if (url.pathname.replace(/\/$/, '') !== route.replace(/\/$/, '')) add('canonical', `Canonical path ${url.pathname} is not this page's route ${route}.`);
+      if (canonicalOrigin && url.origin !== new URL(canonicalOrigin).origin)
+        add('canonical', `Canonical origin ${url.origin} differs from the configured ${canonicalOrigin}.`);
+      if (url.pathname.replace(/\/$/, '') !== route.replace(/\/$/, ''))
+        add('canonical', `Canonical path ${url.pathname} is not this page's route ${route}.`);
     }
   }
   return out;
 }
 
-export type LinkResolution = { readonly kind: 'external' | 'ignored' } | { readonly kind: 'internal'; readonly path: string; readonly fragment?: string };
+export type LinkResolution =
+  | { readonly kind: 'external' | 'ignored' }
+  | { readonly kind: 'internal'; readonly path: string; readonly fragment?: string };
 
 /** Classify an href found on page `route`. Only same-site links are validated; nothing is fetched. */
 export function resolveLink(href: string, route: string, origins: readonly string[] = []): LinkResolution {
   const trimmed = href.trim();
   if (!trimmed || /^(mailto|tel|javascript|data|blob):/i.test(trimmed)) return { kind: 'ignored' };
   let url: URL;
-  try { url = new URL(trimmed, `http://site.invalid${route}`); } catch { return { kind: 'ignored' }; }
+  try {
+    url = new URL(trimmed, `http://site.invalid${route}`);
+  } catch {
+    return { kind: 'ignored' };
+  }
   if (url.origin !== 'http://site.invalid' && !origins.includes(url.origin)) return { kind: 'external' };
-  return { kind: 'internal', path: decodeURIComponent(url.pathname), fragment: url.hash ? decodeURIComponent(url.hash.slice(1)) : undefined };
+  return {
+    kind: 'internal',
+    path: decodeURIComponent(url.pathname),
+    fragment: url.hash ? decodeURIComponent(url.hash.slice(1)) : undefined,
+  };
 }
 
 /** Routes the content source promises, from `.md` paths below a content directory and their frontmatter slugs. */
@@ -176,5 +248,5 @@ export function frontmatterSlug(markdown: string): string | undefined {
 }
 
 export function formatDiagnostics(diagnostics: readonly Diagnostic[]): string {
-  return diagnostics.map(item => `  ${item.page}  [${item.kind}] ${item.message}`).join('\n');
+  return diagnostics.map((item) => `  ${item.page}  [${item.kind}] ${item.message}`).join('\n');
 }

@@ -29,11 +29,11 @@ const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/packag
 };
 const unversioned = flags.includes('--unversioned');
 // --stress=<n>: add n generated documents (with duplicate headings and rich Markdown) to the current docs and to each archive.
-const stress = Number(flags.find(flag => flag.startsWith('--stress='))?.slice('--stress='.length) ?? 0);
+const stress = Number(flags.find((flag) => flag.startsWith('--stress='))?.slice('--stress='.length) ?? 0);
 const skipApi = flags.includes('--skip-api');
 // --angular=22: install Angular 22 with TypeScript 6 (the range Angular 22 supports) instead of the workspace's Angular 21.
 // Every other package keeps the version range of the showcase, and peer dependencies are checked strictly, never silenced.
-const angular = flags.find(flag => flag.startsWith('--angular='))?.slice('--angular='.length);
+const angular = flags.find((flag) => flag.startsWith('--angular='))?.slice('--angular='.length);
 if (angular !== undefined && angular !== '21' && angular !== '22') throw new Error(`Unknown --angular=${angular}`);
 // --slow-markdown: add an asynchronous marked step, like Shiki's, so Markdown renders really interleave (determinism stress).
 // --without-deterministic-markdown: the control; remove the guard from vite.config.ts.
@@ -77,14 +77,21 @@ if (stress > 0) {
   const demo = app === 'showcase-a' ? 'vanta-button' : 'forge-schema';
   await writeDocsFixture(resolve(outDir, 'src/content/docs'), { count: stress, demo, label: 'current' });
   if (!unversioned) {
-    await writeDocsFixture(resolve(outDir, 'src/content/docs-v1'), { count: Math.ceil(stress / 2), demo, label: 'archive' });
+    await writeDocsFixture(resolve(outDir, 'src/content/docs-v1'), {
+      count: Math.ceil(stress / 2),
+      demo,
+      label: 'archive',
+    });
   }
 }
 
 if (slowMarkdown || withoutGuard) {
   const configFile = resolve(outDir, 'vite.config.ts');
   let config = await readFile(configFile, 'utf8');
-  if (withoutGuard) config = config.replace(/import \{ doqDeterministicMarkdown \}[^\n]*\n/, '').replace(/\s*\/\/ Renders Markdown one file[^\n]*\n\s*doqDeterministicMarkdown\(\),/, '');
+  if (withoutGuard)
+    config = config
+      .replace(/import \{ doqDeterministicMarkdown \}[^\n]*\n/, '')
+      .replace(/\s*\/\/ Renders Markdown one file[^\n]*\n\s*doqDeterministicMarkdown\(\),/, '');
   if (slowMarkdown) {
     config = config.replace(
       "content: { highlighter: 'prism' }",
@@ -99,7 +106,8 @@ manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'do
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
 if (angular === '22') {
   for (const group of ['dependencies', 'devDependencies'] as const)
-    for (const name of Object.keys(manifest[group] ?? {})) if (name.startsWith('@angular/')) manifest[group][name] = '^22.0.0';
+    for (const name of Object.keys(manifest[group] ?? {}))
+      if (name.startsWith('@angular/')) manifest[group][name] = '^22.0.0';
   manifest.devDependencies['typescript'] = '~6.0.0';
   // Unused by the showcase's vite.config.ts, and its tsconfck dependency only supports TypeScript 5 (a tooling peer, not Doqs's).
   delete manifest.devDependencies['vite-tsconfig-paths'];

@@ -18,7 +18,10 @@ export interface DocsFixtureOptions {
   readonly label?: string;
 }
 
-export function fixtureDocument(index: number, { demo, label = 'current' }: Pick<DocsFixtureOptions, 'demo' | 'label'>): { path: string; markdown: string } {
+export function fixtureDocument(
+  index: number,
+  { demo, label = 'current' }: Pick<DocsFixtureOptions, 'demo' | 'label'>,
+): { path: string; markdown: string } {
   const n = String(index).padStart(4, '0');
   const group = `Group ${String(Math.floor(index / 10)).padStart(3, '0')}`;
   const markdown = `---

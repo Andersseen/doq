@@ -1,4 +1,4 @@
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, nextFocusKey } from './fixtures.ts';
 
 test.use({ viewport: { width: 375, height: 812 } });
 
@@ -56,7 +56,7 @@ test.describe('E2E-003 mobile navigation', () => {
       await expect(hiddenLinks.first()).toBeHidden();
       const stops: string[] = [];
       for (let i = 0; i < 12; i++) {
-        await page.keyboard.press('Tab');
+        await page.keyboard.press(nextFocusKey(page));
         stops.push(
           await page.evaluate(
             () =>

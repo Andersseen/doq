@@ -1,4 +1,4 @@
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, expectClipboard } from './fixtures.ts';
 
 // Both consumers are built from the packed tarball outside the workspace (`pnpm consumer:build`): no source aliases.
 test.describe('E2E-077 packed consumers: rich Markdown authoring', () => {
@@ -15,7 +15,7 @@ test.describe('E2E-077 packed consumers: rich Markdown authoring', () => {
     await page.keyboard.press('ArrowRight');
     await expect(tabs.nth(1)).toBeFocused();
     await page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('pnpm dlx voltui add button\n');
+    await expectClipboard(page, 'pnpm dlx voltui add button\n');
     await expect(page.locator('.doq-steps > ol > li')).toHaveCount(3);
     await expect(page.getByRole('region', { name: 'Vanta install command' })).toBeVisible();
     await page.goto(`${apps.consumerA.url}/docs/guides/accessibility`);

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, nextFocusKey } from './fixtures.ts';
 
 const accessibility = `${apps.a.url}/docs/guides/accessibility`;
 const api = `${apps.b.url}/reference/api`;
@@ -116,7 +116,7 @@ test.describe('E2E-040 inline Angular components in Markdown', () => {
     await page.goto(`${apps.a.url}/docs/installation`);
     const install = page.getByRole('region', { name: 'Vanta install command' });
     await install.getByRole('button', { name: 'pnpm', exact: true }).focus();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(nextFocusKey(page));
     await expect(install.getByRole('button', { name: 'npm', exact: true })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(install.locator('code')).toHaveText('npm install @voltui/components');

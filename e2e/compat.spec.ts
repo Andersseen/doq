@@ -10,11 +10,14 @@ const test = base.extend<{ problems: string[] }>({
   problems: [
     async ({ page }, use) => {
       const problems: string[] = [];
-      page.on('pageerror', error => problems.push(`pageerror: ${error.message}`));
-      page.on('console', message => {
-        if (message.type() === 'error' || message.type() === 'warning') problems.push(`console.${message.type()}: ${message.text()}`);
+      page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
+      page.on('console', (message) => {
+        if (message.type() === 'error' || message.type() === 'warning')
+          problems.push(`console.${message.type()}: ${message.text()}`);
       });
-      page.on('requestfailed', request => problems.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`));
+      page.on('requestfailed', (request) =>
+        problems.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`),
+      );
       await use(problems);
       expect(problems, 'browser reported errors or warnings').toEqual([]);
     },
@@ -23,7 +26,10 @@ const test = base.extend<{ problems: string[] }>({
 });
 
 const openSearch = async (page: Page) => {
-  await page.getByRole('button', { name: /^Search/ }).first().click();
+  await page
+    .getByRole('button', { name: /^Search/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Search documentation' });
   await expect(dialog).toBeVisible();
   return dialog;
@@ -34,7 +40,10 @@ test.describe('COMPAT-01 Angular integration of the packed package', () => {
     await page.goto('/onboarding/first-application');
     const version = await page.locator('[ng-version]').first().getAttribute('ng-version');
     if (major) expect(version, 'installed Angular version').toMatch(new RegExp(`^${major}\\.`));
-    expect(await page.evaluate(() => typeof (window as unknown as { Zone?: unknown }).Zone), 'Zone.js must not be loaded').toBe('undefined');
+    expect(
+      await page.evaluate(() => typeof (window as unknown as { Zone?: unknown }).Zone),
+      'Zone.js must not be loaded',
+    ).toBe('undefined');
     // Hydrated, not just prerendered: signal state in a consumer demo, no Zone.js to trigger change detection.
     const demo = page.getByRole('region', { name: 'Forge content model demo' });
     await demo.getByLabel('Field type').selectOption('Reference');
@@ -43,7 +52,9 @@ test.describe('COMPAT-01 Angular integration of the packed package', () => {
 
   test('client navigation updates title, focus and history without a reload', async ({ page }) => {
     await page.goto('/onboarding/first-application');
-    await page.evaluate(() => { (window as unknown as { __kept?: boolean }).__kept = true; });
+    await page.evaluate(() => {
+      (window as unknown as { __kept?: boolean }).__kept = true;
+    });
     await page.getByRole('link', { name: 'Content models' }).first().click();
     await expect(page).toHaveURL(/\/concepts\/models$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Content models' })).toBeFocused();
@@ -53,7 +64,10 @@ test.describe('COMPAT-01 Angular integration of the packed package', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeVisible();
     await page.goForward();
     await expect(page).toHaveURL(/\/concepts\/models$/);
-    expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept), 'a full reload happened').toBe(true);
+    expect(
+      await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept),
+      'a full reload happened',
+    ).toBe(true);
   });
 
   test('rich Markdown: tabs by keyboard, callouts, steps and copy', async ({ page }) => {
@@ -94,7 +108,10 @@ test.describe('COMPAT-01 Angular integration of the packed package', () => {
     await expect(page).toHaveURL(/\/v\/1\/reference\/api$/);
     const dialog = await openSearch(page);
     await dialog.getByRole('searchbox').fill('sandpiper-offset');
-    await expect(dialog.getByRole('link', { name: /API reference/ })).toHaveAttribute('href', /^\/v\/1\/reference\/api#/);
+    await expect(dialog.getByRole('link', { name: /API reference/ })).toHaveAttribute(
+      'href',
+      /^\/v\/1\/reference\/api#/,
+    );
   });
 
   test('generated API reference renders and links resolve', async ({ page }) => {

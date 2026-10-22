@@ -24,6 +24,7 @@
     "test:unit": "vitest run -c vitest.unit.config.ts",
     "test:components": "pnpm --filter @doqs/analog test:components && pnpm --filter site test:components",
     "test:e2e": "node scripts/e2e.ts",
+    "test:e2e:browsers": "node scripts/e2e.ts --browsers",
     "test:contract": "node scripts/contract.ts",
     "verify:mvp": "node scripts/verification/mvp.ts",
     "verify:package": "node scripts/verification/package.ts",

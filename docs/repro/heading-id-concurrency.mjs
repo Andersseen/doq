@@ -34,4 +34,10 @@ console.log('A concurrent:', ids(a1), ids(a2), '(expected usage, usage-1 for bot
 const syncMarked = new Marked(gfmHeadingId());
 const analogRender = async (content) => ({ content: await syncMarked.parse(content), toc: getHeadingList() });
 const [b1, b2] = await Promise.all([analogRender(docA), analogRender(docB)]);
-console.log('B toc of docA:', b1.toc.map((h) => h.id), 'toc of docB:', b2.toc.map((h) => h.id), '(expected [usage, usage-1] and [other])');
+console.log(
+  'B toc of docA:',
+  b1.toc.map((h) => h.id),
+  'toc of docB:',
+  b2.toc.map((h) => h.id),
+  '(expected [usage, usage-1] and [other])',
+);

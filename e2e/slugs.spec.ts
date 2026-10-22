@@ -1,4 +1,4 @@
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, EXPECTED_404_NOISE } from './fixtures.ts';
 
 test.describe('E2E-002 nested and custom slugs', () => {
   test('nested documents open from navigation and survive a reload', async ({ page }) => {
@@ -20,15 +20,25 @@ test.describe('E2E-002 nested and custom slugs', () => {
     await expect(page).toHaveURL(`${apps.b.url}/onboarding/first-application`);
   });
 
-  test('the source filename of a custom-slug document is not a route', async ({ page, request, problems }) => {
+  test('the source filename of a custom-slug document is not a route', async ({
+    page,
+    request,
+    problems,
+    browserName,
+  }) => {
     expect((await request.get(`${apps.b.url}/getting-started`)).status()).toBe(404);
     const response = await page.goto(`${apps.b.url}/getting-started`);
     expect(response?.status()).toBe(404);
     await expect(page.getByRole('heading', { name: 'Getting started' })).toHaveCount(0);
     // The browser logs the expected 404 document load; anything else is still a failure.
-    expect(problems.splice(0)).toEqual([
-      'console.error: Failed to load resource: the server responded with a status of 404 (Not Found)',
-    ]);
+    const reported = problems.splice(0);
+    if (browserName === 'chromium') {
+      expect(reported).toEqual([
+        'console.error: Failed to load resource: the server responded with a status of 404 (Not Found)',
+      ]);
+    } else {
+      expect(reported.filter((problem) => !EXPECTED_404_NOISE.test(problem))).toEqual([]);
+    }
   });
 
   test('links to a custom slug from the index use the public URL', async ({ page }) => {

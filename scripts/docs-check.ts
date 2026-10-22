@@ -13,11 +13,21 @@
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { checkPage, expectedRoute, extractPageFacts, formatDiagnostics, frontmatterSlug, resolveLink, type Diagnostic, type PageFacts } from './docs-check/lib.ts';
+import {
+  checkPage,
+  expectedRoute,
+  extractPageFacts,
+  formatDiagnostics,
+  frontmatterSlug,
+  resolveLink,
+  type Diagnostic,
+  type PageFacts,
+} from './docs-check/lib.ts';
 
 const repo = resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
-const flag = (name: string) => args.filter(arg => arg.startsWith(`--${name}=`)).map(arg => arg.slice(name.length + 3));
+const flag = (name: string) =>
+  args.filter((arg) => arg.startsWith(`--${name}=`)).map((arg) => arg.slice(name.length + 3));
 
 async function walk(directory: string, match: (file: string) => boolean): Promise<string[]> {
   const out: string[] = [];
@@ -29,7 +39,10 @@ async function walk(directory: string, match: (file: string) => boolean): Promis
   return out.sort();
 }
 
-interface Versions { readonly contentDirectory: string; readonly basePath: string }
+interface Versions {
+  readonly contentDirectory: string;
+  readonly basePath: string;
+}
 
 /** Content directories and their base paths, read from the app's build-safe `doq.paths.ts` the same way Doq normalizes them. */
 async function readVersions(source: string): Promise<Versions[]> {
@@ -39,7 +52,10 @@ async function readVersions(source: string): Promise<Versions[]> {
   const segment = /pathSegment:\s*'([^']+)'/.exec(text)?.[1] ?? 'v';
   const versions: Versions[] = [{ contentDirectory, basePath }];
   for (const archive of text.matchAll(/\{\s*id:\s*'([^']+)'[^}]*?contentDirectory:\s*'([^']+)'[^}]*\}/g)) {
-    versions.push({ contentDirectory: archive[2]!, basePath: `${basePath === '/' ? '' : basePath}/${segment}/${archive[1]}` });
+    versions.push({
+      contentDirectory: archive[2]!,
+      basePath: `${basePath === '/' ? '' : basePath}/${segment}/${archive[1]}`,
+    });
   }
   return versions;
 }
@@ -50,50 +66,86 @@ const createSlugger = () => new GithubSlugger();
 async function checkTarget(dist: string, source: string | undefined): Promise<Diagnostic[]> {
   const diagnostics: Diagnostic[] = [];
   const pages = new Map<string, PageFacts>();
-  for (const file of await walk(dist, path => path.endsWith('.html'))) {
+  for (const file of await walk(dist, (path) => path.endsWith('.html'))) {
     if (!file.endsWith('index.html')) continue;
-    pages.set(`/${relative(dist, dirname(file)).split('\\').join('/')}`.replace(/^\/$/, '/'), extractPageFacts(await readFile(file, 'utf8')));
+    pages.set(
+      `/${relative(dist, dirname(file)).split('\\').join('/')}`.replace(/^\/$/, '/'),
+      extractPageFacts(await readFile(file, 'utf8')),
+    );
   }
-  if (!pages.size) return [{ kind: 'missing-route', page: dist, message: 'No prerendered HTML found; run the build first.' }];
+  if (!pages.size)
+    return [{ kind: 'missing-route', page: dist, message: 'No prerendered HTML found; run the build first.' }];
 
   const resolvable = (path: string): string | undefined => {
     const normalized = path.replace(/\/+$/, '') || '/';
     if (pages.has(normalized)) return normalized;
-    return existsSync(join(dist, normalized)) && !normalized.endsWith('/') && /\.[a-z0-9]+$/i.test(normalized) ? normalized : undefined;
+    return existsSync(join(dist, normalized)) && !normalized.endsWith('/') && /\.[a-z0-9]+$/i.test(normalized)
+      ? normalized
+      : undefined;
   };
 
   if (source) {
     const promised = new Set<string>();
     for (const version of await readVersions(source)) {
       const root = join(source, 'src/content', version.contentDirectory);
-      for (const file of await walk(root, path => path.endsWith('.md'))) {
-        const route = expectedRoute(version.basePath, relative(root, file).split('\\').join('/'), frontmatterSlug(await readFile(file, 'utf8')));
+      for (const file of await walk(root, (path) => path.endsWith('.md'))) {
+        const route = expectedRoute(
+          version.basePath,
+          relative(root, file).split('\\').join('/'),
+          frontmatterSlug(await readFile(file, 'utf8')),
+        );
         promised.add(route);
-        if (!pages.has(route)) diagnostics.push({ kind: 'missing-route', page: route, message: `${relative(repo, file)} has no prerendered page.` });
+        if (!pages.has(route))
+          diagnostics.push({
+            kind: 'missing-route',
+            page: route,
+            message: `${relative(repo, file)} has no prerendered page.`,
+          });
       }
     }
     for (const [route, facts] of pages) {
-      if (facts.isDocumentation && !promised.has(route)) diagnostics.push({ kind: 'unexpected-route', page: route, message: 'Documentation page without a Markdown source.' });
+      if (facts.isDocumentation && !promised.has(route))
+        diagnostics.push({
+          kind: 'unexpected-route',
+          page: route,
+          message: 'Documentation page without a Markdown source.',
+        });
     }
   }
 
   for (const [route, facts] of pages) {
-    diagnostics.push(...checkPage({ route, facts, createSlugger, canonicalOrigin: process.env['DOQ_SITE_ORIGIN'] || undefined }));
+    diagnostics.push(
+      ...checkPage({ route, facts, createSlugger, canonicalOrigin: process.env['DOQ_SITE_ORIGIN'] || undefined }),
+    );
     for (const href of new Set(facts.links)) {
-      const link = resolveLink(href, route, process.env['DOQ_SITE_ORIGIN'] ? [new URL(process.env['DOQ_SITE_ORIGIN']).origin] : []);
+      const link = resolveLink(
+        href,
+        route,
+        process.env['DOQ_SITE_ORIGIN'] ? [new URL(process.env['DOQ_SITE_ORIGIN']).origin] : [],
+      );
       if (link.kind !== 'internal') continue;
       const target = resolvable(link.path);
       if (!target) {
-        diagnostics.push({ kind: 'broken-link', page: route, message: `Link ${href} reaches ${link.path}, which has no static route or file.` });
+        diagnostics.push({
+          kind: 'broken-link',
+          page: route,
+          message: `Link ${href} reaches ${link.path}, which has no static route or file.`,
+        });
         continue;
       }
       const targetFacts = pages.get(target);
       if (link.fragment && targetFacts && !targetFacts.ids.has(link.fragment)) {
-        diagnostics.push({ kind: 'broken-fragment', page: route, message: `Link ${href} targets #${link.fragment}, which is not an id on ${target}.` });
+        diagnostics.push({
+          kind: 'broken-fragment',
+          page: route,
+          message: `Link ${href} targets #${link.fragment}, which is not an id on ${target}.`,
+        });
       }
     }
   }
-  console.log(`docs:check: ${pages.size} pages, ${[...pages.values()].filter(page => page.isDocumentation).length} documentation pages, ${[...pages.values()].reduce((sum, page) => sum + page.markdownHeadings.length, 0)} headings, ${[...pages.values()].reduce((sum, page) => sum + new Set(page.links).size, 0)} distinct links`);
+  console.log(
+    `docs:check: ${pages.size} pages, ${[...pages.values()].filter((page) => page.isDocumentation).length} documentation pages, ${[...pages.values()].reduce((sum, page) => sum + page.markdownHeadings.length, 0)} headings, ${[...pages.values()].reduce((sum, page) => sum + new Set(page.links).size, 0)} distinct links`,
+  );
   return diagnostics;
 }
 
@@ -101,7 +153,10 @@ const dists = flag('dist');
 const sources = flag('source');
 const targets = dists.length
   ? dists.map((dist, index) => ({ dist: resolve(dist), source: sources[index] ? resolve(sources[index]) : undefined }))
-  : ['showcase-a', 'showcase-b'].map(app => ({ dist: resolve(repo, `apps/${app}/dist/analog/public`), source: resolve(repo, `apps/${app}`) }));
+  : ['showcase-a', 'showcase-b'].map((app) => ({
+      dist: resolve(repo, `apps/${app}/dist/analog/public`),
+      source: resolve(repo, `apps/${app}`),
+    }));
 
 let failed = false;
 for (const { dist, source } of targets) {
@@ -109,7 +164,9 @@ for (const { dist, source } of targets) {
   const label = relative(repo, dist) || dist;
   if (diagnostics.length) {
     failed = true;
-    console.error(`docs:check FAILED for ${label}: ${diagnostics.length} problem(s)\n${formatDiagnostics(diagnostics)}`);
+    console.error(
+      `docs:check FAILED for ${label}: ${diagnostics.length} problem(s)\n${formatDiagnostics(diagnostics)}`,
+    );
   } else console.log(`docs:check ok: ${label}`);
 }
 process.exit(failed ? 1 : 0);
