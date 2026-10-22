@@ -180,7 +180,17 @@ expectStatus('archive check after current regeneration', doqApi('check', archive
 // prerendered handbook page with a strictly sequential render of that page and validates routes, TOC fragments and links; there
 // is no retry loop. The disposable checkout is built exactly once.
 run('pnpm', ['run', 'build'], outDir);
-run('node', ['scripts/docs-check.ts', `--dist=${resolve(outDir, 'dist/analog/public')}`, `--source=${outDir}`], repo);
+// Angular Movement prerenders only a few of its own routes, so links to its other pages are not the handbook's to validate.
+run(
+  'node',
+  [
+    'scripts/docs-check.ts',
+    `--dist=${resolve(outDir, 'dist/analog/public')}`,
+    `--source=${outDir}`,
+    '--link-scope=/handbook',
+  ],
+  repo,
+);
 console.log(`adoption: ready ${resolve(outDir, 'dist/analog/public')} (Angular Movement ${sha})`);
 
 if (process.argv.includes('--test')) {

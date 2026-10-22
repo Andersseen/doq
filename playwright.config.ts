@@ -51,7 +51,7 @@ const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
 // Specs that run in Firefox and WebKit as well as Chromium: routing, history, fragments, TOC, search, versions, tabs,
 // copy, drawer, focus, themes, overflow and axe. The rest of the suite is engine-independent and stays Chromium-only.
 const crossBrowserSpecs = [
-  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening/,
+  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism/,
 ];
 
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({

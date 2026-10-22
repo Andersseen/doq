@@ -8,6 +8,8 @@
  *  - every same-site link (navigation, version switcher, Markdown, generated API pages) reaches an existing route and,
  *    when it has a fragment, an existing id on that page;
  *  - canonical links, where present, are single and match the route.
+ * `--link-scope=/handbook` (repeatable) limits link validation to targets below that prefix, for hosts that prerender only part of
+ * their routes; everything else on those pages is the host's own.
  * External links are never fetched. The process exits 1 with one actionable line per problem.
  */
 import { existsSync } from 'node:fs';
@@ -19,6 +21,7 @@ import {
   extractPageFacts,
   formatDiagnostics,
   frontmatterSlug,
+  inLinkScope,
   resolveLink,
   type Diagnostic,
   type PageFacts,
@@ -123,7 +126,7 @@ async function checkTarget(dist: string, source: string | undefined): Promise<Di
         route,
         process.env['DOQ_SITE_ORIGIN'] ? [new URL(process.env['DOQ_SITE_ORIGIN']).origin] : [],
       );
-      if (link.kind !== 'internal') continue;
+      if (link.kind !== 'internal' || !inLinkScope(link.path, linkScopes)) continue;
       const target = resolvable(link.path);
       if (!target) {
         diagnostics.push({
@@ -151,6 +154,7 @@ async function checkTarget(dist: string, source: string | undefined): Promise<Di
 
 const dists = flag('dist');
 const sources = flag('source');
+const linkScopes = flag('link-scope');
 const targets = dists.length
   ? dists.map((dist, index) => ({ dist: resolve(dist), source: sources[index] ? resolve(sources[index]) : undefined }))
   : ['showcase-a', 'showcase-b'].map((app) => ({

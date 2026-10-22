@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import GithubSlugger from 'github-slugger';
-import { checkPage, extractPageFacts, frontmatterSlug, resolveLink } from './lib.ts';
+import { checkPage, extractPageFacts, frontmatterSlug, inLinkScope, resolveLink } from './lib.ts';
 
 const slugger = () => new GithubSlugger();
 const article = (body: string, toc = '') =>
@@ -76,6 +76,15 @@ describe('UNIT-141 link classification and route expectations (SEO-03, SEO-05)',
       path: '/docs/a',
     });
     expect(resolveLink('mailto:a@b.c', '/')).toEqual({ kind: 'ignored' });
+  });
+
+  it('validates every same-site target without a scope, and only the documentation prefix with one', () => {
+    expect(inLinkScope('/demos/enter', [])).toBe(true);
+    expect(inLinkScope('/handbook', ['/handbook'])).toBe(true);
+    expect(inLinkScope('/handbook/api/x', ['/handbook/'])).toBe(true);
+    expect(inLinkScope('/handbook-old/x', ['/handbook'])).toBe(false);
+    expect(inLinkScope('/demos/enter', ['/handbook'])).toBe(false);
+    expect(inLinkScope('/anything', ['/'])).toBe(true);
   });
 
   it('reads a frontmatter slug', () => {

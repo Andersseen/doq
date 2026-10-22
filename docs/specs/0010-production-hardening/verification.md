@@ -1,20 +1,69 @@
 # Verification — 0010 production hardening
 
-<!-- Written after running the tests. A case is PASS only when you ran it and read the result. -->
+Written from real runs on macOS (Apple silicon), Node 22.23.1, pnpm 10.18.3, Playwright 1.64.1 (Chromium through installed Google Chrome, `PW_CHANNEL=chrome`: the downloaded headless Chromium never produces animation frames on this machine, which makes every click time out, including in the untouched baseline suite), Firefox and WebKit builds from `playwright install`. A row is PASS only when it was executed and the result read.
+
+## Findings and baselines
+
+**Heading-id race (DET-01, DET-02).** Owner: `@analogjs/platform` `content-plugin.js`, the `load` hook of the `analogjs-content-file` plugin. It calls `getMarkedSetup(...).getMarkedInstance().parse(body)` for each Markdown file; Vite runs load hooks concurrently; `getMarkedSetup` is a process-wide singleton; `marked-gfm-heading-id@4.1.4` keeps `slugger` and `headings` in module variables and resets them in `preprocess`; `markedHighlight({ async: true })` (Prism, Shiki) makes `parse` asynchronous, so renders interleave. `@analogjs/content`'s runtime `MarkdownContentRendererService` has a second, independent window (`await parse(); getHeadingList()`), but `withMarkdownRenderer()` provides `NoopContentRenderer` in 2.9, so Doqs never uses it. Versions: `@analogjs/platform` 2.9.0 (also 2.9.2 and 3.0.0-beta.8, same code path), `marked` 15.0.12, `marked-gfm-heading-id` 4.1.4 (latest). Upstream fix: none found. Configuration dependent: only with an asynchronous marked step; the showcases' plain Prism setup did not show it in a 40-document build, the stress consumer (asynchronous step, 60+30 documents) shows it in 3 of 3 control builds. Server/client difference: ids are baked into the bundle, so SSR, hydration and static HTML agree with each other but not with a sequential render; TOC and Pagefind inherit the corrupted ids.
+
+**Bundle baselines (PERF-01), gzip.** origin/main `f55fa70` versus this branch, production builds:
+
+| Artifact                             | main                     | 0.7.0          | Change      |
+| ------------------------------------ | ------------------------ | -------------- | ----------- |
+| Showcase A first-loaded JS           | 202,166                  | 202,274        | +108        |
+| Showcase B first-loaded JS           | 185,023                  | 185,103        | +80         |
+| Showcase A all JS                    | 218,223                  | 218,346        | +123        |
+| Showcase B all JS                    | 198,993                  | 199,073        | +80         |
+| Showcase A / B stylesheet            | 14,154 / 6,245           | 14,224 / 6,308 | +70 / +63   |
+| `packages/doq/styles.css` (raw/gzip) | 24,168 / 4,811           | 24,705 / 4,952 | +537 / +141 |
+| Search index bytes, pages (A / B)    | 22,203 / 18,911, 21 / 25 | same           | 0           |
+
+**Scaling (PERF-02), showcase B sources, generated documents in the current version plus half as many archived, `pnpm perf:scale`.** Build is `vite build` (prerender included); latency is the median of 8 client navigations in Chrome.
+
+| Documents (+archive) | Static pages | `vite build` | `doq-search` | First-loaded JS gzip | All JS gzip | Search index | Median navigation |
+| -------------------- | ------------ | ------------ | ------------ | -------------------- | ----------- | ------------ | ----------------- |
+| 20 (+10)             | 55           | 7.9 s        | 1.4 s        | 186,786              | 223,309     | 38,152 B     | 17 ms             |
+| 200 (+100)           | 325          | 12.5 s       | 1.5 s        | 200,799              | 441,269     | 200,635 B    | 14 ms             |
+| 1,000 (+500)         | 1,525        | 86.1 s       | 2.7 s        | 254,921              | 1,403,592   | 921,404 B    | 39 ms             |
+
+First-loaded JavaScript grows 52 B (20 to 200) and 46 B (20 to 1,000) per document. No Doqs code is per-document in the bundle: Analog bundles each file's frontmatter and loader; a supported way to defer them does not exist, so the growth is guarded (`perf:scale --check`, budget 70 B) rather than optimised. Navigation is not a bottleneck (14-39 ms), so no rendering change was made; observers and listeners are already disconnected per document (copy buttons: one per block after repeated navigation, `E2E-005`).
+
+**Browser-specific findings.** WebKit restored scroll before `popstate`, breaking Forward to a fragment entry (fixed, `E2E-004`/`E2E-011` in three engines). Forced colors gave the selected tab and current links no non-colour cue (fixed in CSS). Safari's default Tab skips links and many buttons (test helper). Firefox and WebKit cannot grant `clipboard-read` (annotated). Engines word a legitimate 404 differently (accepted, nothing else).
 
 ## Test cases
 
-<!-- Row format: | <KIND>-NNN | AC ids | what it checks | PASS / FAIL / NOT RUN |
-     KIND is UNIT, COMP, E2E, CONTRACT, SDD or MANUAL. Non-MANUAL ids must appear in a test source file. -->
-
-| Case     | Acceptance | Checks    | Result  |
-| -------- | ---------- | --------- | ------- |
-| UNIT-001 | AC-001     | TODO(sdd) | NOT RUN |
+| Case         | Acceptance | Checks                                                                                                                                    | Result  |
+| ------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| UNIT-130     | AC-001     | Real marked + gfm-heading-id through a stand-in of Analog's plugin: concurrent loads corrupt ids; through the guard they equal sequential | PASS    |
+| UNIT-140     | AC-003     | docs:check rules: correct page accepted; race output, foreign suffixes, empty page, h1, TOC, canonical rejected                           | PASS    |
+| UNIT-141     | AC-003     | Link classification, scope, route expectations, frontmatter slug                                                                          | PASS    |
+| UNIT-142     | AC-004     | docs:check route rule equals `doqPrerenderRoute`                                                                                          | PASS    |
+| UNIT-150     | AC-010     | Budget measurement (assets, gzip, index, pages) and budget file invariants                                                                | PASS    |
+| UNIT-151     | AC-010     | Generated fixtures are deterministic and rich                                                                                             | PASS    |
+| UNIT-152     | AC-010     | 1,000-document catalogs normalise, order and map to prerender routes deterministically                                                    | PASS    |
+| COMP-120     | AC-011     | Title, description and canonical lifecycle across documents, host routes, missing documents                                               | PASS    |
+| CONTRACT-080 | AC-013     | `./vite` export shipped, Node-only, no dependencies, not in the browser entry                                                             | PASS    |
+| CONTRACT-081 | AC-013     | No private sources or tests in the tarball                                                                                                | PASS    |
+| CONTRACT-082 | AC-004     | Over HTTP: unique heading ids and resolving TOC fragments on both showcases                                                               | PASS    |
+| CONTRACT-083 | AC-004     | Over HTTP: every same-site link answers 200 and its fragment exists                                                                       | PASS    |
+| E2E-132      | AC-005     | Packed tarball on Angular 21.2 and 22.2 (+TS 6), zoneless: version, hydration, history, tabs, search, versions, API pages                 | PASS    |
+| E2E-133      | AC-002     | Prerendered ids = hydrated DOM ids, TOC links resolve, search anchors name real headings (Chromium, Firefox, WebKit)                      | PASS    |
+| E2E-130      | AC-008     | Reduced motion, 200% text at 320/1280, forced colors, consumer tokens + axe contrast (three engines)                                      | PASS    |
+| E2E-131      | AC-009     | Drawer by keyboard, no hidden tab stop, focus after Back (three engines)                                                                  | PASS    |
+| E2E-011      | AC-007     | Back/Forward between fragment positions, Chromium + Firefox + WebKit                                                                      | PASS    |
+| E2E-003      | AC-006     | Mobile drawer open/navigate/close in Firefox and WebKit                                                                                   | PASS    |
+| E2E-012      | AC-006     | Search, keyboard, version filter in Firefox and WebKit                                                                                    | PASS    |
+| E2E-061      | AC-006     | Tabs keyboard pattern in Firefox and WebKit                                                                                               | PASS    |
+| E2E-110      | AC-006     | Version switching, selector keyboard, overflow and axe in Firefox and WebKit                                                              | PASS    |
+| E2E-050      | AC-012     | Angular Movement adoption proof, built once, 19 tests                                                                                     | PASS    |
+| MANUAL-130   | AC-002     | `pnpm verify:determinism --builds=5` one fingerprint; `--control` detected                                                                | PASS    |
+| MANUAL-131   | AC-010     | `pnpm perf:check` and `pnpm perf:scale` 20/200/1000                                                                                       | PASS    |
+| MANUAL-132   | AC-012     | Complete `pnpm quality:gate` on the final code                                                                                            | NOT RUN |
 
 ## Executed commands
 
-TODO(sdd): the exact commands you ran and their real results (counts, exit codes).
+Filled in after the final gate run (see below).
 
 ## Remaining limitations
 
-TODO(sdd): what is not verified, known gaps, follow-ups. "None" only if true.
+Filled in after the final gate run (see below).

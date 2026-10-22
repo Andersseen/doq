@@ -247,6 +247,18 @@ export function frontmatterSlug(markdown: string): string | undefined {
   return value?.replace(/^["']|["']$/g, '');
 }
 
+/**
+ * Whether a link target is the documentation's to validate. With no scope every same-site target is; with scopes (host sites
+ * that prerender only part of their routes) only targets at or below a scope prefix are, the rest are the host's own routes.
+ */
+export function inLinkScope(path: string, scopes: readonly string[]): boolean {
+  if (!scopes.length) return true;
+  return scopes.some((scope) => {
+    const prefix = scope.replace(/\/+$/, '');
+    return prefix === '' || path === prefix || path.startsWith(`${prefix}/`);
+  });
+}
+
 export function formatDiagnostics(diagnostics: readonly Diagnostic[]): string {
   return diagnostics.map((item) => `  ${item.page}  [${item.kind}] ${item.message}`).join('\n');
 }
