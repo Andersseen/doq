@@ -77,4 +77,4 @@ The project is configured in `apps/site/wrangler.jsonc` (`name: doq-site`; chang
 
 Preview deployments use `--branch=<pr-branch>`, which Cloudflare treats as preview (production is `--branch=main` only). The site links to `npmjs.com/package/@doqs/analog`, which resolves only after the first publication: deploy production after the bootstrap.
 
-Local work needs none of this: `pnpm dev:site`, `pnpm --filter site build`, `pnpm --filter site preview`. To deploy by hand: `pnpm --filter site build && pnpm --filter site exec wrangler pages deploy --branch=<name>` after `wrangler login`.
+Local work needs none of this: `pnpm dev:site`, `pnpm --filter site build`, `pnpm --filter site preview`. To deploy by hand after `wrangler login` (and creating the Pages project): `pnpm deploy:site` builds the site and deploys it to production (`--branch=main`); `pnpm deploy:site:preview` deploys a preview (`--branch=preview`).
