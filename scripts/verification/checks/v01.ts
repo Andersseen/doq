@@ -34,7 +34,7 @@ export async function v01(page: Page, app: VerifiedApp) {
       'document slot follows the Markdown content',
     );
     // Index: presentation copy, index slot before cards, single h1, no document slot.
-    await page.navigate(base + '/docs');
+    await page.navigate(base + (x.docsBase || '/'));
     state = await head();
     assert.equal(state.h1Text, x.indexTitle, 'index heading');
     assert.equal(state.title, x.indexTitle, 'index title');
@@ -120,27 +120,29 @@ export async function v01(page: Page, app: VerifiedApp) {
     await waitFor(async () => (await count(x.indexSlot)) === 1, 'index slot after client navigation');
     await page.click('.doq-index-card');
     await waitFor(async () => (await count('.doq-markdown')) > 0, 'document after second card click');
-    await page.click('a[href="/"]');
-    await waitFor(async () => (await page.evaluate('location.pathname')) === '/', 'host route');
-    await waitFor(
-      async () => (await page.evaluate('document.title')) === x.hostTitle,
-      'host title restored after leaving docs',
-    );
-    state = await head();
-    assert.equal(state.description, x.hostDescription, 'host description restored after leaving docs');
-    // Direct document load then leave: the host values must come from the server capture, not the doc head.
-    await page.navigate(base + app.doc);
-    await page.click('a[href="/"]');
-    await waitFor(
-      async () => (await page.evaluate('document.title')) === x.hostTitle,
-      'host title restored after hydrated doc',
-    );
-    state = await head();
-    assert.equal(state.description, x.hostDescription, 'host description restored after hydrated doc');
+    if (x.hostRoute) {
+      await page.click('a[href="/"]');
+      await waitFor(async () => (await page.evaluate('location.pathname')) === '/', 'host route');
+      await waitFor(
+        async () => (await page.evaluate('document.title')) === x.hostTitle,
+        'host title restored after leaving docs',
+      );
+      state = await head();
+      assert.equal(state.description, x.hostDescription, 'host description restored after leaving docs');
+      // Direct document load then leave: the host values must come from the server capture, not the doc head.
+      await page.navigate(base + app.doc);
+      await page.click('a[href="/"]');
+      await waitFor(
+        async () => (await page.evaluate('document.title')) === x.hostTitle,
+        'host title restored after hydrated doc',
+      );
+      state = await head();
+      assert.equal(state.description, x.hostDescription, 'host description restored after hydrated doc');
+    }
     // Unknown document route (client-side): not-found metadata, no stale title.
     await page.navigate(base + app.doc);
     await page.evaluate(
-      "history.pushState({},'','/docs/not-a-real-page');dispatchEvent(new PopStateEvent('popstate'))",
+      `history.pushState({},'','${x.docsBase}/not-a-real-page');dispatchEvent(new PopStateEvent('popstate'))`,
     );
     await waitFor(async () => (await count('.doq-not-found')) > 0, 'not-found view');
     await waitTitle(`Page not found · ${x.suffix}`, 'not found');

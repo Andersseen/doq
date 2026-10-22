@@ -17,6 +17,10 @@ def _frontmatter(path: Path) -> dict[str, str]:
     return dict(line.split(": ", 1) for line in match.group(1).splitlines() if ": " in line)
 
 
+# Showcase A mounts Doqs on one route of a product site; Showcase B is docs-first (the whole app is documentation).
+BASE_PATH = {"showcase-a": "/docs", "showcase-b": ""}
+
+
 def _expected_routes(app: str) -> dict[str, str]:
     """Public route -> title, derived from the Markdown sources (custom slug wins over path)."""
     content = REPO / f"apps/{app}/src/content/docs"
@@ -24,7 +28,7 @@ def _expected_routes(app: str) -> dict[str, str]:
     for file in sorted(content.rglob("*.md")):
         meta = _frontmatter(file)
         slug = meta.get("slug") or str(file.relative_to(content).with_suffix("")).removesuffix("/index")
-        routes["/docs/" + slug.strip("/")] = meta["title"]
+        routes[BASE_PATH[app] + "/" + slug.strip("/")] = meta["title"]
     return routes
 
 
@@ -41,16 +45,16 @@ def test_contract_006_every_markdown_document_is_prerendered_at_its_public_route
         html = body.decode()
         assert re.search(rf"<h1[^>]*>{re.escape(title)}</h1>", html), f"{route}: rendered title missing"
         assert "<title>" in html and title in re.search(r"<title>(.*?)</title>", html, re.S).group(1)
-    status, _, body = site.get("/docs")
+    status, _, body = site.get(BASE_PATH[app] or "/")
     assert status == 200 and b"doq-index" in body
 
 
 def test_contract_007_custom_slug_serves_the_document_and_its_source_path_does_not(site_b):
-    """CONTRACT-007: Showcase B declares `slug: onboarding/first-application` for getting-started.md."""
-    status, _, body = site_b.get("/docs/onboarding/first-application")
+    """CONTRACT-007: Showcase B (mounted at the root) declares `slug: onboarding/first-application` for getting-started.md."""
+    status, _, body = site_b.get("/onboarding/first-application")
     assert status == 200
     assert b"Create a workspace" in body and b"Request an entry" in body
-    for source_path in ("/docs/getting-started", "/docs/getting-started.md", "/docs/getting-started/index.html"):
+    for source_path in ("/getting-started", "/getting-started.md", "/getting-started/index.html"):
         assert site_b.get(source_path)[0] == 404, source_path
 
 
@@ -76,8 +80,8 @@ def test_contract_009_path_traversal_cannot_escape_the_build_directory(site_a, p
 
 def test_contract_010_html_references_only_assets_that_exist_and_have_the_right_type(site_a, site_b):
     """CONTRACT-010: every script/stylesheet referenced by a document resolves with a sensible content type."""
-    for site in (site_a, site_b):
-        _, _, body = site.get("/docs")
+    for site, index in ((site_a, "/docs"), (site_b, "/")):
+        _, _, body = site.get(index)
         references = re.findall(r'(?:src|href)="(/[^"]+\.(?:js|css))"', body.decode())
         assert references, "no assets referenced"
         for reference in dict.fromkeys(references):

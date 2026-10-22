@@ -4,7 +4,7 @@ test.describe('E2E-015 search disabled', () => {
   test('a build with search disabled has no search UI, no shortcut and no index requests', async ({ page }) => {
     const requests: string[] = [];
     page.on('request', (request) => requests.push(request.url()));
-    await page.goto(`${apps.noSearch.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.noSearch.url}/onboarding/first-application`);
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Search/ })).toHaveCount(0);
     await expect(page.locator('dialog, doq-search')).toHaveCount(0);
@@ -22,13 +22,13 @@ test.describe('E2E-015 search disabled', () => {
   });
 
   test('the rest of the documentation experience is intact', async ({ page }) => {
-    await page.goto(`${apps.noSearch.url}/docs`);
+    await page.goto(`${apps.noSearch.url}/`);
     await expect(page.getByRole('heading', { level: 1, name: 'ForgeCMS developer hub' })).toBeVisible();
     await page
       .getByRole('link', { name: /Getting started/ })
       .first()
       .click();
-    await expect(page).toHaveURL(`${apps.noSearch.url}/docs/onboarding/first-application`);
+    await expect(page).toHaveURL(`${apps.noSearch.url}/onboarding/first-application`);
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeFocused();
     await expect(page.locator('.doq-root')).toHaveAttribute('data-sidebar', 'right');
     await expect(page.getByRole('complementary', { name: 'On this page' })).toHaveCount(0);
@@ -37,7 +37,7 @@ test.describe('E2E-015 search disabled', () => {
   test('the search-enabled build requests no index before the reader interacts', async ({ page }) => {
     const requests: string[] = [];
     page.on('request', (request) => requests.push(request.url()));
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     await expect(page.getByRole('button', { name: /^Search/ })).toBeVisible();
     await page.waitForLoadState('networkidle');
     expect(requests.filter((url) => url.includes('pagefind'))).toEqual([]);

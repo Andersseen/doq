@@ -30,6 +30,6 @@ The response is structured data. Render it using the components and typography y
 
 ## Continue
 
-- [Understand the content model](/docs/concepts/models)
-- [Learn about delivery architecture](/docs/architecture/content-delivery)
-- [Review the API reference](/docs/reference/api)
+- [Understand the content model](/concepts/models)
+- [Learn about delivery architecture](/architecture/content-delivery)
+- [Review the API reference](/reference/api)

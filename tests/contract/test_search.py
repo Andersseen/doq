@@ -60,7 +60,8 @@ def test_contract_013_host_pages_and_document_chrome_are_not_indexed(site_name, 
     urls = {page["url"] for page in pages}
     assert "/" not in urls and "/docs/" not in urls
     chrome = ["On this page", "Close navigation", "Page navigation"]
-    landing = re.sub(r"<[^>]+>", " ", site.get("/")[2].decode())
+    # Showcase A has a host landing page at "/"; Showcase B's "/" is the documentation index, whose text is documentation.
+    landing = re.sub(r"<[^>]+>", " ", site.get("/")[2].decode()) if site_name == "site_a" else ""
     host_text = [phrase for phrase in re.findall(r"[A-Z][a-z]+(?: [a-z]+){3,}", landing)][:10]
     for page in pages:
         content = page["content"]
@@ -71,11 +72,11 @@ def test_contract_013_host_pages_and_document_chrome_are_not_indexed(site_name, 
 
 
 def test_contract_014_custom_slug_page_is_indexed_under_the_public_url_only(site_b):
-    """CONTRACT-014: Showcase B's getting-started.md is indexed as /docs/onboarding/first-application/."""
+    """CONTRACT-014: Showcase B's getting-started.md is indexed as /onboarding/first-application/."""
     pages = {page["url"]: page for page in _fragments(site_b)}
-    assert "/docs/onboarding/first-application/" in pages
+    assert "/onboarding/first-application/" in pages
     assert not any("getting-started" in url for url in pages)
-    page = pages["/docs/onboarding/first-application/"]
+    page = pages["/onboarding/first-application/"]
     assert page["meta"]["title"] == "Getting started"
     assert "Keep environment credentials out of browser bundles" in page["content"]
     assert any(anchor.get("id") == "create-a-workspace" for anchor in page.get("anchors", []))
@@ -85,7 +86,7 @@ def test_contract_015_a_search_disabled_build_ships_no_search_assets_or_markup(s
     """CONTRACT-015: disabling search leaves the same documents but no index and no search control."""
     assert not (site_b_nosearch.root / "pagefind").exists()
     assert site_b_nosearch.get("/pagefind/pagefind.js")[0] == 404
-    status, _, body = site_b_nosearch.get("/docs/concepts/models")
+    status, _, body = site_b_nosearch.get("/concepts/models")
     assert status == 200 and b"Content models" in body
     assert b"doq-search" not in body and b"<dialog" not in body
     for name in _expected_routes("showcase-b"):

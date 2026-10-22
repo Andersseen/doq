@@ -26,7 +26,7 @@ test.describe('E2E-010 accessibility smoke', () => {
   });
 
   test('each Doq page has exactly one level-one heading', async ({ page }) => {
-    for (const url of [`${apps.a.url}/docs`, `${apps.a.url}/docs/overview`, `${apps.b.url}/docs/concepts/models`]) {
+    for (const url of [`${apps.a.url}/docs`, `${apps.a.url}/docs/overview`, `${apps.b.url}/concepts/models`]) {
       await page.goto(url);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     }
@@ -34,7 +34,7 @@ test.describe('E2E-010 accessibility smoke', () => {
 
   for (const [name, url] of [
     ['Showcase A document', `${apps.a.url}/docs/components/button`],
-    ['Showcase B document', `${apps.b.url}/docs/onboarding/first-application`],
+    ['Showcase B document', `${apps.b.url}/onboarding/first-application`],
     ['Showcase A index', `${apps.a.url}/docs`],
   ] as const) {
     test(`axe finds no serious or critical WCAG A/AA violations: ${name}`, async ({ page }) => {

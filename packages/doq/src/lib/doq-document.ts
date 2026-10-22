@@ -20,6 +20,11 @@ export interface DoqDocument {
   attributes: DoqDocumentAttributes;
 }
 
+/** Public URL of `slug` below `basePath` ("/docs" + "a/b" → "/docs/a/b"; "/" + "a/b" → "/a/b"). */
+export function joinDoqPath(basePath: string, slug: string): string {
+  return `/${[...basePath.split('/').filter(Boolean), slug].filter(Boolean).join('/')}`;
+}
+
 /** Normalize Analog's content-file metadata into the single URL/navigation model Doq uses. */
 export function normalizeDoqDocument(
   file: { filename: string; attributes: DoqDocumentAttributes; toc?: DoqDocument['headings'] },
@@ -43,8 +48,7 @@ export function normalizeDoqDocument(
   }
   const sourceParts = sourceSlug.split('/');
   const title = file.attributes.title?.trim() || sourceParts[sourceParts.length - 1] || 'Untitled';
-  const prefix = `/${basePath.split('/').filter(Boolean).join('/')}`;
-  const routePath = `${prefix}/${slug}`;
+  const routePath = joinDoqPath(basePath, slug);
   return {
     sourceFilename: filename,
     sourceSlug,
@@ -88,6 +92,5 @@ export function doqPrerenderRoute(
   if (!slug || slug.split('/').some(part => !/^[\p{L}\p{N}_~-]+$/u.test(part))) {
     throw new Error(`Doq: invalid prerender slug "${slug}" for "${file.name}".`);
   }
-  const prefix = `/${basePath.split('/').filter(Boolean).join('/')}`;
-  return `${prefix}/${slug}`;
+  return joinDoqPath(basePath, slug);
 }

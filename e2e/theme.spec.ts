@@ -32,17 +32,22 @@ test.describe('E2E-007 theme isolation', () => {
     expect(await color(fresh, '.landing-a h1', 'color')).toBe(landingHeading);
   });
 
-  test('documentation styles load only through the host stylesheet and keep the host page background', async ({
+  test('docs-first host (Showcase B): documentation owns every route and follows the host theme toggle', async ({
     page,
   }) => {
     await page.goto(apps.b.url);
-    const before = await color(page, 'body', 'backgroundColor');
-    await page.goto(`${apps.b.url}/docs`);
+    const site = page.locator('.forge-site');
+    await expect(page.locator('.doq-index')).toBeVisible();
+    await expect(site).toHaveAttribute('data-theme', 'light');
+    const lightBackground = await color(page, '.doq-shell', 'backgroundColor');
+    await page.getByRole('button', { name: 'Switch to dark theme' }).click();
+    await expect(site).toHaveAttribute('data-theme', 'dark');
+    expect(await color(page, '.doq-shell', 'backgroundColor')).not.toBe(lightBackground);
     await page
-      .getByRole('link', { name: /Developers|Developer guide/ })
+      .getByRole('link', { name: /Content models/ })
       .first()
       .click();
-    await page.goto(apps.b.url);
-    expect(await color(page, 'body', 'backgroundColor')).toBe(before);
+    await expect(page).toHaveURL(`${apps.b.url}/concepts/models`);
+    await expect(site).toHaveAttribute('data-theme', 'dark');
   });
 });

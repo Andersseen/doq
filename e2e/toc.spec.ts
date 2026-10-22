@@ -48,7 +48,7 @@ test.describe('E2E-004 table of contents', () => {
   });
 
   test('Showcase B has no table of contents because its host disabled it', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     await expect(page.getByRole('heading', { level: 1, name: 'Content models' })).toBeVisible();
     await expect(page.getByRole('complementary', { name: 'On this page' })).toHaveCount(0);
   });

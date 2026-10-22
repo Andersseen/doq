@@ -67,6 +67,9 @@ describe('UNIT-011 normalizeSearchResultUrl', () => {
     ['/handbook', '/handbook', '/handbook'],
     ['/docs/x/', 'docs/', '/docs/x'],
     ['/learn/docs/x/', '/learn/docs', '/learn/docs/x'],
+    ['/guides/routing/#add', '/', '/guides/routing#add'],
+    ['/index.html', '/', '/'],
+    ['https://example.com/', '/', '/'],
   ])('maps %s below %s to %s', (url, basePath, expected) => {
     expect(normalizeSearchResultUrl(url, basePath)).toBe(expected);
   });

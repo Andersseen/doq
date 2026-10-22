@@ -17,7 +17,7 @@ test.describe('E2E-001 open documentation', () => {
   });
 
   test('Showcase B: direct load renders prerendered content with the configured title suffix', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     await expect(page.getByRole('heading', { level: 1, name: 'Content models' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Model the meaning' })).toBeVisible();
     await expect(page).toHaveTitle('Content models · ForgeCMS Developers');

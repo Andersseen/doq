@@ -128,7 +128,12 @@ try {
       assert.deepEqual([config.contentDirectory, config.basePath, config.sidebar], ['docs', '/help', 'right']);
       assert.equal(doq.defineDoqConfig({ contentDirectory: 'docs' }).basePath, '/docs');
       assert.throws(() => doq.defineDoqConfig({ contentDirectory: '' }), /contentDirectory/);
-      assert.throws(() => doq.defineDoqConfig({ contentDirectory: 'docs', basePath: '/' }), /basePath/);
+      assert.equal(
+        doq.defineDoqConfig({ contentDirectory: 'docs', basePath: '/' }).basePath,
+        '/',
+        'basePath "/" mounts docs at the root',
+      );
+      assert.throws(() => doq.defineDoqConfig({ contentDirectory: 'docs', basePath: '' }), /basePath/);
       assert.throws(() => doq.defineDoqConfig({ contentDirectory: '../x' }), /contentDirectory/);
     });
     check('doqRoutes uses the configured base path', () => {

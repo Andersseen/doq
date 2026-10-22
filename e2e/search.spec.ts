@@ -38,13 +38,13 @@ test.describe('E2E-012 full-text search', () => {
   });
 
   test('a custom nested slug is the public result URL, not the source filename', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     const dialog = await searchFor(page, 'environment credentials out of browser bundles');
     const result = dialog.getByRole('link', { name: /Getting started/ }).first();
-    await expect(result).toHaveAttribute('href', '/docs/onboarding/first-application#create-a-workspace');
+    await expect(result).toHaveAttribute('href', '/onboarding/first-application#create-a-workspace');
     await expect(dialog.locator('a[href*="getting-started"]')).toHaveCount(0);
     await result.click();
-    await expect(page).toHaveURL(`${apps.b.url}/docs/onboarding/first-application#create-a-workspace`);
+    await expect(page).toHaveURL(`${apps.b.url}/onboarding/first-application#create-a-workspace`);
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeVisible();
     await expect(page.locator('#create-a-workspace')).toBeInViewport();
   });
@@ -111,7 +111,7 @@ test.describe('E2E-012 full-text search', () => {
   });
 
   test('empty, unavailable and clear states', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     const dialog = await openSearch(page);
     await expect(dialog.getByRole('status')).toHaveText('Type to search the documentation.');
     await dialog.getByRole('searchbox').fill('zzzqqqnotpresent');
@@ -152,7 +152,7 @@ test.describe('E2E-012 full-text search', () => {
 test.describe('E2E-012 search accessibility', () => {
   for (const [name, url, query] of [
     ['Showcase A (dark)', `${apps.a.url}/docs/overview`, 'lantern cobalt ledger'],
-    ['Showcase B (light)', `${apps.b.url}/docs/concepts/models`, 'environment credentials'],
+    ['Showcase B (light)', `${apps.b.url}/concepts/models`, 'environment credentials'],
   ] as const) {
     test(`${name}: the open dialog has an accessible name, labelled field and no serious axe violations`, async ({
       page,
@@ -187,9 +187,9 @@ test.describe('E2E-013 search on mobile and across host themes', () => {
     [
       'Showcase B (right drawer)',
       apps.b.url,
-      '/docs/concepts/models',
+      '/concepts/models',
       'environment credentials browser bundles',
-      '/docs/onboarding/first-application#create-a-workspace',
+      '/onboarding/first-application#create-a-workspace',
     ],
   ] as const) {
     test(`${name}: search is usable at 375px and lands on the section`, async ({ page }) => {
@@ -229,7 +229,7 @@ test.describe('E2E-013 search on mobile and across host themes', () => {
     expect(light).toBe(await surface('.doq-root'));
     expect(light).not.toBe(dark);
 
-    await page.goto(`${apps.b.url}/docs/concepts/models`);
+    await page.goto(`${apps.b.url}/concepts/models`);
     await openSearch(page);
     const forge = await surface('.doq-search-dialog');
     expect(forge).toBe(await surface('.doq-root'));

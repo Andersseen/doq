@@ -12,17 +12,17 @@ test.describe('E2E-002 nested and custom slugs', () => {
   });
 
   test('a custom slug serves the real document, also after a direct reload', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.b.url}/onboarding/first-application`);
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeVisible();
     await expect(page.getByRole('heading', { level: 2, name: 'Create a workspace' })).toBeVisible();
     await page.reload();
     await expect(page.getByRole('heading', { level: 2, name: 'Request an entry' })).toBeVisible();
-    await expect(page).toHaveURL(`${apps.b.url}/docs/onboarding/first-application`);
+    await expect(page).toHaveURL(`${apps.b.url}/onboarding/first-application`);
   });
 
   test('the source filename of a custom-slug document is not a route', async ({ page, request, problems }) => {
-    expect((await request.get(`${apps.b.url}/docs/getting-started`)).status()).toBe(404);
-    const response = await page.goto(`${apps.b.url}/docs/getting-started`);
+    expect((await request.get(`${apps.b.url}/getting-started`)).status()).toBe(404);
+    const response = await page.goto(`${apps.b.url}/getting-started`);
     expect(response?.status()).toBe(404);
     await expect(page.getByRole('heading', { name: 'Getting started' })).toHaveCount(0);
     // The browser logs the expected 404 document load; anything else is still a failure.
@@ -32,8 +32,8 @@ test.describe('E2E-002 nested and custom slugs', () => {
   });
 
   test('links to a custom slug from the index use the public URL', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs`);
+    await page.goto(`${apps.b.url}/`);
     const link = page.getByRole('link', { name: /Getting started/ }).first();
-    await expect(link).toHaveAttribute('href', '/docs/onboarding/first-application');
+    await expect(link).toHaveAttribute('href', '/onboarding/first-application');
   });
 });

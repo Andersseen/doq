@@ -55,8 +55,8 @@ const controls: Control[] = [
       await libraryCopy(workspace);
       await mutate(
         resolve(workspace, 'packages/doq/src/lib/doq-document.ts'),
-        'const routePath = `${prefix}/${slug}`;',
-        'const routePath = `${prefix}/${sourceSlug}`;',
+        'const routePath = joinDoqPath(basePath, slug);',
+        'const routePath = joinDoqPath(basePath, sourceSlug);',
       );
       return sh('pnpm', ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit'], workspace);
     },
@@ -87,7 +87,7 @@ const controls: Control[] = [
       await libraryCopy(workspace);
       await mutate(
         resolve(workspace, 'packages/doq/src/lib/doq-search.ts'),
-        'if (path !== base && !path.startsWith(`${base}/`)) return undefined;',
+        "if (base !== '/' && path !== base && !path.startsWith(`${base}/`)) return undefined;",
         '',
       );
       return sh('pnpm', ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit'], workspace);

@@ -9,6 +9,8 @@ describe('UNIT-001 normalizeDoqPaths', () => {
     [{ contentDirectory: 'guides\\v1' }, { contentDirectory: 'guides/v1', basePath: '/docs' }],
     [{ contentDirectory: 'docs', basePath: 'learn' }, { contentDirectory: 'docs', basePath: '/learn' }],
     [{ contentDirectory: 'docs', basePath: '//a///b/' }, { contentDirectory: 'docs', basePath: '/a/b' }],
+    [{ contentDirectory: 'docs', basePath: '/' }, { contentDirectory: 'docs', basePath: '/' }],
+    [{ contentDirectory: 'docs', basePath: '///' }, { contentDirectory: 'docs', basePath: '/' }],
   ])('normalizes %j', (input, expected) => {
     expect(normalizeDoqPaths(input)).toEqual(expected);
   });
@@ -24,7 +26,7 @@ describe('UNIT-001 normalizeDoqPaths', () => {
     expect(() => normalizeDoqPaths({ contentDirectory })).toThrow(/invalid contentDirectory/);
   });
 
-  it.each([['/'], [''], ['/..'], ['/docs/../admin'], ['/./docs']])('rejects basePath %j', (basePath) => {
+  it.each([[''], ['/..'], ['/docs/../admin'], ['/./docs']])('rejects basePath %j', (basePath) => {
     expect(() => normalizeDoqPaths({ contentDirectory: 'docs', basePath })).toThrow(/invalid basePath/);
   });
 });
@@ -74,5 +76,16 @@ describe('UNIT-003 configuration defaults', () => {
       useValue: Record<string, unknown>;
     };
     expect(custom.useValue).toMatchObject({ showTableOfContents: false, sidebar: 'hidden' });
+  });
+});
+
+describe('UNIT-051 documentation mounted at the application root', () => {
+  it('prerenders the root index and root-level document routes without a double slash', () => {
+    const [index, content] = doqPrerenderRoutes({ contentDirectory: 'docs', basePath: '/' });
+    expect(index).toBe('/');
+    if (typeof content === 'string') throw new Error('expected a content route');
+    expect(content.transform({ name: 'getting-started' })).toBe('/getting-started');
+    expect(content.transform({ name: 'index', relativePath: 'guides' })).toBe('/guides');
+    expect(content.transform({ name: 'a', attributes: { slug: '/ui/button/' } })).toBe('/ui/button');
   });
 });

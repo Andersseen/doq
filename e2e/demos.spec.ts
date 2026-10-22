@@ -11,7 +11,7 @@ test.describe('E2E-006 consumer-owned Angular demos', () => {
   });
 
   test('Showcase B: the Forge demo reflects the selected field type', async ({ page }) => {
-    await page.goto(`${apps.b.url}/docs/onboarding/first-application`);
+    await page.goto(`${apps.b.url}/onboarding/first-application`);
     const demo = page.getByRole('region', { name: 'Forge content model demo' });
     await expect(demo.getByText('Rich text', { exact: false }).last()).toBeVisible();
     await demo.getByLabel('Field type').selectOption('Boolean');
