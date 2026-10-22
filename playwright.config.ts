@@ -43,7 +43,7 @@ const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
 
 export default defineConfig({
   testDir: 'e2e',
-  testIgnore: [...(withConsumer ? [] : [/consumer(-rich)?\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
+  testIgnore: [...(withConsumer ? [] : [/consumer(-rich|-api)?\.spec/]), ...(withAdoption ? [] : [/adoption\.spec/])],
   outputDir: 'test-results',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

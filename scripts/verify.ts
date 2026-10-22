@@ -35,6 +35,7 @@ const steps: Step[] = [
   pnpm('format:check'),
   pnpm('typecheck:scripts'),
   pnpm('sdd:check'),
+  pnpm('api:check'),
   pnpm('agentyx:check'),
   pnpm('test:unit'),
   pnpm('test:components'),

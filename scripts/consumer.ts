@@ -47,12 +47,35 @@ await cp(source, outDir, { recursive: true, filter: (path) => !skip.has(path.spl
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
 manifest.name = app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer';
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
-manifest.scripts = { build: 'vite build && doq-search index dist/analog/public' };
+manifest.scripts = {
+  api: manifest.scripts['api'],
+  'api:check': manifest.scripts['api:check'],
+  build: 'vite build && doq-search index dist/analog/public',
+};
 await writeFile(resolve(outDir, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
-for (const args of [['install'], ['build']]) {
+const pnpm = (args: string[], expected = 0) => {
   console.log(`consumer: pnpm ${args.join(' ')}`);
   const result = spawnSync('pnpm', args, { cwd: outDir, stdio: 'inherit', env: { ...process.env, CI: 'true' } });
-  if (result.status !== 0) process.exit(result.status ?? 1);
-}
+  if (result.status !== expected) {
+    console.error(`consumer: "pnpm ${args.join(' ')}" exited ${result.status}, expected ${expected}`);
+    process.exit(1);
+  }
+};
+pnpm(['install']);
+
+// API reference through the installed `doq-api` binary and the consumer's own TypeScript: the committed pages must be
+// current, a public API change must make `check` fail until `generate` runs, and regenerating restores the pages.
+const entry = resolve(outDir, app === 'showcase-a' ? 'vanta-ui/src/public-api.ts' : 'forge-sdk/src/public-api.ts');
+const original = await readFile(entry, 'utf8');
+pnpm(['run', 'api:check']);
+await writeFile(entry, `${original}\n/** Added by the consumer proof. */\nexport const consumerProbe = 1;\n`);
+pnpm(['run', 'api:check'], 1);
+pnpm(['run', 'api']);
+pnpm(['run', 'api:check']);
+await writeFile(entry, original);
+pnpm(['run', 'api']);
+pnpm(['run', 'api:check']);
+
+pnpm(['build']);
 console.log(`consumer ready: ${resolve(outDir, 'dist/analog/public')}`);

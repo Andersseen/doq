@@ -33,6 +33,7 @@ Doqs (`@doqs/analog`) adds a Markdown-driven **documentation region** to an Angu
 - **SSR and SSG.** Every page ships as static HTML and hydrates cleanly.
 - **Angular components inside Markdown.** Register your own standalone components once, then place them between paragraphs with a one-line `::demo[id]` directive. Not MDX: no JavaScript in Markdown and no template compilation.
 - **Rich Markdown, built in (0.4).** `> [!NOTE]` callouts, accessible `:::tabs` and code groups, `:::steps` guides and titled code blocks, with no component to write. They are server-rendered, searchable and themed by the same `--host-docs-*` tokens. See [Rich Markdown authoring](packages/doq/README.md#rich-markdown-authoring).
+- **API reference from source (0.5).** `doq-api generate` reads your library's public TypeScript API (components, directives, signal inputs, outputs, models, JSDoc, stability tags) and writes ordinary Markdown pages; `doq-api check` fails CI when they are stale. Build-time only, with your own TypeScript. See [API reference from source](packages/doq/README.md#api-reference-from-source-05).
 - **Static search.** Optional [Pagefind](https://pagefind.app) index built from your prerendered output. No backend, off by default.
 - **Host-owned look.** Restyle with `--host-docs-*` CSS tokens and add your own components through composition slots.
 

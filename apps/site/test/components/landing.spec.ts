@@ -16,16 +16,16 @@ describe('COMP-020 landing page content', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/belongs in your app/i);
     expect(screen.getByRole('main')).toBeTruthy();
-    for (const name of ['What Doqs 0.4 does', 'Getting started', 'How it works'])
+    for (const name of ['What Doqs 0.5 does', 'Getting started', 'How it works'])
       expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
   });
 
-  it('lists the real 0.4 features', async () => {
+  it('lists the real 0.5 features', async () => {
     await render(HomePage);
-    const section = screen.getByRole('region', { name: 'What Doqs 0.4 does' });
+    const section = screen.getByRole('region', { name: 'What Doqs 0.5 does' });
     const names = within(section).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
     expect(names).toEqual(
-      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'Consumer-owned demos', 'SSR and SSG', 'Angular components inside Markdown']),
+      expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'API reference from source', 'SSR and SSG', 'Angular components inside Markdown']),
     );
   });
 
@@ -43,13 +43,14 @@ describe('COMP-020 landing page content', () => {
     await render(HomePage);
     const tabs = screen.getByRole('tablist', { name: 'Setup steps' });
     const names = within(tabs).getAllByRole('tab').map((tab) => tab.textContent?.trim());
-    expect(names).toEqual(['Shared paths', 'Analog prerender', 'Angular providers', 'Demo registration']);
+    expect(names).toEqual(['Shared paths', 'Analog prerender', 'Angular providers', 'API reference', 'Demo registration']);
     expect(within(tabs).getByRole('tab', { selected: true }).textContent).toContain('Shared paths');
     const expected = [
       ['Analog prerender', 'doqPrerenderRoutes'],
       ['Angular providers', 'defineDoqConfig'],
       ['Angular providers', 'doqRoutes'],
       ['Angular providers', 'provideDoq'],
+      ['API reference', 'doq-api check'],
       ['Demo registration', "'enter-animation'"],
     ] as const;
     for (const [tab, api] of expected) {

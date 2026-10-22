@@ -82,7 +82,7 @@
 .doq-search-result-excerpt mark { background: color-mix(in srgb,var(--doq-primary) 24%,transparent); color: var(--doq-foreground); border-radius: .2rem; padding: 0 .1rem; }
 .doq-doc-header { max-width: var(--doq-content-width); }
 .doq-eyebrow { color: var(--doq-primary); text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 750; }
-.doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; }
+.doq-doc-header h1,.doq-index h1 { margin: .65rem 0 1rem; font-size: clamp(2.3rem,5vw,3.5rem); letter-spacing: -.045em; line-height: 1.05; overflow-wrap: anywhere; }
 .doq-description { color: var(--doq-muted); font-size: 1.15rem; line-height: 1.7; }
 .doq-markdown { display: block; max-width: var(--doq-content-width); line-height: 1.78; }
 .doq-markdown :is(h1,h2,h3,h4,h5,h6)[id] { scroll-margin-top: var(--doq-scroll-offset); }
@@ -100,6 +100,7 @@
 .doq-code-copy:hover { color: var(--doq-primary); border-color: var(--doq-primary); }
 .doq-markdown :not(pre)>code { background: var(--doq-code-background); border-radius: .25rem; padding: .12rem .35rem; font-size: .9em; }
 .doq-markdown table { border-collapse: collapse; display: block; overflow: auto; width: 100%; }
+.doq-markdown table:focus-visible { outline: 2px solid var(--doq-focus); outline-offset: 2px; }
 .doq-markdown th,.doq-markdown td { border: 1px solid var(--doq-border); padding: .65rem .8rem; text-align: left; }
 .doq-markdown th { background: var(--doq-surface); }
 .doq-toc { position: absolute; left: calc(100% + 2rem); top: 8rem; display: grid; gap: .7rem; width: 11rem; font-size: .78rem; color: var(--doq-muted); }

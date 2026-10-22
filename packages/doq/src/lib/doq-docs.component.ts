@@ -293,6 +293,7 @@ export class DoqDocsComponent {
     // The enhancement may run from both the mutation observer and the timer; replacing the
     // previous observer and resize listener keeps a single active set per rendered document.
     this.disconnectHeadingObserver();
+    this.syncScrollableTables(markdown);
     if (!('IntersectionObserver' in globalThis) || !nodes.length) return true;
     const observeHeadings = () => {
       this.enhancementObserver?.disconnect();
@@ -308,11 +309,36 @@ export class DoqDocsComponent {
     this.documentRef.defaultView?.addEventListener('resize', this.headingResizeHandler, { passive: true });
     return true;
   }
+  /** A table wider than the column scrolls on its own (CSS), so it must be reachable by keyboard and have a name. */
+  private syncScrollableTables(markdown: HTMLElement): void {
+    const sync = () => {
+      for (const table of Array.from(markdown.querySelectorAll<HTMLElement>('.doq-markdown table'))) {
+        if (table.scrollWidth > table.clientWidth) {
+          if (table.hasAttribute('tabindex')) continue;
+          let heading = table.previousElementSibling;
+          while (heading && !/^H[1-6]$/.test(heading.tagName)) heading = heading.previousElementSibling;
+          table.setAttribute('tabindex', '0');
+          table.dataset['doqScrollable'] = 'true';
+          if (!table.hasAttribute('aria-label')) table.setAttribute('aria-label', `${heading?.textContent?.trim() || 'Scrollable'} table`);
+        } else if (table.dataset['doqScrollable']) {
+          table.removeAttribute('tabindex');
+          table.removeAttribute('data-doq-scrollable');
+        }
+      }
+    };
+    sync();
+    if (this.tableResizeHandler) this.documentRef.defaultView?.removeEventListener('resize', this.tableResizeHandler);
+    this.tableResizeHandler = sync;
+    this.documentRef.defaultView?.addEventListener('resize', sync, { passive: true });
+  }
+  private tableResizeHandler?: () => void;
   private enhancementObserver?: IntersectionObserver;
   private headingResizeHandler?: () => void;
   private disconnectHeadingObserver(): void {
     this.enhancementObserver?.disconnect();
     this.enhancementObserver = undefined;
+    if (this.tableResizeHandler) this.documentRef.defaultView?.removeEventListener('resize', this.tableResizeHandler);
+    this.tableResizeHandler = undefined;
     if (this.headingResizeHandler) this.documentRef.defaultView?.removeEventListener('resize', this.headingResizeHandler);
     this.headingResizeHandler = undefined;
   }

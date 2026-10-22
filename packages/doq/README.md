@@ -301,6 +301,63 @@ The dialog uses the same `--host-docs-*` tokens as the rest of Doq, so it follow
 
 **Cost.** The library adds a few kilobytes (about 6 KB gzip for the new search and navigation code in the unminified package). Pagefind itself is not bundled: `pagefind.js` (~13 KB gzip), the worker, a WebAssembly module (~70 KB) and the index fragments are fetched on the first query only.
 
+## API reference from source (0.5)
+
+Doqs can write the *reference* part of your documentation for you. `doq-api` reads the public TypeScript API of your library with **your** compiler and writes ordinary Doqs Markdown pages (an index plus one page per public symbol). The pages go through the same routing, table of contents, highlighting, theming and Pagefind index as the guides you write by hand, so there is no second renderer, no second search and no TypeScript in the browser. You keep owning narrative guides and live demos; the generator owns only the folder you point it at.
+
+```sh
+pnpm add -D typescript          # the compiler your project already builds with (optional peer, ^5.5 or ^6)
+pnpm exec doq-api generate \
+  --project projects/lib/tsconfig.lib.json \
+  --entry projects/lib/src/public-api.ts \
+  --out src/content/docs/reference/generated \
+  --base-path /docs
+pnpm exec doq-api check <same flags>   # CI: exit 1 when the committed pages are stale
+```
+
+```jsonc
+// package.json
+"scripts": {
+  "api": "doq-api generate --project projects/lib/tsconfig.lib.json --entry projects/lib/src/public-api.ts",
+  "api:check": "doq-api check --project projects/lib/tsconfig.lib.json --entry projects/lib/src/public-api.ts"
+}
+```
+
+Run `api` when the public API changes and commit the pages; run `api:check` in CI so a pull request that changes the API without refreshing the reference fails. Generation is deterministic (stable order, names and bytes; no timestamps or absolute paths), so a clean check means the pages match the source.
+
+| Flag | Default | Purpose |
+| --- | --- | --- |
+| `--entry` | required | Public entry point (`public-api.ts`). Only what it exports is documented. |
+| `--project` | built-in options | tsconfig used to resolve imports and path aliases. |
+| `--out` | `src/content/docs/reference/generated` | Output directory; must be a sub-directory of the content directory. |
+| `--content-dir` | `src/content/docs` | Your Doqs content directory (`src/content/<contentDirectory>`). |
+| `--base-path` | `/docs` | Your Doqs `basePath`, used for cross-links (`/` for docs-first sites). |
+| `--group`, `--title` | `API reference` | Sidebar group of the pages and title of the index page. |
+| `--order-start` | `1000` | `order` of the index; symbols follow, so generated pages come after hand-written ones. |
+| `--source-url` | none | Adds a source link per symbol; `{path}` and `{line}` are replaced, for example `https://github.com/you/lib/blob/main/{path}#L{line}`. |
+| `--include`, `--exclude` | all | Categories: `component,directive,pipe,service,function,class,interface,type,enum,constant`. |
+| `--strict` | off | Fail on warnings and on public symbols without a documentation comment. |
+| `--cwd` | `.` | Project root. |
+
+Exit codes: `0` success (for `check`: up to date), `1` failed run, stale pages, conflicts or strict violations, `2` usage or configuration error. Node code can use `import { generateApiReference, checkApiReference, buildApiReference } from '@doqs/analog/api-reference'` (Node only, never import it in browser code; typed in `api-reference.d.mts`).
+
+### What is extracted
+
+- **Public API only.** The entry point's exports, followed through barrels, `export *`, renamed and `export type` re-exports. A symbol exported under two names is documented once ("Also exported as"). Unexported code, `@internal`/`@ignore` symbols, re-exports from other packages, `default` and namespaces are skipped, as are private, protected, `#private` and `@internal` members, lifecycle hooks and `inject()`/`viewChild()` fields.
+- **Angular.** `@Component`, `@Directive`, `@Pipe` and `@Injectable` (only when the decorator comes from `@angular/core`): selector, `exportAs`, pipe name, `providedIn`, **signal inputs** (`input()`, `input.required()`, aliases, defaults, transforms), **models** (`model()`, with the `<name>Change` output), **outputs** (`output()`), the legacy `@Input()` / `@Output()` forms with `EventEmitter`, and public methods and properties. An input with a `transform` accepts a different binding type than the signal reads (`input<number | undefined, unknown>(…, { transform })` accepts `unknown` and reads `number | undefined`): the page shows the accepted type, the transform and the read type, never `InputSignal<…>`.
+- **TypeScript.** Functions (every overload), arrow-function constants, interfaces, type aliases, enums, classes and constants, with generics, optional and rest parameters, unions and readonly arrays as you wrote them. Types are not expanded recursively; a type that is one documented name links to its page and every documented name a signature mentions is listed under *Related types*.
+- **JSDoc.** Description, `@param`, `@returns`, `@example`, `@deprecated`, `@since`, `@see`, `@stability`, `@experimental` and `{@link}`. Missing comments still give a signature page; nothing is classed as stable unless you wrote `@stability stable`. Prose cannot add HTML or Doqs directives to a page.
+
+Metadata that is computed (a selector built from a function call, for example) is **reported as a warning and left out**; code is never executed and nothing is guessed. Warnings print to stderr and fail `--strict`.
+
+### Safe ownership
+
+Pages are written only below `--out`, which must sit inside the content directory and the project (no `..`, no `node_modules`, no symbolic link out). A `.doq-api.json` manifest records every generated file and its hash. An existing file that the generator did not create, a generated page that someone edited and a damaged manifest make `generate` stop **before writing anything**; files that are no longer generated are deleted only when unchanged since generation; hand-written siblings are never touched. Generated pages carry `generated: doq-api` in their frontmatter and are not meant to be edited: link to them from your own guides instead, as in `[createClient](/docs/reference/generated/create-client)`.
+
+### Limits
+
+TypeDoc-style per-version archives, template analysis and a live source view are out of scope. Links inside Markdown are ordinary anchors (Analog does not intercept them), so following a reference link is a normal navigation to a prerendered page. Where the compiler cannot see Angular's types (the package is not installed) explicit type arguments are used and a warning says so.
+
 ## Navigation and reading
 
 These behaviors need no configuration:
@@ -313,8 +370,8 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary. Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary; `@doqs/analog/api-reference` (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`) and the `doq-api` binary (0.5). Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 
-Built with Angular 21.2 and Analog 2.9. Angular 22 is in the peer range but not validated. Existing 0.0.0-pilot and 0.1 configuration objects keep working without changes; search is opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`). See [CHANGELOG.md](./CHANGELOG.md).
+Built with Angular 21.2 and Analog 2.9. Angular 22 is in the peer range but not validated. Existing 0.0.0-pilot and 0.1 configuration objects keep working without changes; search is opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`); `doq-api` needs the project's own `typescript` (optional peer `^5.5.0 || ^6.0.0`, tested with 5.9 and 6.0). See [CHANGELOG.md](./CHANGELOG.md).

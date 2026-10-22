@@ -6,6 +6,7 @@ import {
   fetchRegistryState,
   integrityOf,
   planRelease,
+  PUBLISH_VISIBILITY,
   publishPrerequisites,
   npmPublishArgs,
   type FetchLike,
@@ -215,5 +216,21 @@ describe('UNIT-070 npm publish command construction (0.3.0 release regression)',
   it('keeps an already absolute path and refuses anything that is not a tarball', () => {
     expect(npmPublishArgs('/tmp/x/doqs-analog-0.4.0.tgz', '/work')[1]).toBe('/tmp/x/doqs-analog-0.4.0.tgz');
     expect(() => npmPublishArgs('artifacts/pkg', '/work')).toThrow(/Not a package tarball/);
+  });
+});
+
+describe('UNIT-100 waiting for npm to serve a fresh publication (0.4.0 release regression)', () => {
+  it('waits longer than the six minutes npm took to list @doqs/analog@0.4.0', () => {
+    const waitMs = PUBLISH_VISIBILITY.attempts * PUBLISH_VISIBILITY.intervalMs;
+    expect(waitMs).toBeGreaterThanOrEqual(10 * 60_000);
+    expect(waitMs).toBeLessThanOrEqual(20 * 60_000);
+  });
+
+  it('keeps the verification loop bound to that window', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const cli = await readFile(new URL('./cli.ts', import.meta.url), 'utf8');
+    expect(cli).toContain('PUBLISH_VISIBILITY.attempts');
+    expect(cli).toContain('PUBLISH_VISIBILITY.intervalMs');
+    expect(cli).not.toMatch(/attempt <= 12/);
   });
 });

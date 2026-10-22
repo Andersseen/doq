@@ -35,6 +35,7 @@ jobs:
           pnpm exec agentyx install --frozen
           git diff --exit-code
       - run: pnpm sdd:check
+      - run: pnpm api:check
 
   unit:
     name: Unit and component tests

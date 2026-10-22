@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.0
+
+Angular API reference generation. Additive and opt-in: nothing changes for a project that does not run `doq-api`; no configuration option, route, frontmatter key read by the runtime or CSS token was added or changed, and the Angular entry point imports neither Node nor TypeScript.
+
+### Added
+- **`doq-api generate` / `doq-api check`** (Node-only CLI) and **`@doqs/analog/api-reference`** (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`, typed in `api-reference.d.mts`). They read a library's public entry point with the project's own TypeScript (optional peer `^5.5.0 || ^6.0.0`, resolved from the project, never bundled) and write deterministic Doqs Markdown: an index plus one page per public symbol, as tables and fenced code, with frontmatter (`title`, `description`, `group`, `order`, `generated`, `category`).
+- **Angular-aware extraction**: components, directives, pipes and services (selector, `exportAs`, pipe name, `providedIn`); signal `input()` / `input.required()` with aliases, defaults, transforms and both the accepted and the read type; `model()` with its change output; `output()`; legacy `@Input()` / `@Output()` with `EventEmitter`; public methods and properties. Computed metadata is reported, never guessed.
+- **TypeScript extraction**: functions with overloads, arrow-function constants, interfaces, type aliases, enums, classes, constants; readable signatures (generics, optional/rest parameters, unions, readonly arrays) without absolute paths; links to other documented symbols; JSDoc (`@param`, `@returns`, `@example`, `@deprecated`, `@since`, `@see`, `@stability`, `@experimental`, `{@link}`) with HTML and Doqs directives neutralised.
+- **Safe ownership**: output only inside a sub-directory of the content directory, a `.doq-api.json` manifest with file hashes, no overwrite of hand-written or hand-edited files, removal only of unchanged generated files, nothing written when a conflict exists.
+- **Check mode**: exits 1 and names added, modified and removed pages when the committed reference is stale; never writes. Exit code 2 marks usage and configuration errors. `--strict` fails on warnings and undocumented symbols.
+- Options: `--entry`, `--project`, `--out`, `--content-dir`, `--base-path`, `--group`, `--title`, `--order-start`, `--source-url`, `--include`, `--exclude`, `--strict`, `--cwd`.
+- Showcase A documents a standalone Angular component and directive (`apps/showcase-a/vanta-ui`); Showcase B documents a non-Angular SDK (`apps/showcase-b/forge-sdk`); both commit their generated pages and check them in `pnpm verify:change` / CI (`pnpm api:check`). The disposable Angular Movement proof generates and verifies the reference of its real public API.
+
+### Fixed
+- A long unbroken title (a generated API page named `VantaAlertComponent`) overflowed a 375 px viewport on Linux fonts; document and index titles now wrap anywhere (`overflow-wrap`).
+- Release workflow: `verify-published` waited two minutes for npm to list a fresh version, but the registry took about six minutes to list `@doqs/analog@0.4.0` (published 09:51 UTC, visible 09:57 UTC on 2026-10-22), so the GitHub Release `v0.4.0` was not created. The window is now ten minutes or more (`PUBLISH_VISIBILITY`, regression test `UNIT-100`). The missing `v0.4.0` release is not created retroactively; see `docs/operations/release-and-deployment.md`.
+
+### Compatibility and limits
+- Node `^20.19.0 || ^22.12.0 || >=24.0.0`; tested with TypeScript 5.9 (this repository) and 6.0 (Angular Movement). No Angular peer range was widened.
+- Links inside Markdown are ordinary anchors (Analog does not intercept them), so following a reference link is a normal navigation to a prerendered page.
+- Not included: a TypeDoc replacement, API versioning, template analysis, runtime reflection, a browser-side analyser.
+
 ## 0.4.0
 
 Rich documentation authoring. Additive: every 0.3 configuration, document, route and `::demo[id]` directive works unchanged, and a document without rich blocks renders as one Markdown region exactly as before. No configuration option was added; the blocks are always on and only recognise the exact syntax below.

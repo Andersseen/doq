@@ -37,3 +37,7 @@ Use a stable identifier or slug to load one entry. A missing or unpublished entr
 | `403` | The identity cannot read this collection |
 | `404` | The entry is missing or unpublished |
 | `429` | Retry after the response's guidance |
+
+## SDK reference
+
+The typed client behind these calls is documented from its source: start with [createForgeClient](/reference/generated/create-forge-client), then see [ForgeClient](/reference/generated/forge-client), [ForgeQuery](/reference/generated/forge-query) and the [ForgeErrorCode](/reference/generated/forge-error-code) values that match the table above. The [complete index](/reference/generated) lists every public symbol.
