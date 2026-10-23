@@ -64,6 +64,13 @@ describe('UNIT-023 workflow permission and trust invariants', () => {
     expect(job(workflow, 'publish')).not.toMatch(/pnpm (install|build|pack)/);
   });
 
+  it('UNIT-066: installs the workspace before the structural tarball check, which imports TypeScript (0.8.0 release regression)', async () => {
+    const plan = job(await releaseWorkflow(), 'plan');
+    const install = plan.indexOf('pnpm install --frozen-lockfile --ignore-scripts');
+    expect(install).toBeGreaterThan(-1);
+    expect(install).toBeLessThan(plan.indexOf('node scripts/verification/package.ts'));
+  });
+
   it('only creates the GitHub Release after a verified publication or to repair a missing one', async () => {
     const release = job(await releaseWorkflow(), 'github-release');
     expect(release).toContain("needs.publish.result == 'success'");

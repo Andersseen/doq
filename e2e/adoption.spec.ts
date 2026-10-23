@@ -376,3 +376,72 @@ test.describe('E2E-114 Angular Movement adoption: versioned handbook', () => {
     await expect(dialog.locator('a[href^="/handbook/v/0.9/api/move-enter-directive"]').first()).toBeVisible();
   });
 });
+
+// PLAY-026: the real moveEnter directive of the Angular Movement checkout, driven by a Doqs playground (0.9).
+test.describe('E2E-115 Angular Movement adoption: interactive playground', () => {
+  const page_ = `${base}/handbook/guides/playground`;
+  const playground = (page: Page) => page.getByRole('group', { name: 'moveEnter', exact: true });
+  const timing = (page: Page) =>
+    page.getByTestId('am-target').evaluate((el) => {
+      const effect = el.getAnimations()[0]?.effect;
+      const t = effect?.getTiming();
+      return t ? { duration: Number(t.duration), delay: Number(t.delay), easing: String(t.easing) } : undefined;
+    });
+
+  test('controls change the real animation, outputs are listed, reset restores, code follows', async ({ page }) => {
+    await page.goto(page_);
+    const pg = playground(page);
+    await expect(pg).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await pg.getByLabel('Duration (ms)').fill('1700');
+    await pg.getByLabel('Delay (ms)').fill('300');
+    // The directive plays on init and reads its inputs once: Web Animations reports what the browser is really running.
+    await expect.poll(() => timing(page)).toMatchObject({ duration: 1700, delay: 300 });
+    await pg.getByLabel('Preset').selectOption('zoom-in');
+    await expect(page.getByTestId('am-target')).toHaveText('zoom-in');
+    await expect(pg.getByRole('list', { name: 'Events' })).toContainText('preset: "zoom-in"');
+    await pg.getByLabel('Disabled').check();
+    await expect(pg.getByRole('list', { name: 'Events' }).locator('li').first()).toContainText('Played');
+    const code = pg.locator('.doq-pg-panel code');
+    await expect(code).toContainText('moveEnter="zoom-in"');
+    await expect(code).toContainText('[moveDuration]="1700"');
+    await expect(code).toContainText('[moveDisabled]="true"');
+    await pg.getByRole('button', { name: 'Reset' }).click();
+    await expect(pg.getByLabel('Duration (ms)')).toHaveValue('500');
+    await expect(pg.getByLabel('Disabled')).not.toBeChecked();
+    await expect(pg.getByText(/No events yet/)).toBeVisible();
+    await expect.poll(() => timing(page)).toMatchObject({ duration: 500, delay: 0 });
+  });
+
+  test('preview widths and the expanded view work next to the host shell, axe finds nothing serious', async ({
+    page,
+  }) => {
+    await page.goto(page_);
+    const pg = playground(page);
+    await pg.getByRole('button', { name: 'Mobile' }).click();
+    expect((await pg.locator('.doq-pg-frame').boundingBox())!.width).toBeLessThanOrEqual(320);
+    await pg.getByRole('button', { name: 'Expand' }).click();
+    const dialog = page.getByRole('dialog', { name: /moveEnter — expanded preview/ });
+    await expect(dialog.getByTestId('am-target')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(pg.getByRole('button', { name: 'Expand' })).toBeFocused();
+    const results = await new AxeBuilder({ page }).include('.doq-playground').analyze();
+    expect(results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')).toEqual([]);
+  });
+
+  test('surrounding Markdown is searchable and the playground chrome is not', async ({ page }) => {
+    await page.goto(page_);
+    const found = await page.evaluate(async () => {
+      const url = '/pagefind/pagefind.js';
+      const pagefind = await import(/* @vite-ignore */ url);
+      await pagefind.init();
+      const hit = (await pagefind.search('persimmon-granite-harbor')).results[0];
+      const data = hit ? await hit.data() : undefined;
+      return { url: data?.url as string | undefined, content: (data?.content as string | undefined) ?? '' };
+    });
+    expect(found.url).toContain('/handbook/guides/playground');
+    for (const chrome of ['Preview width', 'Duration (ms)', 'No events yet'])
+      expect(found.content).not.toContain(chrome);
+  });
+});

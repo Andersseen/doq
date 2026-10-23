@@ -88,7 +88,7 @@ def test_contract_015_a_search_disabled_build_ships_no_search_assets_or_markup(s
     assert site_b_nosearch.get("/pagefind/pagefind.js")[0] == 404
     status, _, body = site_b_nosearch.get("/concepts/models")
     assert status == 200 and b"Content models" in body
-    assert b"doq-search" not in body and b"<dialog" not in body
+    assert b"doq-search" not in body and b'aria-labelledby="doq-search-title"' not in body
     for name in _expected_routes("showcase-b"):
         assert site_b_nosearch.get(name)[0] == 200, name
 

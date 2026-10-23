@@ -12,6 +12,10 @@ Use a filled button for the primary action, an outline for secondary actions, an
 
 The live control below is a Vanta-owned Angular component using signal state. The application registers it with Doq under the `vanta-button` ID, then this page refers to that ID in its `demo` frontmatter.
 
+Change the inputs of a real Volt UI button below, press it to inspect its output, then reset. The page registers the playground under the `vanta-button` ID and places it with `::playground[vanta-button]`.
+
+::playground[vanta-button]
+
 ## Example
 
 Use the button in a template, and handle its `pressed` output in the component class:

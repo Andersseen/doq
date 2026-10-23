@@ -44,3 +44,7 @@ A second registered component, animated by Angular Movement and controlled with 
 - Demos are excluded from the search index; the Markdown around them is indexed.
 - A directive inside a code block, list, blockquote or table stays literal text.
 - Slots (`indexAfterIntro`, `documentAfterContent`) add the same component to every page of a kind.
+
+## Need controls?
+
+A demo has no inputs and no chrome. To let readers change a component's inputs, watch its outputs, resize the preview and copy usage code, register a playground instead: see [Interactive playgrounds](/docs/guides/interactive-playgrounds).

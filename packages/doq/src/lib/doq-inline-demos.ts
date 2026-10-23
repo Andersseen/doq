@@ -4,6 +4,9 @@ export type DoqContentSegment = { readonly kind: 'html'; readonly html: string }
 /** The authoring syntax: a paragraph that contains exactly `::demo[id]`. */
 export const DOQ_INLINE_DEMO_PATTERN = /^::demo\[([A-Za-z0-9][A-Za-z0-9_-]*)\]$/;
 
+/** The playground syntax: a paragraph that contains exactly `::playground[id]`. */
+export const DOQ_INLINE_PLAYGROUND_PATTERN = /^::playground\[([A-Za-z0-9][A-Za-z0-9_-]*)\]$/;
+
 const VOID_ELEMENTS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const TAG = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9-]*)(?:"[^"]*"|'[^']*'|[^'">])*>/g;
 

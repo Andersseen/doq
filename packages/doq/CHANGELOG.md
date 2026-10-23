@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.9.0
+
+Interactive component playgrounds. Additive: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token was removed or changed, `::demo[id]` and every 0.8 (and earlier) configuration build and render as before, and `pnpm verify:public-api` passes against the 0.7.0 baseline.
+
+### Added
+- **`::playground[id]`** Markdown directive, recognised like `::demo[id]` (its own paragraph; literal inside code, lists, quotes, tables and tab bodies).
+- **`DoqConfig.playgrounds`**: a registry of `{ component, title?, description?, controls?, outputs?, code?, previewSizes? }`. `defineDoqConfig` reports every problem in one readable error (duplicate controls, bad ids, select `initial` outside the options, invalid ranges, required controls without an initial value…).
+- **`DoqPlaygroundComponent`** (rendered for you): `boolean`, `string`, `number` (`min`, `max`, `step`) and `select` controls; inputs are bound with Angular's public `createComponent({ bindings })` by their public (alias) name, so signal inputs, required inputs, transforms and legacy `@Input` work and a control change never recreates the component; selected `output()`/`EventEmitter`/`model` change events are listed (latest 20, safely formatted); Reset (restores controls, clears events, recreates the component); preview widths (Responsive, Mobile 320px, Tablet 768px; customisable or `false`); an Expand view in a native modal `<dialog>` that keeps the same component instance; code tabs with exact copy and a polite status message.
+- Helpers `formatDoqUsage()` (template usage with correct escaping), `formatDoqEventPayload()`, `validateDoqPlaygrounds()`, `parseDoqDocument()` and the constants `DOQ_INLINE_PLAYGROUND_PATTERN`, `DOQ_DEFAULT_PREVIEW_SIZES`, `DOQ_PLAYGROUND_EVENT_LIMIT`; `DoqDocsComponent.parts`.
+- Two optional tokens, `--host-docs-playground-surface` and `--host-docs-playground-preview`; `forced-colors` and `prefers-reduced-motion` rules.
+- Repository: playground fixtures in Showcase A (real Volt UI button), Showcase B (two independent SDK playgrounds), the official documentation (real Angular Movement) and the Angular Movement adoption proof; the _Interactive playgrounds_ guide.
+
+### Fixed
+- **The 0.8.0 release could not run.** The _Release eligibility_ job executed `scripts/verification/package.ts` (which imports TypeScript) before installing dependencies and failed with `ERR_MODULE_NOT_FOUND`; npm still served 0.7.0. The job now installs the workspace first (`--ignore-scripts`, SHA-pinned action), with a regression test.
+
+### Changed
+- `parseDoqContent`, `DoqRichSegment` and `DoqDocsComponent.segments` are deliberately unchanged (they never contain playgrounds); the document view renders `parts` (`parseDoqDocument`).
+- Stylesheet +6.3 KB source / +0.9 KB gzip; budgets in `perf-budgets.json` raised for exactly that, with the reason recorded. JavaScript budgets are unchanged.
+
+### Known limitations
+- Overlays that a component appends to `<body>` (CDK overlays, popovers outside the top layer) render below the Expand dialog.
+- Controls are written by hand; they are not inferred from `doq-api` metadata (planned for later). Object-graph inputs need a wrapper component.
+- Code examples are text you provide; importing source files into Markdown is planned for 0.10.
+- The playground is client-interactive only after hydration; a component that cannot render on the server must guard browser APIs like any SSR component.
+
 ## 0.8.0
 
 Integration developer experience and public API stabilization. Additive: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token changed, and every 0.7 (and earlier) configuration builds and renders as before. The browser bundle (`fesm2022`) is byte-for-byte unaffected by the new tooling.

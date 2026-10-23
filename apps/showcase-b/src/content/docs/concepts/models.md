@@ -23,3 +23,13 @@ Pick a field type to see how an editor would encounter it:
 ## Reuse with care
 
 Reusable models make delivery consistent. Keep editorial concepts understandable for the teams who maintain them.
+
+## Query entries
+
+Entries are read through the delivery API. Adjust the request below and send it to see the output the client reports.
+
+::playground[forge-request]
+
+Failed requests can be retried. Compare two policies side by side: each playground keeps its own state.
+
+::playground[forge-retry]

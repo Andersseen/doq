@@ -3,9 +3,10 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideFileRouter, requestContextInterceptor, withExtraRoutes } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
-import { defineDoqConfig, doqRoutes, provideDoq } from '@doqs/analog';
+import { defineDoqConfig, doqRoutes, formatDoqUsage, provideDoq } from '@doqs/analog';
 import { doqPaths } from '../doq.paths';
 import { VantaButtonDemoComponent } from './demos/button-demo';
+import { VantaButtonPlaygroundComponent } from './demos/button-playground';
 import { VantaContrastDemoComponent } from './demos/contrast-demo';
 import { VantaInstallDemoComponent } from './demos/install-demo';
 import { VantaHelpComponent } from './slots/vanta-help';
@@ -19,6 +20,23 @@ const doqConfig = defineDoqConfig({
   showTableOfContents: true,
   search: { enabled: true },
   demos: { 'vanta-button': VantaButtonDemoComponent, 'vanta-install': VantaInstallDemoComponent, 'vanta-contrast': VantaContrastDemoComponent },
+  playgrounds: {
+    'vanta-button': {
+      component: VantaButtonPlaygroundComponent,
+      title: 'Volt UI button',
+      description: 'A real Volt UI button: change its inputs and press it to see the output.',
+      controls: [
+        { input: 'variant', kind: 'select', label: 'Variant', initial: 'solid', options: [{ label: 'Solid', value: 'solid' }, { label: 'Outline', value: 'outline' }, { label: 'Ghost', value: 'ghost' }, { label: 'Destructive', value: 'destructive' }, { label: 'Link', value: 'link' }] },
+        { input: 'size', kind: 'select', label: 'Size', initial: 'md', options: [{ label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }] },
+        { input: 'label', kind: 'string', label: 'Label', initial: 'Save changes', required: true },
+        { input: 'disabled', kind: 'boolean', label: 'Disabled', initial: false },
+      ],
+      outputs: [{ event: 'pressed', label: 'Pressed' }],
+      code: [
+        { label: 'Template', language: 'html', code: ({ label, ...inputs }) => formatDoqUsage('button', inputs, { attributes: ['voltButton', 'type="button"'], text: String(label ?? '') }) },
+      ],
+    },
+  },
   slots: { indexAfterIntro: VantaStartComponent, documentAfterContent: VantaHelpComponent },
   presentation: {
     documentationLabel: 'Vanta UI docs',
