@@ -13,6 +13,8 @@ const bgOf = (page: Page, selector: string) =>
 test.describe('E2E-100 the official site documents Doqs with Doqs', () => {
   test('DX-001/DX-002: the landing is intact and leads to Getting started', async ({ page }) => {
     await page.goto(apps.site.url);
+    // Firefox warns when the test's own evaluation forces layout before the document has settled.
+    await page.waitForLoadState('networkidle');
     await expect(page).toHaveTitle(/^Doqs — Documentation that lives/);
     await expect(
       page.getByRole('heading', { level: 1, name: 'Documentation that belongs in your app.' }),
@@ -98,6 +100,8 @@ test.describe('E2E-100 the official site documents Doqs with Doqs', () => {
 
   test('DX-010/DX-011: back on the landing the host title, description and theme are restored', async ({ page }) => {
     await page.goto(apps.site.url);
+    // Firefox warns when the test's own evaluation forces layout before the document has settled.
+    await page.waitForLoadState('networkidle');
     const landingDescription = await page.locator('meta[name="description"]').getAttribute('content');
     await page.goto(`${docs}/cli`);
     await expect(page).toHaveTitle('The doq CLI · Doqs');

@@ -18,6 +18,9 @@ export async function expectClipboard(page: Page, expected: string): Promise<voi
   }
 }
 
+const HARNESS_LAYOUT_WARNING =
+  /^\[JavaScript Warning: "Layout was forced before the page was fully loaded\..*\{file: "debugger eval code"/;
+
 /** Every test fails on uncaught exceptions, console errors/warnings and failed requests (hydration regressions surface here). */
 export const test = base.extend<{ problems: string[] }>({
   problems: [
@@ -25,8 +28,12 @@ export const test = base.extend<{ problems: string[] }>({
       const problems: string[] = [];
       page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
       page.on('console', (message) => {
-        if (message.type() === 'error' || message.type() === 'warning')
+        if (message.type() === 'error' || message.type() === 'warning') {
+          // Firefox reports, for Playwright's own evaluation (`{file: "debugger eval code"}`, never page code), that layout was
+          // measured while the document was still settling. Nothing in the page produced it, so it is not a page problem.
+          if (HARNESS_LAYOUT_WARNING.test(message.text())) return;
           problems.push(`console.${message.type()}: ${message.text()}`);
+        }
       });
       page.on('requestfailed', (request) =>
         problems.push(`requestfailed: ${request.url()} ${request.failure()?.errorText}`),
