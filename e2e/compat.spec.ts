@@ -50,6 +50,25 @@ test.describe('E2E-132 Angular integration of the packed package', () => {
     await expect(demo.locator('strong')).toHaveText('Reference');
   });
 
+  test('an interactive playground binds inputs and reports outputs without Zone.js', async ({ page }) => {
+    await page.goto('/concepts/models');
+    const request = page.getByRole('group', { name: 'Delivery request', exact: true });
+    // Signal, required, aliased (`drafts`) and transformed (`numberAttribute`) inputs of a real component, zoneless.
+    await request.getByLabel('Limit').fill('42');
+    await request.getByLabel('Include drafts').check();
+    await expect(request.getByLabel('Request URL')).toHaveText(
+      'GET /v1/entries?collection=product-guides&limit=42&locale=en&status=draft',
+    );
+    await request.getByRole('button', { name: 'Send request' }).click();
+    await expect(request.getByRole('list', { name: 'Events' })).toContainText('Request sent');
+    await request.getByRole('button', { name: 'Expand' }).click();
+    const dialog = page.getByRole('dialog', { name: /Delivery request — expanded preview/ });
+    await expect(dialog.getByLabel('Request URL')).toContainText('limit=42');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(request.getByRole('button', { name: 'Expand' })).toBeFocused();
+  });
+
   test('client navigation updates title, focus and history without a reload', async ({ page }) => {
     await page.goto('/onboarding/first-application');
     await page.evaluate(() => {

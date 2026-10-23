@@ -1,6 +1,7 @@
 import { InjectionToken, Provider, Type } from '@angular/core';
 import { DoqPaths, normalizeDoqPaths } from './doq-paths';
 import { DoqSearchConfig, normalizeDoqSearchConfig } from './doq-search';
+import { DoqPlaygroundRegistry, validateDoqPlaygrounds } from './doq-playground-model';
 
 export type DoqDemoRegistry = Readonly<Record<string, Type<unknown>>>;
 
@@ -39,6 +40,8 @@ export interface DoqConfig extends DoqPaths {
   sidebarWidth?: string;
   /** Consumer-owned standalone Angular demos, keyed by stable Markdown frontmatter IDs. */
   demos?: DoqDemoRegistry;
+  /** Consumer-owned interactive playgrounds, keyed by the stable IDs used in `::playground[id]`. Additive; demos are unchanged. */
+  playgrounds?: DoqPlaygroundRegistry;
   /** Optional host-owned composition points. */
   slots?: DoqSlots;
   /** Optional product-aware copy and page titles. */
@@ -51,6 +54,8 @@ export const DOQ_CONFIG = new InjectionToken<DoqConfig>('DOQ_CONFIG');
 
 /** Validate and normalize a configuration once; pass the result to doqRoutes() and provideDoq(). */
 export function defineDoqConfig(config: DoqConfig): DoqConfig {
+  const problems = validateDoqPlaygrounds(config.playgrounds);
+  if (problems.length) throw new Error(`Doq: invalid playground configuration:\n- ${problems.join('\n- ')}`);
   return { ...config, ...normalizeDoqPaths(config), ...(config.search === undefined ? {} : { search: normalizeDoqSearchConfig(config.search) }) };
 }
 

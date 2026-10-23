@@ -66,7 +66,7 @@ const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
 // Specs that run in Firefox and WebKit as well as Chromium: routing, history, fragments, TOC, search, versions, tabs,
 // copy, drawer, focus, themes, overflow and axe. The rest of the suite is engine-independent and stays Chromium-only.
 const crossBrowserSpecs = [
-  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism|official-docs/,
+  /docs-open|playgrounds|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism|official-docs/,
 ];
 
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
@@ -82,7 +82,7 @@ export default defineConfig({
   testIgnore: [
     // One cell of the Angular compatibility matrix: runs against a dedicated consumer (playwright.compat.config.ts).
     /compat\.spec/,
-    ...(withConsumer ? [] : [/consumer(-rich|-api|-init)?\.spec/, /legacy\.spec/]),
+    ...(withConsumer ? [] : [/consumer(-rich|-api|-init|-playgrounds)?\.spec/, /legacy\.spec/]),
     ...(withAdoption ? [] : [/adoption\.spec/]),
   ],
   outputDir: 'test-results',

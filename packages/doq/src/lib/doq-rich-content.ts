@@ -1,4 +1,4 @@
-import { DOQ_INLINE_DEMO_PATTERN } from './doq-inline-demos';
+import { DOQ_INLINE_DEMO_PATTERN, DOQ_INLINE_PLAYGROUND_PATTERN } from './doq-inline-demos';
 
 /** The callout kinds, in GitHub's `> [!KIND]` alert syntax. */
 export const DOQ_CALLOUT_TYPES = ['note', 'tip', 'important', 'warning', 'caution'] as const;
@@ -15,6 +15,11 @@ export type DoqRichSegment =
   | { readonly kind: 'html'; readonly html: string }
   | { readonly kind: 'demo'; readonly id: string }
   | { readonly kind: 'tabs'; readonly label: string; readonly tabs: readonly DoqTab[]; readonly codeOnly: boolean };
+
+/** A `::playground[id]` mount point (0.9). Kept out of `DoqRichSegment` so that union, and code switching over it, is unchanged. */
+export interface DoqPlaygroundSegment { readonly kind: 'playground'; readonly id: string }
+/** What Doqs renders for a document: every `DoqRichSegment`, plus playground mount points. */
+export type DoqDocumentSegment = DoqRichSegment | DoqPlaygroundSegment;
 
 const VOID_ELEMENTS = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const TAG = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][a-zA-Z0-9-]*)(?:"[^"]*"|'[^']*'|[^'">])*>/g;
@@ -144,16 +149,25 @@ const CODE_BLOCKS = new Set(['pre', 'figure']);
  *  - `:::steps` ... `:::` around an ordered list: a step guide.
  *  - `:::code file.ts` immediately before a fenced block: a titled code block.
  *  - `::demo[id]` alone in a paragraph: a registered consumer demo (unchanged from 0.3).
+ *  - `::playground[id]` alone in a paragraph: a registered interactive playground (0.9).
  * Anything that does not parse exactly (an unclosed group, a tab outside tabs, an unknown directive) is left in the
  * document as the literal text the author wrote; nothing is dropped.
  */
 export function parseDoqContent(source: string): DoqRichSegment[] {
-  return parse(rewriteInline(source), false);
+  return parse(rewriteInline(source), false, false) as DoqRichSegment[];
 }
 
-function parse(source: string, nested: boolean): DoqRichSegment[] {
+/**
+ * `parseDoqContent` plus `::playground[id]` mount points: the document view Doqs renders. A playground directive is
+ * recognised exactly like `::demo[id]` and, like it, stays literal text inside code, lists, quotes, tables and tab bodies.
+ */
+export function parseDoqDocument(source: string): DoqDocumentSegment[] {
+  return parse(rewriteInline(source), false, true);
+}
+
+function parse(source: string, nested: boolean, playgrounds: boolean): DoqDocumentSegment[] {
   const blocks = topLevelBlocks(source);
-  const segments: DoqRichSegment[] = [];
+  const segments: DoqDocumentSegment[] = [];
   let pending: Block[] = [];
   const flush = () => {
     const html = joinHtml(pending);
@@ -162,8 +176,11 @@ function parse(source: string, nested: boolean): DoqRichSegment[] {
   };
   for (let index = 0; index < blocks.length; index++) {
     const block = blocks[index]!;
-    const demo = !nested && block.name === 'p' ? DOQ_INLINE_DEMO_PATTERN.exec(block.html.trim().replace(/^<p>/, '').replace(/<\/p>$/, '').trim())?.[1] : undefined;
+    const paragraph = !nested && block.name === 'p' ? block.html.trim().replace(/^<p>/, '').replace(/<\/p>$/, '').trim() : undefined;
+    const demo = paragraph === undefined ? undefined : DOQ_INLINE_DEMO_PATTERN.exec(paragraph)?.[1];
     if (demo !== undefined) { flush(); segments.push({ kind: 'demo', id: demo }); continue; }
+    const playground = paragraph === undefined || !playgrounds ? undefined : DOQ_INLINE_PLAYGROUND_PATTERN.exec(paragraph)?.[1];
+    if (playground !== undefined) { flush(); segments.push({ kind: 'playground', id: playground }); continue; }
     const directives = directivesOf(block);
     const name = directives?.[0]?.name;
     if (directives && (name === 'code' || name === 'steps' || (name === 'tabs' && !nested))) {
@@ -180,7 +197,7 @@ function parse(source: string, nested: boolean): DoqRichSegment[] {
   }
   flush();
   // Adjacent html stays one segment so spacing and heading order match the unsplit document.
-  return segments.reduce<DoqRichSegment[]>((out, segment) => {
+  return segments.reduce<DoqDocumentSegment[]>((out, segment) => {
     const last = out.at(-1);
     if (segment.kind === 'html' && last?.kind === 'html') out[out.length - 1] = { kind: 'html', html: last.html + segment.html };
     else out.push(segment);
@@ -242,9 +259,9 @@ function build(runs: readonly Run[], next: number, kind: 'tabs' | 'steps'): Cons
   return { segment: { kind: 'tabs', label: head.directive.argument, tabs, codeOnly }, next };
 }
 
-/** A group body is a fragment of its own document: steps and titled code work inside it; tabs and demos do not nest. */
+/** A group body is a fragment of its own document: steps and titled code work inside it; tabs, demos and playgrounds do not nest. */
 function nestedHtml(content: readonly Block[]): string {
-  return parse(joinHtml(content), true).map(segment => (segment.kind === 'html' ? segment.html : '')).join('');
+  return parse(joinHtml(content), true, false).map(segment => (segment.kind === 'html' ? segment.html : '')).join('');
 }
 
 const escapeHtml = (value: string): string => escapeAttribute(value).replace(/>/g, '&gt;');

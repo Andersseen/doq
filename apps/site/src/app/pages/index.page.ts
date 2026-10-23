@@ -38,7 +38,7 @@ const features: readonly Feature[] = [
   {
     icon: LmnPuzzlePieceIcon,
     title: 'Angular components inside Markdown',
-    text: 'Register your own standalone components once, then place them between paragraphs with a one-line ::demo[id] directive. Interactive, server-rendered and hydrated.',
+    text: 'Register your own standalone components once, then place them between paragraphs with a one-line ::demo[id] directive. Interactive, server-rendered and hydrated. Use ::playground[id] to add input controls, an event list and copyable usage code.',
     featured: true,
   },
   { icon: LmnCodeBracketIcon, title: 'Native Angular and Analog.js', text: 'Routes come from doqRoutes() and content from Analog’s own content files. Your router and providers stay yours.' },
@@ -297,7 +297,7 @@ The text after a demo is still ordinary, searchable Markdown.`;
           Put a line containing only <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">::demo[id]</code> where a live Angular component belongs.
           Directives inside code fences, lists and quotes stay literal text, an unknown id shows a short notice instead of breaking the page,
           and headings, the table of contents and search keep working around every component.
-          The component is yours: you register it, Doqs only places it.
+          The component is yours: you register it, Doqs only places it. Register it as a playground instead and readers can also change its inputs, watch its outputs, resize and expand the preview, and copy usage code.
         </p>
         <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <volt-card>

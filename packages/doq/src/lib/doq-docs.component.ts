@@ -9,11 +9,13 @@ import { DOQ_CONFIG } from './doq-config';
 import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
+import { DoqPlaygroundComponent } from './doq-playground.component';
+import { DoqPlaygroundDefinition } from './doq-playground-model';
 import { DoqSearchComponent } from './doq-search.component';
 import { DoqVersionSwitcherComponent } from './doq-version-switcher.component';
 import { doqCanonicalUrl, doqVersionLinks } from './doq-versions';
 import { normalizeDoqPaths } from './doq-paths';
-import { parseDoqContent } from './doq-rich-content';
+import { parseDoqContent, parseDoqDocument } from './doq-rich-content';
 import { DoqTabsComponent } from './doq-tabs.component';
 
 interface DocAttributes { title?: string; description?: string; order?: number; group?: string; slug?: string; demo?: string; }
@@ -21,7 +23,7 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
 @Component({
   selector: 'doq-docs',
   standalone: true,
-  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, DoqVersionSwitcherComponent, NgComponentOutlet],
+  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqPlaygroundComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, DoqVersionSwitcherComponent, NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (document(); as doc) {
@@ -47,9 +49,13 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
           </div>
           <header class="doq-doc-header"><p class="doq-eyebrow" data-pagefind-ignore>{{ doc.attributes.group || copy.label }}</p><h1 tabindex="-1">{{ doc.attributes.title }}</h1>@if (doc.attributes.description) { <p class="doq-description">{{ doc.attributes.description }}</p> }</header>
           <div class="doq-content">
-            @for (segment of segments(); track $index) {
+            @for (segment of parts(); track $index) {
               @if (segment.kind === 'html') { <analog-markdown class="doq-markdown" [content]="segment.html" /> }
               @else if (segment.kind === 'tabs') { <doq-tabs [uid]="'doq-tabs-' + $index" [label]="segment.label" [tabs]="segment.tabs" [codeOnly]="segment.codeOnly" /> }
+              @else if (segment.kind === 'playground') {
+                @if (playgroundDefinition(segment.id); as definition) { <doq-playground [uid]="'doq-playground-' + $index" [playgroundId]="segment.id" [definition]="definition" /> }
+                @else { <p class="doq-demo-fallback" data-pagefind-ignore role="status">Playground “{{ segment.id }}” is not registered by this application.</p> }
+              }
               @else {
                 <div class="doq-region doq-inline-demo" data-pagefind-ignore [attr.data-doq-demo]="segment.id">
                 @if (demoComponent(segment.id); as demo) { <ng-container *ngComponentOutlet="demo" /> }
@@ -208,13 +214,16 @@ export class DoqDocsComponent {
     }),
   ), { initialValue: undefined });
   private ownSlug(): string | null { const slug = this.routeSlug(); return slug && this.documents.some(doc => doc.slug === slug) ? slug : null; }
+  playgroundDefinition(id: string): DoqPlaygroundDefinition | undefined { return this.config.playgrounds && Object.prototype.hasOwnProperty.call(this.config.playgrounds, id) ? this.config.playgrounds[id] : undefined; }
   demoComponent(id: string): Type<unknown> | undefined { return id === 'button' ? DoqButtonDemoComponent : this.config.demos?.[id]; }
-  /** The rendered document cut at its `::demo[id]` directives and `:::tabs` groups; plain Markdown is one HTML segment. */
+  /** The document cut at `::demo[id]` and `:::tabs`, without playgrounds: the 0.8 shape, kept for compatibility. The view renders `parts`. */
   readonly segments = computed(() => parseDoqContent(this.document()?.content ?? ''));
+  /** The rendered document cut at its `::demo[id]`, `::playground[id]` directives and `:::tabs` groups; plain Markdown is one HTML segment. */
+  readonly parts = computed(() => parseDoqDocument(this.document()?.content ?? ''));
   /** The frontmatter demo, unless the Markdown already places that same demo inline. */
   readonly trailingDemo = computed(() => {
     const id = this.document()?.attributes.demo;
-    return id && !this.segments().some(segment => segment.kind === 'demo' && segment.id === id) ? id : undefined;
+    return id && !this.parts().some(segment => segment.kind === 'demo' && segment.id === id) ? id : undefined;
   });
   readonly headings = computed(() => this.document()?.toc ?? []);
   readonly previous = computed(() => this.adjacent(-1));

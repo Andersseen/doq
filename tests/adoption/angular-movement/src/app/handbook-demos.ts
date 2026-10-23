@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import { SmoothScrollService } from 'movement';
 import { MoveEnterDirective, MovePreset } from 'movement';
 import { InstallCommand } from './shared/components/install-command/install-command';
@@ -45,6 +56,58 @@ export class HandbookEnterDemo {
     queueMicrotask(() => {
       this.show.set(true);
       this.plays.update((n) => n + 1);
+    });
+  }
+}
+
+/**
+ * A Doqs playground target for the real `moveEnter` directive. The directive plays once, in ngOnInit, and does not follow later
+ * input changes, so the wrapper creates a new element for every input combination: the animation is replayed with the new settings.
+ * Angular Movement has no outputs; `played` is this wrapper's own.
+ */
+@Component({
+  selector: 'app-handbook-movement-playground',
+  imports: [MoveEnterDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'block' },
+  template: `
+    <div
+      class="border-border flex min-h-28 items-center justify-center overflow-hidden rounded-lg border border-dashed"
+    >
+      @for (run of runs(); track run) {
+        <div
+          class="border-accent/40 rounded-lg border p-4"
+          data-testid="am-target"
+          [moveEnter]="preset()"
+          [moveDuration]="duration()"
+          [moveDelay]="delay()"
+          [moveEasing]="easing()"
+          [moveDisabled]="disabled()"
+        >
+          {{ preset() }}
+        </div>
+      }
+    </div>
+  `,
+})
+export class HandbookMovementPlayground {
+  readonly preset = input<MovePreset>('fade-up');
+  readonly duration = input(500);
+  readonly delay = input(0);
+  readonly easing = input('ease-out');
+  readonly disabled = input(false);
+  readonly played = output<{ preset: string; duration: number }>();
+  protected readonly runs = computed(() => [
+    [this.preset(), this.duration(), this.delay(), this.easing(), this.disabled()].join('|'),
+  ]);
+  private started = false;
+  constructor() {
+    effect(() => {
+      this.runs();
+      untracked(() => {
+        if (this.started) this.played.emit({ preset: this.preset(), duration: this.duration() });
+        this.started = true;
+      });
     });
   }
 }

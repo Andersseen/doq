@@ -4,16 +4,16 @@
     {
       "target": "doq-core",
       "metric": "stylesGzip",
-      "baseline": 4952,
-      "max": 5300,
-      "reason": "The core stylesheet ships to every consumer unconditionally; 0.7 adds a forced-colors block of about 0.3 KB."
+      "baseline": 5890,
+      "max": 6300,
+      "reason": "The core stylesheet ships to every consumer unconditionally; 0.7 adds a forced-colors block of about 0.3 KB, 0.9 adds the playground styles (about 0.9 KB gzip, measured)."
     },
     {
       "target": "doq-core",
       "metric": "stylesBytes",
-      "baseline": 24705,
-      "max": 26200,
-      "reason": "Unminified source size of packages/doq/styles.css, the file consumers import."
+      "baseline": 31035,
+      "max": 32800,
+      "reason": "Unminified source size of packages/doq/styles.css, the file consumers import. 0.9 adds about 6.3 KB for the playground (controls, toolbar, events, code panel, dialog, forced-colors and reduced-motion rules)."
     },
     {
       "target": "showcase-a",
@@ -67,9 +67,9 @@
     {
       "target": "showcase-b",
       "metric": "initialCssGzip",
-      "baseline": 6308,
-      "max": 6900,
-      "reason": "Stylesheet linked by a documentation page in the docs-first showcase."
+      "baseline": 7259,
+      "max": 7700,
+      "reason": "Stylesheet linked by a documentation page in the docs-first showcase. 0.9: the core stylesheet gained the playground styles (about 0.9 KB gzip)."
     },
     {
       "target": "showcase-b",
@@ -102,23 +102,23 @@
     {
       "target": "site",
       "metric": "initialCssGzip",
-      "baseline": 15538,
-      "max": 16400,
-      "reason": "Stylesheet linked by the landing and the documentation (host Tailwind and Volt styles plus the Doqs core stylesheet). It was 11,160 B before the documentation was added."
+      "baseline": 16440,
+      "max": 17400,
+      "reason": "Stylesheet linked by the landing and the documentation (host Tailwind and Volt styles plus the Doqs core stylesheet). It was 11,160 B before the documentation was added. 0.9: the Doqs core stylesheet gained the playground styles (about 0.9 KB gzip)."
     },
     {
       "target": "site",
       "metric": "searchIndexBytes",
-      "baseline": 41765,
-      "max": 46000,
-      "reason": "Pagefind index of the official documentation (18 pages)."
+      "baseline": 46978,
+      "max": 49500,
+      "reason": "Pagefind index of the official documentation (19 pages: 0.9 adds the Interactive playgrounds guide)."
     },
     {
       "target": "site",
       "metric": "staticPages",
-      "baseline": 20,
-      "max": 20,
-      "reason": "The landing, the documentation index and 18 documents; an unexpected extra page means a duplicate route."
+      "baseline": 21,
+      "max": 21,
+      "reason": "The landing, the documentation index and 19 documents (0.9 adds the Interactive playgrounds guide); an unexpected extra page means a duplicate route."
     },
     {
       "target": "scale",

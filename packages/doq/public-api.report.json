@@ -1,5 +1,5 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "entries": {
     ".": {
       "DOQ_CALLOUT_TYPES": {
@@ -10,9 +10,21 @@
         "kind": "const",
         "text": "declare const DOQ_CONFIG: InjectionToken<DoqConfig>;"
       },
+      "DOQ_DEFAULT_PREVIEW_SIZES": {
+        "kind": "const",
+        "text": "declare const DOQ_DEFAULT_PREVIEW_SIZES: readonly DoqPreviewSize[];"
+      },
       "DOQ_INLINE_DEMO_PATTERN": {
         "kind": "const",
         "text": "declare const DOQ_INLINE_DEMO_PATTERN: RegExp;"
+      },
+      "DOQ_INLINE_PLAYGROUND_PATTERN": {
+        "kind": "const",
+        "text": "declare const DOQ_INLINE_PLAYGROUND_PATTERN: RegExp;"
+      },
+      "DOQ_PLAYGROUND_EVENT_LIMIT": {
+        "kind": "const",
+        "text": "declare const DOQ_PLAYGROUND_EVENT_LIMIT = 20;"
       },
       "DOQ_VERSION_FILTER": {
         "kind": "const",
@@ -23,6 +35,14 @@
         "text": "DoqArchiveConfig extends DoqVersionConfig",
         "members": {
           "contentDirectory": "readonly contentDirectory: string;"
+        }
+      },
+      "DoqBooleanControl": {
+        "kind": "interface",
+        "text": "DoqBooleanControl extends DoqControlBase",
+        "members": {
+          "initial": "readonly initial?: boolean;",
+          "kind": "readonly kind: 'boolean';"
         }
       },
       "DoqButtonDemoComponent": {
@@ -46,6 +66,7 @@
         "members": {
           "contentWidth": "contentWidth?: string;",
           "demos": "demos?: DoqDemoRegistry;",
+          "playgrounds": "playgrounds?: DoqPlaygroundRegistry;",
           "presentation": "presentation?: DoqPresentation;",
           "routeParam": "routeParam?: string;",
           "search": "search?: DoqSearchConfig;",
@@ -58,6 +79,10 @@
       "DoqContentSegment": {
         "kind": "type",
         "text": "type DoqContentSegment = { readonly kind: 'html'; readonly html: string; } | { readonly kind: 'demo'; readonly id: string; };"
+      },
+      "DoqControlValue": {
+        "kind": "type",
+        "text": "type DoqControlValue = string | number | boolean;"
       },
       "DoqDemoRegistry": {
         "kind": "type",
@@ -80,6 +105,8 @@
           "navigation": "readonly navigation: _angular_core.Signal<{ href: string; sourceFilename: string; sourceSlug: string; routePath: string; slug: string; title: string; description: string; group: string; order: number; headings: readonly { id: string; text: string; level: number; }[]; attributes: _doqs_analog.DoqDocumentAttributes; }[]>;",
           "navigationTree": "readonly navigationTree: _angular_core.Signal<DoqNavigationNode[]>;",
           "next": "readonly next: _angular_core.Signal<{ href: string; sourceFilename: string; sourceSlug: string; routePath: string; slug: string; title: string; description: string; group: string; order: number; headings: readonly { id: string; text: string; level: number; }[]; attributes: _doqs_analog.DoqDocumentAttributes; }>;",
+          "parts": "readonly parts: _angular_core.Signal<_doqs_analog.DoqDocumentSegment[]>;",
+          "playgroundDefinition": "playgroundDefinition(id: string): DoqPlaygroundDefinition | undefined;",
           "previous": "readonly previous: _angular_core.Signal<{ href: string; sourceFilename: string; sourceSlug: string; routePath: string; slug: string; title: string; description: string; group: string; order: number; headings: readonly { id: string; text: string; level: number; }[]; attributes: _doqs_analog.DoqDocumentAttributes; }>;",
           "routeSlug": "readonly routeSlug: _angular_core.Signal<string>;",
           "searchVersion": "readonly searchVersion: _doqs_analog.DoqVersion;",
@@ -121,6 +148,10 @@
           "title": "title?: string;"
         }
       },
+      "DoqDocumentSegment": {
+        "kind": "type",
+        "text": "type DoqDocumentSegment = DoqRichSegment | DoqPlaygroundSegment;"
+      },
       "DoqExcerptSegment": {
         "kind": "interface",
         "text": "DoqExcerptSegment",
@@ -143,6 +174,17 @@
           "versions": "readonly versions: readonly _doqs_analog.DoqVersion[];"
         }
       },
+      "DoqNumberControl": {
+        "kind": "interface",
+        "text": "DoqNumberControl extends DoqControlBase",
+        "members": {
+          "initial": "readonly initial?: number;",
+          "kind": "readonly kind: 'number';",
+          "max": "readonly max?: number;",
+          "min": "readonly min?: number;",
+          "step": "readonly step?: number;"
+        }
+      },
       "DoqPaths": {
         "kind": "interface",
         "text": "DoqPaths",
@@ -151,6 +193,94 @@
           "contentDirectory": "readonly contentDirectory: string;",
           "versioning": "readonly versioning?: DoqVersioning;"
         }
+      },
+      "DoqPlaygroundCode": {
+        "kind": "interface",
+        "text": "DoqPlaygroundCode",
+        "members": {
+          "code": "readonly code: string | ((values: DoqPlaygroundValues) => string);",
+          "label": "readonly label: string;",
+          "language": "readonly language?: string;"
+        }
+      },
+      "DoqPlaygroundComponent": {
+        "kind": "class",
+        "text": "DoqPlaygroundComponent",
+        "members": {
+          "closeDialog": "closeDialog(): void;",
+          "constructor": "constructor();",
+          "controls": "readonly controls: Signal<readonly DoqPlaygroundControl[]>;",
+          "copy": "copy(snippet: Snippet): Promise<void>;",
+          "copyLabel": "copyLabel(snippet: Snippet): string;",
+          "copyText": "copyText(snippet: Snippet): string;",
+          "definition": "readonly definition: _angular_core.InputSignal<DoqPlaygroundDefinition>;",
+          "draft": "draft(control: DoqStringControl | DoqNumberControl): string;",
+          "errors": "readonly errors: _angular_core.WritableSignal<Record<string, string>>;",
+          "events": "readonly events: _angular_core.WritableSignal<readonly DoqPlaygroundEvent[]>;",
+          "expand": "expand(): void;",
+          "expanded": "readonly expanded: _angular_core.WritableSignal<boolean>;",
+          "frameWidth": "readonly frameWidth: Signal<string>;",
+          "generation": "readonly generation: _angular_core.WritableSignal<number>;",
+          "onDialogClose": "onDialogClose(): void;",
+          "onEvent": "onEvent(event: { readonly event: string; readonly payload: unknown; }): void;",
+          "onTabKeydown": "onTabKeydown(event: KeyboardEvent): void;",
+          "playgroundId": "readonly playgroundId: _angular_core.InputSignal<string>;",
+          "reset": "reset(): void;",
+          "selectRequired": "selectRequired(control: DoqSelectControl): boolean;",
+          "setBoolean": "setBoolean(control: DoqPlaygroundControl, checked: boolean): void;",
+          "setSelect": "setSelect(control: DoqSelectControl, index: string): void;",
+          "setSize": "setSize(index: number): void;",
+          "setText": "setText(control: DoqStringControl | DoqNumberControl, text: string): void;",
+          "sizeIndex": "readonly sizeIndex: _angular_core.WritableSignal<number>;",
+          "sizes": "readonly sizes: Signal<readonly _doqs_analog.DoqPreviewSize[]>;",
+          "snippets": "readonly snippets: Signal<Snippet[]>;",
+          "status": "readonly status: _angular_core.WritableSignal<string>;",
+          "tab": "readonly tab: _angular_core.WritableSignal<number>;",
+          "title": "readonly title: Signal<string>;",
+          "uid": "readonly uid: _angular_core.InputSignal<string>;",
+          "values": "readonly values: _angular_core.WritableSignal<Readonly<Record<string, DoqControlValue>>>;"
+        }
+      },
+      "DoqPlaygroundControl": {
+        "kind": "type",
+        "text": "type DoqPlaygroundControl = DoqBooleanControl | DoqStringControl | DoqNumberControl | DoqSelectControl;"
+      },
+      "DoqPlaygroundDefinition": {
+        "kind": "interface",
+        "text": "DoqPlaygroundDefinition",
+        "members": {
+          "code": "readonly code?: readonly DoqPlaygroundCode[];",
+          "component": "readonly component: Type<unknown>;",
+          "controls": "readonly controls?: readonly DoqPlaygroundControl[];",
+          "description": "readonly description?: string;",
+          "outputs": "readonly outputs?: readonly DoqPlaygroundOutput[];",
+          "previewSizes": "readonly previewSizes?: false | readonly DoqPreviewSize[];",
+          "title": "readonly title?: string;"
+        }
+      },
+      "DoqPlaygroundOutput": {
+        "kind": "interface",
+        "text": "DoqPlaygroundOutput",
+        "members": {
+          "event": "readonly event: string;",
+          "label": "readonly label?: string;"
+        }
+      },
+      "DoqPlaygroundRegistry": {
+        "kind": "type",
+        "text": "type DoqPlaygroundRegistry = Readonly<Record<string, DoqPlaygroundDefinition>>;"
+      },
+      "DoqPlaygroundSegment": {
+        "kind": "interface",
+        "text": "DoqPlaygroundSegment",
+        "members": {
+          "id": "readonly id: string;",
+          "kind": "readonly kind: 'playground';"
+        }
+      },
+      "DoqPlaygroundValues": {
+        "kind": "type",
+        "text": "type DoqPlaygroundValues = Readonly<Record<string, DoqControlValue | undefined>>;"
       },
       "DoqPrerenderContentRoute": {
         "kind": "interface",
@@ -169,6 +299,14 @@
           "indexDescription": "indexDescription?: string;",
           "indexTitle": "indexTitle?: string;",
           "pageTitleSuffix": "pageTitleSuffix?: string;"
+        }
+      },
+      "DoqPreviewSize": {
+        "kind": "interface",
+        "text": "DoqPreviewSize",
+        "members": {
+          "label": "readonly label: string;",
+          "width": "readonly width: string;"
         }
       },
       "DoqResolvedSearchConfig": {
@@ -211,6 +349,23 @@
           "url": "readonly url: string;"
         }
       },
+      "DoqSelectControl": {
+        "kind": "interface",
+        "text": "DoqSelectControl extends DoqControlBase",
+        "members": {
+          "initial": "readonly initial?: DoqControlValue;",
+          "kind": "readonly kind: 'select';",
+          "options": "readonly options: readonly DoqSelectOption[];"
+        }
+      },
+      "DoqSelectOption": {
+        "kind": "interface",
+        "text": "DoqSelectOption",
+        "members": {
+          "label": "readonly label: string;",
+          "value": "readonly value: DoqControlValue;"
+        }
+      },
       "DoqShellComponent": {
         "kind": "class",
         "text": "DoqShellComponent",
@@ -227,6 +382,15 @@
         "members": {
           "documentAfterContent": "documentAfterContent?: Type<unknown>;",
           "indexAfterIntro": "indexAfterIntro?: Type<unknown>;"
+        }
+      },
+      "DoqStringControl": {
+        "kind": "interface",
+        "text": "DoqStringControl extends DoqControlBase",
+        "members": {
+          "initial": "readonly initial?: string;",
+          "kind": "readonly kind: 'string';",
+          "placeholder": "readonly placeholder?: string;"
         }
       },
       "DoqTab": {
@@ -324,6 +488,14 @@
         "kind": "function",
         "text": "declare function doqVersionLinks(versions: readonly DoqVersion[], activeId: string, slug: string | null, catalogs: Readonly<Record<string, readonly { readonly slug: string; }[]>>): DoqVersionLink[];"
       },
+      "formatDoqEventPayload": {
+        "kind": "function",
+        "text": "declare function formatDoqEventPayload(value: unknown): string;"
+      },
+      "formatDoqUsage": {
+        "kind": "function",
+        "text": "declare function formatDoqUsage(selector: string, values: DoqPlaygroundValues, options?: { readonly attributes?: readonly string[]; readonly text?: string; }): string;"
+      },
       "joinDoqPath": {
         "kind": "function",
         "text": "declare function joinDoqPath(basePath: string, slug: string): string;"
@@ -348,6 +520,10 @@
         "kind": "function",
         "text": "declare function parseDoqContent(source: string): DoqRichSegment[];"
       },
+      "parseDoqDocument": {
+        "kind": "function",
+        "text": "declare function parseDoqDocument(source: string): DoqDocumentSegment[];"
+      },
       "provideDoq": {
         "kind": "function",
         "text": "declare function provideDoq(config: DoqConfig): Provider;"
@@ -359,6 +535,10 @@
       "splitDoqInlineDemos": {
         "kind": "function",
         "text": "declare function splitDoqInlineDemos(html: string): DoqContentSegment[];"
+      },
+      "validateDoqPlaygrounds": {
+        "kind": "function",
+        "text": "declare function validateDoqPlaygrounds(registry: DoqPlaygroundRegistry | undefined): string[];"
       }
     },
     "./search-index": {
