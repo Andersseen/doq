@@ -19,6 +19,7 @@ jobs:
   static:
     name: Static checks (format, types, Agentyx lock, specs)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -40,6 +41,7 @@ jobs:
   unit:
     name: Unit and component tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -54,6 +56,7 @@ jobs:
   build:
     name: Production builds and package
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -101,6 +104,7 @@ jobs:
     name: Python contract tests
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -121,6 +125,7 @@ jobs:
     name: Playwright E2E
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -147,6 +152,7 @@ jobs:
     name: MVP and 0.1 acceptance harness
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -169,6 +175,7 @@ jobs:
     name: Playwright cross-browser (Firefox, WebKit)
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -195,6 +202,7 @@ jobs:
     name: Deterministic builds (repeated clean builds, guard control)
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -214,6 +222,7 @@ jobs:
     name: Angular ${{ matrix.angular }} compatibility
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -244,6 +253,7 @@ jobs:
     name: Content scaling budget (generated fixtures)
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

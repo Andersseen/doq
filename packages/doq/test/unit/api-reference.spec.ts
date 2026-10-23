@@ -586,7 +586,7 @@ describe('UNIT-098 doq-api command line', () => {
     expect(stale.stderr).toContain('added     two.md');
     expect(stale.stderr).toContain('modified  index.md');
     expect(await readdir(join(cwd, 'src/content/docs/reference/api'))).not.toContain('two.md');
-  });
+  }, 30_000); // spawns the CLI three times; the 5 s default is not enough on a loaded machine
 
   it('exits 2 with a one-line explanation for usage and configuration errors', async () => {
     await write({ 'src/public-api.ts': `export const one = 1;\n` });

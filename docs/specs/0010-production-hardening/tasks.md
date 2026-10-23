@@ -12,4 +12,4 @@
 - [x] T-010 [REQ-012, AC-011] Audit the metadata lifecycle and add `metadata.spec.ts`.
 - [x] T-011 [REQ-005, REQ-013, AC-004, AC-012] Extend the pytest contracts (links, ids, tarball contents) and the adoption proof (single build, `docs:check`).
 - [x] T-012 [REQ-014, AC-013] Bump to 0.7.0, changelog, READMEs, CONTRIBUTING, CI jobs, quality gate steps.
-- [ ] T-013 [REQ-013, AC-012] Run the complete quality gate and the adoption proof against the final code and record the real results in `verification.md`.
+- [x] T-013 [REQ-013, AC-012] Run the complete quality gate and the adoption proof against the final code and record the real results in `verification.md`.

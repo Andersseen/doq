@@ -65,6 +65,8 @@ const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
 export default defineConfig({
   testDir: 'e2e',
   testIgnore: [
+    // One cell of the Angular compatibility matrix: runs against a dedicated consumer (playwright.compat.config.ts).
+    /compat\.spec/,
     ...(withConsumer ? [] : [/consumer(-rich|-api)?\.spec/, /legacy\.spec/]),
     ...(withAdoption ? [] : [/adoption\.spec/]),
   ],

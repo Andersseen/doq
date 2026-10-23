@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, untracked, PLATFORM_ID, Type } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationCancel, NavigationEnd, NavigationError, NavigationSkipped, NavigationStart, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
 import { injectDoqCatalogs, injectDoqDocuments, injectDoqVersion, resolveDoqCopy } from './doq-catalog';
@@ -111,7 +111,7 @@ export class DoqDocsComponent {
       this.navigationTrigger = event.navigationTrigger;
       this.restoreNavigationId = event.restoredState?.navigationId;
       this.restorePosition = undefined;
-    } else if (event instanceof NavigationCancel || event instanceof NavigationError) {
+    } else if (event instanceof NavigationCancel || event instanceof NavigationError || event instanceof NavigationSkipped) {
       this.traversing = false;
     } else if (event instanceof NavigationEnd) {
       this.traversing = false;
