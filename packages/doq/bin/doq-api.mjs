@@ -3,6 +3,9 @@ import { relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { DoqApiError, checkApiReference, generateApiReference, strictMessage } from './api-reference.mjs';
 import { conflictMessage } from './api-reference/output.mjs';
+import { assertSupportedNode } from './cli/node-support.mjs';
+
+assertSupportedNode('doq-api');
 
 const usage = `Usage: doq-api <generate|check> --entry <file> [options]
 

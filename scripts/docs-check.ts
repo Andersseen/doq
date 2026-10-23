@@ -157,7 +157,7 @@ const sources = flag('source');
 const linkScopes = flag('link-scope');
 const targets = dists.length
   ? dists.map((dist, index) => ({ dist: resolve(dist), source: sources[index] ? resolve(sources[index]) : undefined }))
-  : ['showcase-a', 'showcase-b'].map((app) => ({
+  : ['showcase-a', 'showcase-b', 'site'].map((app) => ({
       dist: resolve(repo, `apps/${app}/dist/analog/public`),
       source: resolve(repo, `apps/${app}`),
     }));

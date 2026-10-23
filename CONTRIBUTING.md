@@ -14,7 +14,7 @@ pnpm build
 ## Layout
 
 - `packages/doq` — the `@doqs/analog` library. Tests live in `packages/doq/test/`.
-- `apps/site` — the official website (static Analog landing, deployed to Cloudflare Pages). Release and deployment: [docs/operations/release-and-deployment.md](docs/operations/release-and-deployment.md).
+- `apps/site` — the official website: the Analog landing at `/` and the official documentation at `/docs`, a real Doqs consumer whose Markdown lives in `apps/site/src/content/docs` (static, deployed to Cloudflare Pages). Release and deployment: [docs/operations/release-and-deployment.md](docs/operations/release-and-deployment.md).
 - `apps/showcase-a`, `apps/showcase-b` — two independent host applications that consume the library through the workspace.
 - `e2e/` — Playwright browser tests. `tests/contract/` — pytest checks of the packed tarball and generated HTTP output.
 - `scripts/` — TypeScript tooling run directly by Node (preview server, verification harness, SDD commands, gates). Keep to erasable syntax (no `enum`, parameter properties or `namespace`); `scripts/tsconfig.json` enforces it.
@@ -39,15 +39,17 @@ Both showcases enable `versioning` through their `src/doq.paths.ts`: Showcase A 
 
 ## Tests: what each layer is for
 
-| Command                | Layer                                    | Proves                                                                                                                                                            |
-| ---------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:unit`       | Vitest (node)                            | Path/slug/ordering/config logic, the SDD checker, repository invariants                                                                                           |
-| `pnpm test:components` | Vitest + Angular Testing Library (jsdom) | Rendered behavior of the index, docs page, nav tree, shell, slots, drawer — found by role, label and text                                                         |
-| `pnpm test:contract`   | pytest (stdlib only)                     | The packed tarball and the generated static site, checked from outside over HTTP                                                                                  |
-| `pnpm test:e2e`        | Playwright (Chromium)                    | Real-browser journeys on production builds, including a tarball-installed consumer                                                                                |
-| `pnpm verify:mvp`      | CDP harness (existing)                   | The 24 MVP + 0.1 acceptance criteria; see [scripts/verification/README.md](scripts/verification/README.md)                                                        |
-| `pnpm verify:package`  | Package verifier (existing)              | Manifest, exports, declarations and an installed consumer                                                                                                         |
-| `pnpm verify:adoption` | Angular Movement proof (opt-in, network) | Clones the real Angular Movement site into a temp dir, adds a `/handbook` region from the packed tarball, runs `e2e/adoption.spec.ts`; not part of `quality:gate` |
+| Command                  | Layer                                    | Proves                                                                                                                                                            |
+| ------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:unit`         | Vitest (node)                            | Path/slug/ordering/config logic, the SDD checker, repository invariants                                                                                           |
+| `pnpm test:components`   | Vitest + Angular Testing Library (jsdom) | Rendered behavior of the index, docs page, nav tree, shell, slots, drawer — found by role, label and text                                                         |
+| `pnpm test:contract`     | pytest (stdlib only)                     | The packed tarball and the generated static site, checked from outside over HTTP                                                                                  |
+| `pnpm test:e2e`          | Playwright (Chromium)                    | Real-browser journeys on production builds, including a tarball-installed consumer                                                                                |
+| `pnpm verify:mvp`        | CDP harness (existing)                   | The 24 MVP + 0.1 acceptance criteria; see [scripts/verification/README.md](scripts/verification/README.md)                                                        |
+| `pnpm verify:package`    | Package verifier (existing)              | Manifest, exports, declarations, the `doq` CLI run from the unpacked tarball and an installed consumer                                                            |
+| `pnpm verify:public-api` | Public API report (0.8)                  | The packed declarations against `packages/doq/public-api.report.json` and the 0.7 baseline; `pnpm public-api:update` records an intended change                   |
+| `pnpm verify:init`       | Initialized consumers (0.8)              | Bare Analog apps (Angular 21 embedded and docs-first, Angular 22) adopt the packed tarball through `doq doctor` / `doq init`, then build                          |
+| `pnpm verify:adoption`   | Angular Movement proof (opt-in, network) | Clones the real Angular Movement site into a temp dir, adds a `/handbook` region from the packed tarball, runs `e2e/adoption.spec.ts`; not part of `quality:gate` |
 
 Component tests mock exactly one boundary: Analog's build-time content glob. Everything else (renderer, router, markdown component) is real. Do not snapshot large HTML or test private methods; assert what a user or consumer can observe.
 

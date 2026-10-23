@@ -51,6 +51,16 @@ const consumers = [
     dir: resolve(process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b')),
   },
 ];
+const initConsumers = [
+  {
+    mode: 'embedded',
+    dir: resolve(process.env['DOQ_INIT_EMBEDDED_DIR'] ?? resolve(tmpdir(), 'doq-init-consumer-embedded')),
+  },
+  {
+    mode: 'docs-first',
+    dir: resolve(process.env['DOQ_INIT_DOCS_FIRST_DIR'] ?? resolve(tmpdir(), 'doq-init-consumer-docs-first')),
+  },
+];
 if (!skipConsumer) {
   const { version } = JSON.parse(await readFile(resolve(repo, 'packages/doq/package.json'), 'utf8')) as {
     version: string;
@@ -71,6 +81,14 @@ if (!skipConsumer) {
         `--app=${consumer.app}`,
         ...('unversioned' in consumer ? ['--unversioned'] : []),
       ]);
+      if (status !== 0) process.exit(status);
+    }
+  }
+  // Applications initialized with `doq init`: rebuilt like the showcase consumers when missing or older than the tarball.
+  for (const consumer of initConsumers) {
+    const builtTime = await mtime(resolve(consumer.dir, 'dist/analog/public/index.html'));
+    if (builtTime === undefined || builtTime < tarballTime) {
+      const status = run('node', ['scripts/init-consumer.ts', tarball, consumer.dir, `--mode=${consumer.mode}`]);
       if (status !== 0) process.exit(status);
     }
   }

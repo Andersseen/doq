@@ -98,6 +98,8 @@ interface Budget {
 const targets: Record<string, { dir: string; page: string }> = {
   'showcase-a': { dir: 'apps/showcase-a/dist/analog/public', page: 'docs/installation' },
   'showcase-b': { dir: 'apps/showcase-b/dist/analog/public', page: 'onboarding/first-application' },
+  // The official site: its landing page is the sample, because the documentation region is a lazy route that the landing never loads.
+  site: { dir: 'apps/site/dist/analog/public', page: '.' },
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

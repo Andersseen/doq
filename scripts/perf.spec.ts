@@ -46,7 +46,7 @@ describe('UNIT-150 performance budgets (PERF-01, PERF-04)', () => {
     const { budgets } = JSON.parse(await readFile(resolve(repo, 'perf-budgets.json'), 'utf8')) as {
       budgets: { target: string; metric: string; baseline: number; max: number; reason: string }[];
     };
-    const known = new Set(['doq-core', 'showcase-a', 'showcase-b', 'scale']);
+    const known = new Set(['doq-core', 'showcase-a', 'showcase-b', 'site', 'scale']);
     const seen = new Set<string>();
     for (const budget of budgets) {
       expect(known.has(budget.target), budget.target).toBe(true);

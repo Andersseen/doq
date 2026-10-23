@@ -1,21 +1,29 @@
+import { join } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import analog from '@analogjs/platform';
 import tailwindcss from '@tailwindcss/vite';
-import { buildRobots, buildSitemap, normalizeOrigin, originHeadTags, site } from './src/lib/site-config';
+import { doqPrerenderRoutes } from '@doqs/analog';
+import { doqDeterministicMarkdown } from '@doqs/analog/vite';
+import { doqPaths } from './src/doq.paths';
+import { docsRoutes } from './src/lib/docs-routes';
+import { buildRobots, buildSitemap, normalizeOrigin, site } from './src/lib/site-config';
 
 // DOQ_SITE_ORIGIN (for example the production Pages URL or custom domain) enables canonical URLs and the sitemap.
 // Without it the site still builds; those absolute-URL features are simply left out.
 const origin = normalizeOrigin(process.env['DOQ_SITE_ORIGIN']);
 if (process.env['DOQ_SITE_ORIGIN'] && !origin) throw new Error('DOQ_SITE_ORIGIN must be an https origin such as https://example.com');
 
+const documentationRoutes = docsRoutes(doqPaths, join(import.meta.dirname, 'src/content'));
+
 function siteMetadata(): Plugin {
   return {
     name: 'doq-site-metadata',
-    transformIndexHtml: (html) => html.replace('<!-- origin-tags -->', originHeadTags(origin)),
+    // Canonical and og:url depend on the page, so they are written per route by the app (see src/app/seo.ts).
+    transformIndexHtml: (html) => html.replace('<!-- origin-tags -->', ''),
     generateBundle() {
       if (this.environment.name !== 'client') return;
       this.emitFile({ type: 'asset', fileName: 'robots.txt', source: buildRobots(origin) });
-      if (origin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: buildSitemap(origin) });
+      if (origin) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: buildSitemap(origin, [...site.routes, ...documentationRoutes]) });
     },
   };
 }
@@ -23,5 +31,17 @@ function siteMetadata(): Plugin {
 export default defineConfig({
   build: { target: ['es2022'] },
   resolve: { mainFields: ['module'] },
-  plugins: [analog({ ssr: true, static: true, prerender: { routes: async () => [...site.routes] } }), tailwindcss(), siteMetadata()],
+  define: { __DOQ_SITE_ORIGIN__: JSON.stringify(origin ?? '') },
+  plugins: [
+    analog({
+      ssr: true,
+      static: true,
+      content: { highlighter: 'prism' },
+      prerender: { routes: async () => [...site.routes, ...doqPrerenderRoutes(doqPaths)] },
+    }),
+    // Renders Markdown one file at a time so duplicate-heading ids stay identical between builds.
+    doqDeterministicMarkdown(),
+    tailwindcss(),
+    siteMetadata(),
+  ],
 });

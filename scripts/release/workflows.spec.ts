@@ -123,7 +123,11 @@ describe('UNIT-024 package publishing metadata', () => {
     });
     expect(manifest.license).toBe('MIT');
     expect(manifest.engines.node).toBeTruthy();
-    expect(manifest.bin).toEqual({ 'doq-search': './bin/doq-search.mjs', 'doq-api': './bin/doq-api.mjs' });
+    expect(manifest.bin).toEqual({
+      doq: './bin/doq.mjs',
+      'doq-search': './bin/doq-search.mjs',
+      'doq-api': './bin/doq-api.mjs',
+    });
     expect(manifest.files).toEqual(
       expect.arrayContaining(['fesm2022', 'types', 'bin', 'styles.css', 'README.md', 'LICENSE']),
     );

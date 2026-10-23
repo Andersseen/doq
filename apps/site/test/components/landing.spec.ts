@@ -16,13 +16,13 @@ describe('COMP-020 landing page content', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toMatch(/belongs in your app/i);
     expect(screen.getByRole('main')).toBeTruthy();
-    for (const name of ['What Doqs 0.6 does', 'Getting started', 'How it works'])
+    for (const name of ['What Doqs does', 'Getting started', 'How it works'])
       expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
   });
 
-  it('lists the real 0.6 features', async () => {
+  it('lists the real features', async () => {
     await render(HomePage);
-    const section = screen.getByRole('region', { name: 'What Doqs 0.6 does' });
+    const section = screen.getByRole('region', { name: 'What Doqs does' });
     const names = within(section).getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
     expect(names).toEqual(
       expect.arrayContaining(['Pagefind full-text search', 'Composition slots', 'API reference from source', 'Versioned documentation', 'SSR and SSG', 'Angular components inside Markdown']),
@@ -79,7 +79,7 @@ describe('COMP-020 landing page content', () => {
     await render(HomePage);
     expect(screen.getByRole('link', { name: 'Get Started' }).getAttribute('href')).toBe('#getting-started');
     expect(screen.getByRole('link', { name: 'View on GitHub' }).getAttribute('href')).toBe(siteLinks.github);
-    expect(screen.getByRole('link', { name: 'package README' }).getAttribute('href')).toBe(siteLinks.readme);
+    expect(screen.getByRole('link', { name: 'documentation' }).getAttribute('href')).toBe('/docs/getting-started');
   });
 });
 
@@ -87,9 +87,10 @@ describe('COMP-021 navigation and external links', () => {
   it('offers named navigation with the required links', async () => {
     await render(SiteHeader);
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    expect(within(nav).getByRole('link', { name: 'Interactive Markdown' }).getAttribute('href')).toBe('#interactive-markdown');
-    expect(within(nav).getByRole('link', { name: 'Features' }).getAttribute('href')).toBe('#features');
-    expect(within(nav).getByRole('link', { name: 'Getting started' }).getAttribute('href')).toBe('#getting-started');
+    expect(within(nav).getByRole('link', { name: 'Interactive Markdown' }).getAttribute('href')).toBe('/#interactive-markdown');
+    expect(within(nav).getByRole('link', { name: 'Features' }).getAttribute('href')).toBe('/#features');
+    expect(within(nav).getByRole('link', { name: 'Getting started' }).getAttribute('href')).toBe('/#getting-started');
+    expect(within(nav).getByRole('link', { name: 'Docs' }).getAttribute('href')).toBe('/docs');
     expect(within(nav).getByRole('link', { name: 'GitHub' }).getAttribute('href')).toBe('https://github.com/Andersseen/doqs');
     expect(within(nav).getByRole('link', { name: 'npm' }).getAttribute('href')).toBe('https://www.npmjs.com/package/@doqs/analog');
   });

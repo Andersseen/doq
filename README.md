@@ -32,9 +32,9 @@ Doqs (`@doqs/analog`) adds a Markdown-driven **documentation region** to an Angu
 - **Markdown-driven.** `title`, `group`, `order` and `slug` in frontmatter, nested folders, custom public URLs.
 - **SSR and SSG.** Every page ships as static HTML and hydrates cleanly.
 - **Angular components inside Markdown.** Register your own standalone components once, then place them between paragraphs with a one-line `::demo[id]` directive. Not MDX: no JavaScript in Markdown and no template compilation.
-- **Rich Markdown, built in (0.4).** `> [!NOTE]` callouts, accessible `:::tabs` and code groups, `:::steps` guides and titled code blocks, with no component to write. They are server-rendered, searchable and themed by the same `--host-docs-*` tokens. See [Rich Markdown authoring](packages/doq/README.md#rich-markdown-authoring).
-- **API reference from source (0.5).** `doq-api generate` reads your library's public TypeScript API (components, directives, signal inputs, outputs, models, JSDoc, stability tags) and writes ordinary Markdown pages; `doq-api check` fails CI when they are stale. Build-time only, with your own TypeScript. See [API reference from source](packages/doq/README.md#api-reference-from-source-05).
-- **Versioned documentation (0.6).** Keep older releases readable: archived snapshots at stable `/v/<id>` URLs, an accessible version selector, context-preserving switching, per-version prerendering and Pagefind filtering. Optional; without `versioning` nothing changes. See [Versioned documentation](packages/doq/README.md#versioned-documentation-06).
+- **Rich Markdown, built in (0.4).** `> [!NOTE]` callouts, accessible `:::tabs` and code groups, `:::steps` guides and titled code blocks, with no component to write. They are server-rendered, searchable and themed by the same `--host-docs-*` tokens. See [Rich Markdown authoring](apps/site/src/content/docs/guides/rich-markdown.md).
+- **API reference from source (0.5).** `doq-api generate` reads your library's public TypeScript API (components, directives, signal inputs, outputs, models, JSDoc, stability tags) and writes ordinary Markdown pages; `doq-api check` fails CI when they are stale. Build-time only, with your own TypeScript. See [API reference from source](apps/site/src/content/docs/guides/api-reference.md).
+- **Versioned documentation (0.6).** Keep older releases readable: archived snapshots at stable `/v/<id>` URLs, an accessible version selector, context-preserving switching, per-version prerendering and Pagefind filtering. Optional; without `versioning` nothing changes. See [Versioned documentation](apps/site/src/content/docs/guides/versioned-documentation.md).
 - **Static search.** Optional [Pagefind](https://pagefind.app) index built from your prerendered output. No backend, off by default.
 - **Host-owned look.** Restyle with `--host-docs-*` CSS tokens and add your own components through composition slots.
 
@@ -44,19 +44,12 @@ Doqs (`@doqs/analog`) adds a Markdown-driven **documentation region** to an Angu
 pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs
 ```
 
-```ts
-// src/doq.paths.ts: shared by vite.config.ts, so no Angular components here
-export const doqPaths = { contentDirectory: 'docs', basePath: '/docs' } as const;
-
-// vite.config.ts
-analog({ prerender: { routes: async () => ['/', ...doqPrerenderRoutes(doqPaths)] } });
-
-// app.config.ts
-const doqConfig = defineDoqConfig({ ...doqPaths });
-providers: [provideFileRouter(withExtraRoutes(doqRoutes(doqConfig))), provideDoq(doqConfig)];
+```sh
+pnpm exec doq init      # scaffolds src/doq.paths.ts and two Markdown pages; never overwrites; --dry-run previews
+pnpm exec doq doctor    # reports what is connected and what is missing
 ```
 
-Then `@import '@doqs/analog/styles.css';` once in your global stylesheet and write Markdown in `src/content/docs`. The complete setup, configuration reference and defaults are in the [integration guide](packages/doq/README.md).
+`doq init` prints the exact edits that remain for your `vite.config.ts`, Angular providers and global stylesheet. They are the same four connections described in the [Analog configuration guide](apps/site/src/content/docs/analog-configuration.md); the rest of the documentation (installation, Markdown, search, versions, API reference, deployment, troubleshooting) is in [`apps/site/src/content/docs`](apps/site/src/content/docs), which the official site renders with Doqs itself.
 
 ## Two ways to use it
 
@@ -82,7 +75,7 @@ The packed tarball is also installed into a separate consumer project outside th
 
 ## Development
 
-Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3 and Vite 8. Angular 22.2.x with TypeScript 6 is verified by `pnpm verify:compat --angular=22` (focused smoke suite, not the full suite); Firefox and WebKit by `pnpm test:e2e:browsers` (the engine-dependent journeys). Details and limits: [Verified environments](packages/doq/README.md#verified-environments-and-limits-07).
+Tested with Node 22.23.1, pnpm 10.18.3, Analog 2.9, Angular 21.2.x, TypeScript 5.9.3 and Vite 8. Angular 22.2.x with TypeScript 6 is verified by `pnpm verify:compat --angular=22` (focused smoke suite, not the full suite); Firefox and WebKit by `pnpm test:e2e:browsers` (the engine-dependent journeys). Details and limits: [Verified environments](apps/site/src/content/docs/reference/migration-and-compatibility.md).
 
 ```sh
 pnpm install

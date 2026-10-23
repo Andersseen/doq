@@ -50,6 +50,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The official site's tests import the built @doqs/analog package, exactly like a consumer.
+      - run: pnpm build:doq
       - run: pnpm test:unit
       - run: pnpm test:components
 
@@ -71,6 +73,8 @@ jobs:
           DOQ_SITE_ORIGIN: ${{ vars.DOQ_SITE_ORIGIN }}
       - run: pnpm pack:doq
       - run: pnpm verify:package "artifacts/doqs-analog-$(node -p "require('./packages/doq/package.json').version").tgz"
+      # The packed declarations against the committed public API report and the last compatible release's baseline.
+      - run: pnpm verify:public-api
       # Static integrity of the prerendered output (heading ids vs a sequential render, TOC fragments, links, routes, canonicals)
       # and the measured size budgets (perf-budgets.json).
       - run: pnpm docs:check
@@ -166,6 +170,8 @@ jobs:
       - run: pnpm consumer:build
         env:
           DOQ_CONSUMER_DIR: ${{ runner.temp }}/doq-consumer
+      # Bare Analog applications (Angular 21 embedded and docs-first, Angular 22) adopt the tarball through doq doctor / doq init.
+      - run: pnpm verify:init
       - name: Full CDP harness including the tarball-installed consumer
         run: pnpm verify:mvp
         env:

@@ -20,3 +20,9 @@ class IdleIntersectionObserver {
   }
 }
 Object.defineProperty(globalThis, 'IntersectionObserver', { value: IdleIntersectionObserver, configurable: true });
+
+// jsdom has no matchMedia; the theme preference reads it when the application configuration loads.
+Object.defineProperty(window, 'matchMedia', {
+  value: (query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, onchange: null, dispatchEvent: () => false }),
+  configurable: true,
+});
