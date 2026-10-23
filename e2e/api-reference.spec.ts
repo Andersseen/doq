@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, expectClipboard } from './fixtures.ts';
 
 const alert = `${apps.a.url}/docs/reference/generated/vanta-alert-component`;
 const tooltip = `${apps.a.url}/docs/reference/generated/vanta-tooltip-directive`;
@@ -123,7 +123,7 @@ test.describe('generated API reference (0.5): Showcase A, embedded under /docs',
     await expect(example.locator('code')).toHaveClass(/language-html/);
     const expected = await example.locator('code').innerText();
     await example.getByRole('button', { name: 'Copy code' }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(expected);
+    await expectClipboard(page, expected);
     expect(expected).toContain('alertTitle="Unsaved changes"');
   });
 

@@ -220,3 +220,10 @@
 .doq-topbar .doq-version-list { position: absolute; z-index: 20; min-width: 15rem; box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .15); }
 .doq-version-notice { margin: 0 0 1.5rem; padding: .7rem .9rem; border: 1px solid var(--doq-callout-warning); border-radius: .6rem; background: var(--doq-surface); font-size: .9rem; }
 .doq-index > .doq-version-notice { max-width: 65rem; }
+/* Forced colors (Windows high contrast): state may not depend on color or font weight alone, so mark it with the system Highlight. */
+@media (forced-colors: active) {
+  .doq-tab { border-bottom-color: Canvas; }
+  .doq-tab[aria-selected="true"] { border-bottom-color: Highlight; text-decoration: underline; text-underline-offset: .3em; }
+  .doq-nav-link.is-active,.doq-toc a.is-active,.doq-version-link.is-active { text-decoration: underline; text-underline-offset: .25em; }
+  .doq-nav-link.is-active { outline: 1px solid Highlight; }
+}

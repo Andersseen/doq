@@ -7,6 +7,8 @@
  * than the tarball. Browsers are installed inside node_modules (PLAYWRIGHT_BROWSERS_PATH=0), never under $HOME:
  *   PLAYWRIGHT_BROWSERS_PATH=0 pnpm exec playwright install chromium
  * Set PW_CHANNEL=chrome to use an installed Google Chrome instead.
+ * `pnpm test:e2e:browsers` runs the focused cross-browser matrix (Firefox and WebKit):
+ *   PLAYWRIGHT_BROWSERS_PATH=0 pnpm exec playwright install firefox webkit
  */
 import { spawnSync } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
@@ -16,7 +18,12 @@ import { resolve } from 'node:path';
 const repo = resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
 const skipConsumer = args.includes('--skip-consumer') || !!process.env['E2E_SKIP_CONSUMER'];
-const passthrough = args.filter((arg) => arg !== '--skip-consumer');
+// Default to the full Chromium suite; `--browsers` runs the focused Firefox + WebKit matrix instead (pnpm test:e2e:browsers).
+const browsers = args.includes('--browsers');
+const passthrough = args.filter((arg) => arg !== '--skip-consumer' && arg !== '--browsers');
+if (!passthrough.some((arg) => arg.startsWith('--project'))) {
+  passthrough.push(...(browsers ? ['--project=firefox', '--project=webkit'] : ['--project=chromium']));
+}
 
 const mtime = async (path: string) => (await stat(path).catch(() => undefined))?.mtimeMs;
 const run = (command: string, commandArgs: string[], env: NodeJS.ProcessEnv = {}) =>

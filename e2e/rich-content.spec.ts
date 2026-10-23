@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, expectClipboard, nextFocusKey } from './fixtures.ts';
 
 const install = `${apps.a.url}/docs/installation`;
 const accessibility = `${apps.a.url}/docs/guides/accessibility`;
@@ -50,9 +50,9 @@ test.describe('rich Markdown authoring (0.4)', () => {
     await page.keyboard.press('Home');
     await expect(tabs.first()).toBeFocused();
     // One tab stop: Tab leaves the strip for the active panel, then the panel's copy button.
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(nextFocusKey(page));
     await expect(page.getByRole('tabpanel')).toBeFocused();
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(nextFocusKey(page));
     await expect(page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' })).toBeFocused();
   });
 
@@ -62,11 +62,11 @@ test.describe('rich Markdown authoring (0.4)', () => {
     // A click before hydration is replayed by Angular afterwards: wait for the tab state instead of racing it.
     await expect(page.getByRole('tab', { name: 'yarn' })).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('yarn dlx voltui add button\n');
+    await expectClipboard(page, 'yarn dlx voltui add button\n');
     await page.getByRole('tab', { name: 'npm', exact: true }).click();
     await expect(page.getByRole('tab', { name: 'npm', exact: true })).toHaveAttribute('aria-selected', 'true');
     await page.getByRole('tabpanel').getByRole('button', { name: 'Copy code' }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('npx voltui add button\n');
+    await expectClipboard(page, 'npx voltui add button\n');
   });
 
   test('E2E-063: a callout keeps nested lists, links and inline code', async ({ page }) => {
@@ -242,8 +242,8 @@ test.describe('rich Markdown authoring (0.4)', () => {
     await page.goto(install);
     const tab = page.getByRole('tab', { name: 'npm', exact: true });
     await tab.focus();
-    await page.keyboard.press('Shift+Tab');
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(nextFocusKey(page, true));
+    await page.keyboard.press(nextFocusKey(page));
     await expect(tab).toBeFocused();
     const outline = await tab.evaluate((el) => ({
       style: getComputedStyle(el).outlineStyle,

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.7.0
+
+Production hardening. Additive: no exported type, configuration key, frontmatter key, route or `--host-docs-*` token changed, and every 0.6 (and 0.5-style) configuration builds and renders as before.
+
+### Added
+- **`@doqs/analog/vite` → `doqDeterministicMarkdown()`** (Node-only, opt-in). `@analogjs/platform` renders each Markdown file in the `load` hook of its `analogjs-content-file` plugin; Vite runs those hooks concurrently, all of them share one `marked` instance, and `marked-gfm-heading-id` keeps its slugger in module state. With an asynchronous marked step (Shiki or any async highlighter) two files interleave and receive each other's duplicate-heading suffixes (`usage-2` where `usage-1` belongs), and the wrong ids are baked into the bundle. The plugin calls Analog's own hook through the resolved plugin list, one file at a time, so the output equals a sequential build. Nothing is patched or copied; it throws at config time when Analog's plugin is missing. Add it next to `analog()` in `vite.config.ts`. See [Deterministic builds](./README.md#deterministic-builds-07).
+- **Static integrity check** `pnpm docs:check` (repository tool, not shipped): for every prerendered page it compares heading ids with a strictly sequential render of that page, rejects duplicate ids, empty pages, a missing or repeated `h1`, table-of-contents links to missing ids, broken same-site links and fragments (navigation, version switcher, Markdown, generated API pages), several or foreign canonical links, Markdown sources without a route and documentation pages without a source. External links are never fetched.
+- **Measured budgets** `pnpm perf:check` (initial JavaScript, all JavaScript, stylesheet, search index, page count, core CSS; `perf-budgets.json`) and `pnpm perf:scale` (generated 20/200/1000-document fixtures).
+- **Compatibility matrix** `pnpm verify:compat --angular=21|22`: the packed tarball in a docs-first consumer on Angular 21.2 and on Angular 22.2 with TypeScript 6 (strict peers, no Zone.js), with `doq-api check`, `doq-search`, `docs:check` and an Angular-integration smoke suite.
+- **Cross-browser matrix** `pnpm test:e2e:browsers`: the journeys that depend on the engine run in Firefox and WebKit on the production builds (the complete suite stays in Chromium).
+
+### Fixed
+- **Back/Forward in WebKit.** WebKit restores the destination's scroll position before `popstate`, so Doqs recorded the wrong position for the entry being left and Forward to a fragment entry kept the previous scroll. The position the reader is leaving from is now tracked from scroll events and frozen during a traversal.
+- **Forced colors (high contrast).** The selected tab and the current navigation, table-of-contents and version links were distinguishable only by colour and weight; they now also use `Highlight` and an underline when `forced-colors: active`.
+
+### Changed
+- Tests: the copy tests read the clipboard back only where the engine can grant `clipboard-read` (Chromium); Firefox and WebKit assert the visible confirmation. Keyboard tests use the engine's "visit everything" chord where Safari's default skips links (WebKit on macOS). Engine-specific wording of a legitimate 404 is accepted, nothing else.
+- The Angular Movement adoption proof builds once with `doqDeterministicMarkdown()` and validates with `docs:check` instead of rebuilding until the ids happened to be canonical.
+
+### Compatibility and limits
+- Angular `^21.2.2 || ^22.0.0` (unchanged). Verified: Angular 21.2.x (every suite) and Angular 22.2.x with TypeScript 6.0 (smoke suite), both zoneless. **Not verified:** applications that load Zone.js, Analog above 2.9.x, Vite below 8 with the new plugin.
+- Browsers verified on production builds: Chromium (complete suite), Firefox and WebKit (focused matrix). Clipboard read-back is verified in Chromium only.
+- The first-loaded JavaScript grows by about 46–52 B (gzip) per document of any version: Analog bundles the frontmatter and a loader of every Markdown file, and there is no supported Analog API to defer it. Measured: 20 documents 186.8 KB, 200 documents 200.8 KB, 1,000 documents (+500 archived) 254.9 KB; navigation between documents stays at 14–39 ms.
+- Accessibility is checked with axe and keyboard journeys; this is not a WCAG certification (see the README).
+
 ## 0.6.0
 
 Versioned documentation. Additive and opt-in: a 0.5 configuration (no `versioning`) produces the same routes, the same markup, the same search calls and the same prerendered files as before; this is verified with a 0.5-style consumer built from the packed tarball.

@@ -452,11 +452,48 @@ Each run owns its own `--out` folder and manifest, `check` stays non-mutating, a
 
 Nothing is required: a configuration without `versioning` renders exactly as before. To adopt it, add the `versioning` object above and the archive folders. `normalizeDoqPaths()` now also returns the resolved `versioning` when it is configured.
 
+## Deterministic builds (0.7)
+
+Heading ids are decided at build time: `@analogjs/platform` renders each Markdown file in a Vite `load` hook, and the ids (`usage`, `usage-1`) are baked into the bundle. Vite runs those hooks concurrently, but they share one `marked` instance and `marked-gfm-heading-id` keeps its slugger in module state, so with an asynchronous marked step (Shiki, or any async highlighter) two files can interleave and receive each other's suffixes (`usage-2` where `usage-1` belongs). The prerendered HTML, the table of contents and the search anchors of such a build disagree, and the next build may differ. This is an upstream defect (reproduction: `docs/repro/heading-id-concurrency.mjs`; present in `@analogjs/platform` 2.9.x and 3.0.0-beta, `marked-gfm-heading-id` 4.1.4). Doqs contains it; it does not fix upstream.
+
+Add the helper next to `analog()` in `vite.config.ts` (Node-only, no dependency):
+
+```ts
+import { doqDeterministicMarkdown } from '@doqs/analog/vite';
+
+export default defineConfig({
+  plugins: [analog({ ssr: true, static: true, content: { highlighter: 'shiki' } }), doqDeterministicMarkdown()],
+});
+```
+
+Markdown files are then rendered one at a time, in the order Vite asks for them, through Analog's own hook: the output equals a sequential build, existing fragments do not change, and nothing is patched or copied. It throws at config time when the `analogjs-content-file` plugin is absent. It is opt-in because Doqs cannot add a Vite plugin to your config.
+
+**Troubleshooting heading-id problems.** Symptoms: a fragment link scrolls nowhere, the table of contents and the page disagree, a search result opens the wrong place, or `usage-2` exists on a page with only two `Usage` headings. Add the plugin and rebuild. To verify a build, compare it with a sequential render: this repository ships `pnpm docs:check` (`node scripts/docs-check.ts --dist=<public dir> --source=<app dir>`), which compares every page's heading ids with `github-slugger` applied in order, and checks routes, table-of-contents fragments, same-site links and canonicals without network access. Run it in CI after the build; do not accept "rebuild until it passes".
+
+## Verified environments and limits (0.7)
+
+Verified with real installs of the packed tarball, not declarations:
+
+| Environment                                | Evidence                                                                                                                    |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Angular 21.2.x, TypeScript 5.9, Analog 2.9 | Every suite: unit, component, contract, E2E, CDP harness, tarball consumers, Angular Movement proof                          |
+| Angular 22.2.x, TypeScript 6.0, Analog 2.9 | `pnpm verify:compat --angular=22`: strict peers, `doq-api check`, `doq-search`, prerender, hydration, navigation, search, versions, API pages |
+| Zoneless                                   | Both environments run without Zone.js (asserted). **Applications that load Zone.js are not verified.**                      |
+| Chromium, Firefox, WebKit                  | The engine-dependent journeys (`pnpm test:e2e:browsers`, Playwright 1.64); the full suite runs in Chromium                   |
+
+Node `^20.19 || ^22.12 || >=24`; Vite 8 (as installed by the showcases). Not verified: Analog above 2.9.x, Vite below 8, Safari/Firefox/Edge versions other than the Playwright builds, mobile browsers beyond viewport emulation, clipboard read-back outside Chromium (the visible confirmation is asserted there).
+
+**SSR/SSG expectations.** Every page must render the same prerendered and after hydration with no console errors or warnings; user-visible pages never touch `window`/`document` outside browser-guarded code. `docs:check` and the E2E suites enforce this on the showcases and the packed consumers.
+
+**Accessibility.** Automated: axe in the documentation, search, version selector, drawer and API-reference pages, in both host themes and at five widths. Exercised by keyboard: search shortcut, results, tabs (arrows, Home, End), version selector, drawer (open, Escape, focus return, no tab stop in a closed drawer), focus after navigation and after Back. Environment: reduced motion, 200% text size, forced colours (Chromium, Firefox), consumer colour tokens. **Not verified:** screen-reader output, real Windows high-contrast themes, WCAG certification. Doqs makes no WCAG conformance claim.
+
+**Performance.** `perf-budgets.json` pins first-loaded JavaScript, total JavaScript, stylesheet, search index and page count (`pnpm perf:check`). Documentation size scales with content: the first-loaded JavaScript grows by about 46-52 B (gzip) per document of any version, because Analog bundles every file's frontmatter and loader and offers no supported way to defer it. Measured on generated fixtures: 20 documents 186.8 KB, 200 documents 200.8 KB, 1,000 documents plus 500 archived 254.9 KB; client navigation 14-39 ms; the 1,500-page build takes about 90 s. `pnpm perf:scale` reproduces it.
+
 ## Navigation and reading
 
 These behaviors need no configuration:
 
-- **Fragment links work.** Following a table-of-contents link, opening or reloading a URL with `#heading`, and client-side navigation to a fragment scroll the heading into view once the Markdown has rendered. A fragment that matches no heading is ignored. Back/Forward restore the reader's position. Headings keep the renderer's IDs (`examples`, `examples-1` for duplicates).
+- **Fragment links work.** Following a table-of-contents link, opening or reloading a URL with `#heading`, and client-side navigation to a fragment scroll the heading into view once the Markdown has rendered. A fragment that matches no heading is ignored. Back/Forward restore the reader's position (also in WebKit since 0.7). Headings keep the renderer's IDs (`examples`, `examples-1` for duplicates).
 - **Sticky host headers.** Headings use `scroll-margin-top: var(--host-docs-scroll-offset, 2rem)`. Set `--host-docs-scroll-offset` (any CSS length) to the height of your sticky header.
 - **Continuity.** After an in-app change of document (sidebar, mobile drawer, previous/next, search) the new document starts at the top and keyboard focus moves to the article heading (`tabindex="-1"`, no extra tab stop), or to the heading named by the fragment. Escape and the Close button still return focus to the menu button. Direct loads never move focus.
 
@@ -464,8 +501,8 @@ Doq does not change your router configuration; it does not need `withInMemoryScr
 
 ## Public API
 
-`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, `doqVersionLinks`, `DOQ_VERSION_FILTER` (0.6), the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, `DoqVersioning`, `DoqVersionConfig`, `DoqArchiveConfig`, `DoqResolvedVersioning`, `DoqVersion`, `DoqVersionLink` (0.6), the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`, `DoqVersionSwitcherComponent`. Node-only: `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary; `@doqs/analog/api-reference` (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`) and the `doq-api` binary (0.5). Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
+`defineDoqConfig`, `provideDoq`, `doqRoutes`, `doqPrerenderRoutes`, `doqPrerenderRoute` (single file, kept for compatibility), `splitDoqInlineDemos`, `DOQ_INLINE_DEMO_PATTERN`, `parseDoqContent`, `DOQ_CALLOUT_TYPES`, `normalizeDoqPaths`, `joinDoqPath`, `normalizeDoqSearchConfig`, `normalizeSearchResultUrl`, `doqVersionLinks`, `DOQ_VERSION_FILTER` (0.6), the types `DoqConfig`, `DoqPaths`, `DoqSlots`, `DoqPresentation`, `DoqContentSegment`, `DoqRichSegment`, `DoqTab`, `DoqCalloutType`, `DoqSearchConfig`, `DoqSearchResult`, `DoqDemoRegistry`, `DoqPrerenderContentRoute`, `DoqVersioning`, `DoqVersionConfig`, `DoqArchiveConfig`, `DoqResolvedVersioning`, `DoqVersion`, `DoqVersionLink` (0.6), the document helpers, and the components `DoqDocsComponent`, `DoqIndexComponent`, `DoqShellComponent`, `DoqTabsComponent`, `DoqVersionSwitcherComponent`. Node-only: `@doqs/analog/vite` (`doqDeterministicMarkdown`, 0.7); `@doqs/analog/search-index` (`indexDoqSearch`) and the `doq-search` binary; `@doqs/analog/api-reference` (`generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError`) and the `doq-api` binary (0.5). Styles: `@doqs/analog/styles.css`; new optional token `--host-docs-scroll-offset`.
 
 ## Compatibility
 
-Built with Angular 21.2 and Analog 2.9. Angular 22 is in the peer range but not validated. Existing 0.0.0-pilot through 0.5 configuration objects keep working without changes; search and versioning are opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`); `doq-api` needs the project's own `typescript` (optional peer `^5.5.0 || ^6.0.0`, tested with 5.9 and 6.0). See [CHANGELOG.md](./CHANGELOG.md).
+Built with Angular 21.2 and Analog 2.9; Angular 22.2 with TypeScript 6 is verified by a focused smoke suite (see [Verified environments](#verified-environments-and-limits-07)). Existing 0.0.0-pilot through 0.5 configuration objects keep working without changes; search and versioning are opt-in. Pagefind 1.5.x is supported (optional peer `^1.5.0`); `doq-api` needs the project's own `typescript` (optional peer `^5.5.0 || ^6.0.0`, tested with 5.9 and 6.0). See [CHANGELOG.md](./CHANGELOG.md).

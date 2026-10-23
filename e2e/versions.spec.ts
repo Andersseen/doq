@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, nextFocusKey } from './fixtures.ts';
 
 // Real production output + real Pagefind index. Showcase A: current docs at /docs, archive "1" at /docs/v/1 (src/content/docs-v1).
 // Showcase B: docs-first root, archive "1" at /v/1. Neither the index nor the selector is mocked.
@@ -141,8 +141,8 @@ test.describe('E2E-110 versioned documentation: embedded (/docs)', () => {
     await expect(page.locator('.doq-version-list')).toBeHidden();
     await expect(summary).toBeFocused();
     await page.keyboard.press('Space');
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(nextFocusKey(page));
+    await page.keyboard.press(nextFocusKey(page));
     await expect(page.getByRole('link', { name: /v1\.x/ })).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(`${apps.a.url}/docs/v/1/installation`);

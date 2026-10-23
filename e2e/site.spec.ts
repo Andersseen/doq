@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { apps, expect, test } from './fixtures.ts';
+import { apps, expect, test, expectClipboard } from './fixtures.ts';
 
 const installCommand = 'pnpm add @doqs/analog @analogjs/content @analogjs/router prismjs';
 
@@ -43,7 +43,7 @@ test.describe('E2E-030 official website', () => {
     await page.goto(apps.site.url);
     await page.getByRole('button', { name: /Copy install command/ }).click();
     await expect(page.locator('app-copy-command').getByRole('status')).toHaveText(/copied/i);
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(installCommand);
+    await expectClipboard(page, installCommand);
   });
 
   test('mobile: the Volt drawer opens by keyboard, traps focus, closes with Escape and returns focus', async ({
