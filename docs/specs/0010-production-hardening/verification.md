@@ -32,38 +32,44 @@ First-loaded JavaScript grows 52 B (20 to 200) and 46 B (20 to 1,000) per docume
 
 ## Test cases
 
-| Case         | Acceptance | Checks                                                                                                                                    | Result  |
-| ------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| UNIT-130     | AC-001     | Real marked + gfm-heading-id through a stand-in of Analog's plugin: concurrent loads corrupt ids; through the guard they equal sequential | PASS    |
-| UNIT-140     | AC-003     | docs:check rules: correct page accepted; race output, foreign suffixes, empty page, h1, TOC, canonical rejected                           | PASS    |
-| UNIT-141     | AC-003     | Link classification, scope, route expectations, frontmatter slug                                                                          | PASS    |
-| UNIT-142     | AC-004     | docs:check route rule equals `doqPrerenderRoute`                                                                                          | PASS    |
-| UNIT-150     | AC-010     | Budget measurement (assets, gzip, index, pages) and budget file invariants                                                                | PASS    |
-| UNIT-151     | AC-010     | Generated fixtures are deterministic and rich                                                                                             | PASS    |
-| UNIT-152     | AC-010     | 1,000-document catalogs normalise, order and map to prerender routes deterministically                                                    | PASS    |
-| COMP-120     | AC-011     | Title, description and canonical lifecycle across documents, host routes, missing documents                                               | PASS    |
-| CONTRACT-080 | AC-013     | `./vite` export shipped, Node-only, no dependencies, not in the browser entry                                                             | PASS    |
-| CONTRACT-081 | AC-013     | No private sources or tests in the tarball                                                                                                | PASS    |
-| CONTRACT-082 | AC-004     | Over HTTP: unique heading ids and resolving TOC fragments on both showcases                                                               | PASS    |
-| CONTRACT-083 | AC-004     | Over HTTP: every same-site link answers 200 and its fragment exists                                                                       | PASS    |
-| E2E-132      | AC-005     | Packed tarball on Angular 21.2 and 22.2 (+TS 6), zoneless: version, hydration, history, tabs, search, versions, API pages                 | PASS    |
-| E2E-133      | AC-002     | Prerendered ids = hydrated DOM ids, TOC links resolve, search anchors name real headings (Chromium, Firefox, WebKit)                      | PASS    |
-| E2E-130      | AC-008     | Reduced motion, 200% text at 320/1280, forced colors, consumer tokens + axe contrast (three engines)                                      | PASS    |
-| E2E-131      | AC-009     | Drawer by keyboard, no hidden tab stop, focus after Back (three engines)                                                                  | PASS    |
-| E2E-011      | AC-007     | Back/Forward between fragment positions, Chromium + Firefox + WebKit                                                                      | PASS    |
-| E2E-003      | AC-006     | Mobile drawer open/navigate/close in Firefox and WebKit                                                                                   | PASS    |
-| E2E-012      | AC-006     | Search, keyboard, version filter in Firefox and WebKit                                                                                    | PASS    |
-| E2E-061      | AC-006     | Tabs keyboard pattern in Firefox and WebKit                                                                                               | PASS    |
-| E2E-110      | AC-006     | Version switching, selector keyboard, overflow and axe in Firefox and WebKit                                                              | PASS    |
-| E2E-050      | AC-012     | Angular Movement adoption proof, built once, 19 tests                                                                                     | PASS    |
-| MANUAL-130   | AC-002     | `pnpm verify:determinism --builds=5` one fingerprint; `--control` detected                                                                | PASS    |
-| MANUAL-131   | AC-010     | `pnpm perf:check` and `pnpm perf:scale` 20/200/1000                                                                                       | PASS    |
-| MANUAL-132   | AC-012     | Complete `pnpm quality:gate` on the final code                                                                                            | NOT RUN |
+| Case         | Acceptance | Checks                                                                                                                                    | Result |
+| ------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| UNIT-130     | AC-001     | Real marked + gfm-heading-id through a stand-in of Analog's plugin: concurrent loads corrupt ids; through the guard they equal sequential | PASS   |
+| UNIT-140     | AC-003     | docs:check rules: correct page accepted; race output, foreign suffixes, empty page, h1, TOC, canonical rejected                           | PASS   |
+| UNIT-141     | AC-003     | Link classification, scope, route expectations, frontmatter slug                                                                          | PASS   |
+| UNIT-142     | AC-004     | docs:check route rule equals `doqPrerenderRoute`                                                                                          | PASS   |
+| UNIT-150     | AC-010     | Budget measurement (assets, gzip, index, pages) and budget file invariants                                                                | PASS   |
+| UNIT-151     | AC-010     | Generated fixtures are deterministic and rich                                                                                             | PASS   |
+| UNIT-152     | AC-010     | 1,000-document catalogs normalise, order and map to prerender routes deterministically                                                    | PASS   |
+| COMP-120     | AC-011     | Title, description and canonical lifecycle across documents, host routes, missing documents                                               | PASS   |
+| CONTRACT-080 | AC-013     | `./vite` export shipped, Node-only, no dependencies, not in the browser entry                                                             | PASS   |
+| CONTRACT-081 | AC-013     | No private sources or tests in the tarball                                                                                                | PASS   |
+| CONTRACT-082 | AC-004     | Over HTTP: unique heading ids and resolving TOC fragments on both showcases                                                               | PASS   |
+| CONTRACT-083 | AC-004     | Over HTTP: every same-site link answers 200 and its fragment exists                                                                       | PASS   |
+| E2E-132      | AC-005     | Packed tarball on Angular 21.2 and 22.2 (+TS 6), zoneless: version, hydration, history, tabs, search, versions, API pages                 | PASS   |
+| E2E-133      | AC-002     | Prerendered ids = hydrated DOM ids, TOC links resolve, search anchors name real headings (Chromium, Firefox, WebKit)                      | PASS   |
+| E2E-130      | AC-008     | Reduced motion, 200% text at 320/1280, forced colors, consumer tokens + axe contrast (three engines)                                      | PASS   |
+| E2E-131      | AC-009     | Drawer by keyboard, no hidden tab stop, focus after Back (three engines)                                                                  | PASS   |
+| E2E-011      | AC-007     | Back/Forward between fragment positions, Chromium + Firefox + WebKit                                                                      | PASS   |
+| E2E-003      | AC-006     | Mobile drawer open/navigate/close in Firefox and WebKit                                                                                   | PASS   |
+| E2E-012      | AC-006     | Search, keyboard, version filter in Firefox and WebKit                                                                                    | PASS   |
+| E2E-061      | AC-006     | Tabs keyboard pattern in Firefox and WebKit                                                                                               | PASS   |
+| E2E-110      | AC-006     | Version switching, selector keyboard, overflow and axe in Firefox and WebKit                                                              | PASS   |
+| E2E-050      | AC-012     | Angular Movement adoption proof, built once, 19 tests                                                                                     | PASS   |
+| MANUAL-130   | AC-002     | `pnpm verify:determinism --builds=5` one fingerprint; `--control` detected                                                                | PASS   |
+| MANUAL-131   | AC-010     | `pnpm perf:check` and `pnpm perf:scale` 20/200/1000                                                                                       | PASS   |
+| MANUAL-132   | AC-012     | Complete `pnpm quality:gate` on the final code: 24 of 24 stages PASS                                                                      | PASS   |
 
 ## Executed commands
 
-Filled in after the final gate run (see below).
+Final `pnpm quality:gate` (PW_CHANNEL=chrome), all 24 stages PASS: format:check, typecheck:scripts, sdd:check, api:check, agentyx:check, test:unit (365 tests), test:components (134 library + 14 site), build, docs:check, perf:check, pack:doq, verify:package (22/22), test:contract (81), verify:negative-controls, consumer:build, test:contract with unversioned consumers, test:e2e (Chromium, 182), test:e2e:browsers (Firefox + WebKit, 233 passed, 1 skipped: WebKit cannot emulate forced colors), perf:scale --check (52 B/document), verify:determinism (5 builds, one fingerprint `483ce21248826721`), verify:determinism --control (detected), verify:compat 21 and 22 (6/6 each; Angular 22.2.3, TypeScript 6.0.3), verify:mvp (17/17 browser checks). Also `pnpm verify:adoption` (Angular Movement, one build, 19/19). Two earlier gate attempts stopped at transient failures (a test spawning the CLI timed out at 5 s under machine load, fixed with an explicit 30 s timeout; a legacy-consumer directory was reported missing once and did not reproduce) and are not counted.
 
 ## Remaining limitations
 
-Filled in after the final gate run (see below).
+- The heading race is contained, not fixed upstream; hosts must add `doqDeterministicMarkdown()` (opt-in) and run `docs:check`.
+- Zone.js applications, Analog above 2.9.x, Vite below 8, real screen readers, real Windows high-contrast themes and WCAG conformance are unverified. Clipboard read-back is verified in Chromium only. WebKit forced colors cannot be emulated.
+- Angular 22 has the focused smoke suite only, on a docs-first consumer; the embedded showcase depends on `lumen-icons`, whose peer range is Angular 21 only.
+- First-loaded JavaScript grows about 46-52 B gzip per document; no supported Analog API defers it.
+- The 0.6.0 release was not confirmed: the main CI run for #18 (39797201252) had its acceptance-harness job in progress for about an hour, and npm and GitHub still show 0.5.0. It was not cancelled or re-run from here. CI jobs now have `timeout-minutes`.
+- Nothing was deployed from this branch; the official site was not changed (it makes no Angular or browser compatibility claim).
+- GitHub Actions for this branch have not run yet; the new CI jobs were validated locally only.
