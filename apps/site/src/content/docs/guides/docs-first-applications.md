@@ -24,6 +24,7 @@ export const doqPaths = { contentDirectory: 'docs', basePath: '/' } as const;
 ## Rules for the root mount
 
 - Do not add `src/app/pages/index.page.ts`; the documentation index owns `/`.
+- Other host routes are shadowed: Doqs matches every URL below `/`, so a host page such as `/about` renders the documentation "page not found" view. Use [embedded mode](/docs/guides/embedded-documentation) if the application needs routes of its own.
 - Pass `doqPrerenderRoutes(doqPaths)` without a leading `'/'`: with `basePath: '/'` the helper already includes the index route.
 - `DoqShellComponent` is an optional neutral header and footer for projects that have none. It takes `docsPath="/"` in this mode.
 - Archived versions, when used, live at `/v/<id>`.

@@ -19,12 +19,15 @@ test.describe('E2E-101 newly initialized consumers', () => {
     await expect(page.getByRole('button', { name: /^Search/ })).toHaveCount(0);
   });
 
-  test('DX-016 docs-first: documentation owns the root and the host keeps its own route', async ({ page }) => {
+  test('DX-016 docs-first: documentation owns the root and every other URL is a documentation 404', async ({
+    page,
+  }) => {
     await page.goto(apps.initDocsFirst.url);
     await expect(page.locator('.doq-index')).toBeVisible();
     await page.goto(`${apps.initDocsFirst.url}/getting-started`);
     await expect(page.getByRole('heading', { level: 1, name: 'Getting started' })).toBeVisible();
+    // Doqs mounted at "/" owns every route: a host page at /about is shadowed, as the docs-first guide states.
     await page.goto(`${apps.initDocsFirst.url}/about`);
-    await expect(page.getByRole('heading', { level: 1, name: 'About Acme' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Documentation page not found' })).toBeVisible();
   });
 });
