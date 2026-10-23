@@ -10,4 +10,4 @@
 - [x] T-008 [REQ-009, AC-009] `init-consumer` matrix (Angular 21 embedded/docs-first, Angular 22), initialized-consumer E2E, Angular Movement proof extension.
 - [x] T-009 [REQ-010, AC-010] README, root README, changelog, CONTRIBUTING, AGENTS, CI steps, 1.0 readiness document.
 - [x] T-010 [REQ-007] Fix the "On this page" overflow in the library and verify at 1500–2560 px.
-- [ ] T-011 [REQ-001..REQ-010] Run the complete quality gate and record the real results in `verification.md`.
+- [x] T-011 [REQ-001..REQ-010] Run the complete quality gate and record the real results in `verification.md`.
