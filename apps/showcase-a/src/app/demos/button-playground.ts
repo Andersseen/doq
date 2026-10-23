@@ -4,6 +4,7 @@ import { VoltNativeButton } from '@voltui/components';
 type VoltVariant = 'solid' | 'destructive' | 'outline' | 'ghost' | 'link';
 type VoltSize = 'sm' | 'md' | 'lg';
 
+// #region doqs:volt-wrapper
 /**
  * A consumer-owned wrapper that applies Volt UI's `voltButton` directive. Doqs binds the inputs by their public
  * names and reports `pressed`; the directive itself is never instantiated by Doqs.
@@ -22,3 +23,4 @@ export class VantaButtonPlaygroundComponent {
   readonly label = input('Save changes');
   readonly pressed = output<string>();
 }
+// #endregion doqs:volt-wrapper

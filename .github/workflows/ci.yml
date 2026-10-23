@@ -37,6 +37,7 @@ jobs:
           git diff --exit-code
       - run: pnpm sdd:check
       - run: pnpm api:check
+      - run: pnpm content:check
 
   unit:
     name: Unit and component tests

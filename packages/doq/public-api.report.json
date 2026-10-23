@@ -1,5 +1,5 @@
 {
-  "version": "0.9.0",
+  "version": "0.10.0",
   "entries": {
     ".": {
       "DOQ_CALLOUT_TYPES": {
@@ -683,10 +683,159 @@
         "kind": "function",
         "text": "export function generateApiReference(options: ApiReferenceOptions): Promise<GenerateApiReferenceResult>;"
       }
+    },
+    "./content": {
+      "BuildContentResult": {
+        "kind": "interface",
+        "text": "BuildContentResult",
+        "members": {
+          "cwd": "cwd: string;",
+          "dependencies": "dependencies: string[];",
+          "diagnostics": "diagnostics: DoqContentDiagnostic[];",
+          "results": "results: { name: string; outDir: string; authoringRoot: string; files: Map<string, string>; }[];"
+        }
+      },
+      "CONFIG_FILE": {
+        "kind": "const",
+        "text": "export const CONFIG_FILE: 'doq.content.json';"
+      },
+      "CheckContentResult": {
+        "kind": "interface",
+        "text": "CheckContentResult",
+        "members": {
+          "conflicts": "conflicts: string[];",
+          "dependencies": "dependencies: string[];",
+          "targets": "targets: CheckContentTargetResult[];",
+          "upToDate": "upToDate: boolean;"
+        }
+      },
+      "CheckContentTargetResult": {
+        "kind": "interface",
+        "text": "CheckContentTargetResult",
+        "members": {
+          "added": "added: string[];",
+          "conflicts": "conflicts: string[];",
+          "modified": "modified: string[];",
+          "name": "name: string;",
+          "outDir": "outDir: string;",
+          "pageCount": "pageCount: number;",
+          "removed": "removed: string[];",
+          "upToDate": "upToDate: boolean;"
+        }
+      },
+      "DoqContentDiagnostic": {
+        "kind": "interface",
+        "text": "DoqContentDiagnostic",
+        "members": {
+          "directive": "directive: string;",
+          "file": "file: string;",
+          "hint": "hint?: string;",
+          "kind": "kind: DoqContentErrorKind;",
+          "line": "line: number;",
+          "message": "message: string;",
+          "reference": "reference: string;"
+        }
+      },
+      "DoqContentError": {
+        "kind": "class",
+        "text": "DoqContentError extends Error",
+        "members": {
+          "diagnostics": "diagnostics?: DoqContentDiagnostic[];",
+          "exitCode": "exitCode: number;",
+          "kind": "kind: DoqContentErrorKind;"
+        }
+      },
+      "DoqContentErrorKind": {
+        "kind": "type",
+        "text": "export type DoqContentErrorKind = 'config' | 'invalid-authoring' | 'missing-source' | 'unsafe-path' | 'unknown-symbol' | 'ambiguous-symbol' | 'stale' | 'conflict';"
+      },
+      "DoqContentOptions": {
+        "kind": "interface",
+        "text": "DoqContentOptions",
+        "members": {
+          "config": "config?: string;",
+          "cwd": "cwd?: string;",
+          "targets": "targets?: DoqContentTarget[];"
+        }
+      },
+      "DoqContentTarget": {
+        "kind": "interface",
+        "text": "DoqContentTarget",
+        "members": {
+          "api": "api?: string[];",
+          "authoring": "authoring: string;",
+          "name": "name?: string;",
+          "out": "out: string;",
+          "revision": "revision?: string;",
+          "sourceLines": "sourceLines?: string;",
+          "sourcePathPrefix": "sourcePathPrefix?: string;",
+          "sourceRoots": "sourceRoots?: string[];",
+          "sourceUrl": "sourceUrl?: string;"
+        }
+      },
+      "DoqContentTargetResult": {
+        "kind": "interface",
+        "text": "DoqContentTargetResult",
+        "members": {
+          "name": "name: string;",
+          "outDir": "outDir: string;",
+          "pageCount": "pageCount: number;",
+          "removed": "removed: string[];",
+          "written": "written: string[];"
+        }
+      },
+      "DoqContentVitePlugin": {
+        "kind": "interface",
+        "text": "DoqContentVitePlugin",
+        "members": {
+          "buildStart": "buildStart(this: unknown): Promise<void>;",
+          "configureServer": "configureServer(server: { watcher: { on(event: string, listener: (file: string) => void): unknown; }; config: { logger: { error(message: string): void; }; }; }): void;",
+          "enforce": "enforce: 'pre';",
+          "name": "name: string;"
+        }
+      },
+      "EXIT_CODES": {
+        "kind": "const",
+        "text": "export const EXIT_CODES: Readonly<{ stale: 1; config: 2; conflict: 3; authoring: 4; }>;"
+      },
+      "GenerateContentResult": {
+        "kind": "interface",
+        "text": "GenerateContentResult",
+        "members": {
+          "authoringRoots": "authoringRoots: string[];",
+          "dependencies": "dependencies: string[];",
+          "targets": "targets: DoqContentTargetResult[];"
+        }
+      },
+      "buildContent": {
+        "kind": "function",
+        "text": "export function buildContent(options?: DoqContentOptions): Promise<BuildContentResult>;"
+      },
+      "checkContent": {
+        "kind": "function",
+        "text": "export function checkContent(options?: DoqContentOptions): Promise<CheckContentResult>;"
+      },
+      "doqContent": {
+        "kind": "function",
+        "text": "export function doqContent(options?: DoqContentOptions): DoqContentVitePlugin;"
+      },
+      "formatDiagnostic": {
+        "kind": "function",
+        "text": "export function formatDiagnostic(diagnostic: DoqContentDiagnostic): string;"
+      },
+      "generateContent": {
+        "kind": "function",
+        "text": "export function generateContent(options?: DoqContentOptions): Promise<GenerateContentResult>;"
+      },
+      "loadContentConfig": {
+        "kind": "function",
+        "text": "export function loadContentConfig(options?: DoqContentOptions): Promise<{ cwd: string; targets: Required<DoqContentTarget>[]; }>;"
+      }
     }
   },
   "files": [
     "bin/api-reference.d.mts",
+    "bin/content.d.mts",
     "bin/search-index.d.mts",
     "bin/vite.d.mts",
     "types/doqs-analog.d.ts"

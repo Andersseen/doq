@@ -11,5 +11,16 @@
     "forge-page.md": "7025edbda57bfabd01f348a2ebcaf84e4d321f8286471655e48aa7aa9141a3fb",
     "forge-query.md": "2dbeba1986974de5c344c845d960983447bf6b8b7805e660d3a55a878b4e2104",
     "index.md": "d22238812c4b2c4c6f55e5ee60b255d5306856ba82474830252a3a3a44740981"
+  },
+  "symbols": {
+    "ForgeClient": "/reference/generated/forge-client",
+    "ForgeConfig": "/reference/generated/forge-config",
+    "ForgeEntry": "/reference/generated/forge-entry",
+    "ForgeEnvironment": "/reference/generated/forge-environment",
+    "ForgeErrorCode": "/reference/generated/forge-error-code",
+    "ForgePage": "/reference/generated/forge-page",
+    "ForgeQuery": "/reference/generated/forge-query",
+    "createForgeClient": "/reference/generated/create-forge-client",
+    "defineForgeConfig": "/reference/generated/define-forge-config"
   }
 }

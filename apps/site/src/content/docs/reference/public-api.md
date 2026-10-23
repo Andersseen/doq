@@ -43,10 +43,11 @@ Never import these in browser code.
 | `@doqs/analog/vite` | `doqDeterministicMarkdown(options?)` |
 | `@doqs/analog/search-index` | `indexDoqSearch` |
 | `@doqs/analog/api-reference` | `generateApiReference`, `checkApiReference`, `buildApiReference`, `DoqApiError` |
+| `@doqs/analog/content` (0.10) | `generateContent`, `checkContent`, `buildContent`, `loadContentConfig`, `formatDiagnostic`, `doqContent`, `DoqContentError`, `EXIT_CODES`, `CONFIG_FILE`, and their option and result types (reference: [Content tooling API](/docs/reference/content-api)) |
 
 ## Binaries and styles
 
-`doq` (init, doctor), `doq-search` (index), `doq-api` (generate, check), and `@doqs/analog/styles.css`.
+`doq` (init, doctor, content), `doq-search` (index), `doq-api` (generate, check), and `@doqs/analog/styles.css`.
 
 ## Source
 

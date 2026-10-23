@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.10.0
+
+Advanced content authoring: source-backed code, reusable Markdown and links to the generated API reference, resolved at build time into ordinary Markdown. Additive and opt-in: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token was removed or changed, nothing is added to the browser entry, and every 0.9 (and earlier) project builds and renders as before without any new file or step.
+
+### Added
+- **`doq content generate | check | watch`** (and `@doqs/analog/content`: `generateContent`, `checkContent`, `buildContent`, `loadContentConfig`, `formatDiagnostic`, `doqContent()` Vite plugin, `DoqContentError`, `EXIT_CODES`, types `DoqContentTarget`, `DoqContentOptions`, `DoqContentDiagnostic` and results). Node-only, dependency-free, never executes or fetches anything. Configured by `doq.content.json` (one target per documentation version).
+- **`::source{file="…" region="…"}`**: a highlighted code block read from a real file, as a whole, a named region (`// #region doqs:name`, `# …`, `/* … */`, `<!-- … -->`; nesting allowed, markers removed) or a line range, with `lang`, `title` and an optional "View source" link built from `sourceUrl`/`revision` (never guessed). Fences are longer than any backtick run in the code, so a snippet cannot end its own block or become a directive.
+- **`::include{file="…"}`**: Markdown fragments (a file or directory whose name starts with `_`, so never a route), nested up to five levels, cycles detected, no frontmatter, heading levels kept as written, `/path` from the authoring root and other paths from the including file.
+- **`[[api:Name]]`, `[[api:Name|Label]]`, `[[api:Name@target]]`**: links to the generated API page of a public symbol using the symbol index `doq-api` now records in its manifest. A target resolves against its own index, so archived guides link archived pages and a missing symbol is an error, never a fallback to the current version.
+- **`doq-api` symbol index**: `.doq-api.json` gains `symbols` (public export → route, with collisions and `--base-path` applied by the generator). Regenerate once with `doq-api generate`. `doq-api` also documents an entry that is itself a declaration file (a `.d.ts`/`.d.mts` entry).
+- Ownership like `doq-api`: a manifest (`.doq-content.json` in the authoring directory) with SHA-256 hashes; hand-written or edited files are conflicts and never overwritten, `check` writes nothing, output has no timestamps or absolute paths. Diagnostics name the page, line, directive, reference, reason and fix; exit codes 1 stale, 2 configuration, 3 conflict, 4 invalid authoring.
+- Safety: only text files below the configured `sourceRoots`, checked on real paths (traversal and symbolic links), never `node_modules`, `.git`, build output, `.env*`, keys, credential-like names, binaries, non-UTF-8 or files above 256 KiB.
+- Repository: authored pages in Showcase A (embedded, with a Volt UI playground next to its source), Showcase B (docs-first, nested routes), both archives and the official documentation (_Content authoring_, _Content tooling_ and a generated _Content tooling API_ reference); the Angular Movement adoption proof; tarball consumers with and without authoring.
+
+### Changed
+- `doq-api`'s manifest has a new `symbols` member; `doq-api check` reports a manifest written by 0.9 as stale until `doq-api generate` is run.
+- Budgets for content-proportional metrics of the showcases and the official site are raised for the added pages, with the reason in `perf-budgets.json`. Initial JavaScript and stylesheet budgets are unchanged.
+
+### Known limitations
+- Directives are line-level: they are not recognised inside block quotes, lists or tables (they stay literal). Source and include errors inside a fragment point at the fragment, not at the including page.
+- Links inside a fragment are not rewritten; use absolute routes. A new authored page needs a `doq content generate` (the Vite plugin does it on start and on change).
+- Archived documentation needs its own source snapshot and API index; Doqs never fetches an old tag.
+- `watch` and the plugin watch the files read by the last successful run.
+
 ## 0.9.0
 
 Interactive component playgrounds. Additive: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token was removed or changed, `::demo[id]` and every 0.8 (and earlier) configuration build and render as before, and `pnpm verify:public-api` passes against the 0.7.0 baseline.

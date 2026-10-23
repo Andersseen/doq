@@ -2,6 +2,7 @@
 // Node-only integration CLI for @doqs/analog. Never imports Angular or TypeScript.
 import { readFile } from 'node:fs/promises';
 import { parseCli, USAGE } from './cli/args.mjs';
+import { formatContent, runContent } from './cli/content.mjs';
 import { formatDoctor, runDoctor } from './cli/doctor.mjs';
 import { formatInit, runInit } from './cli/init.mjs';
 import { assertSupportedNode } from './cli/node-support.mjs';
@@ -20,9 +21,9 @@ async function main() {
     console.log(manifest.version);
     return 0;
   }
-  const result = command.command === 'init' ? await runInit(command) : await runDoctor(command);
+  const result = command.command === 'init' ? await runInit(command) : command.command === 'content' ? await runContent(command) : await runDoctor(command);
   // JSON mode writes exactly one document to stdout; the text form goes to stdout too, errors always to stderr.
-  console.log(command.json ? JSON.stringify(result, null, 2) : command.command === 'init' ? formatInit(result) : formatDoctor(result));
+  console.log(command.json ? JSON.stringify(result, null, 2) : command.command === 'init' ? formatInit(result) : command.command === 'content' ? formatContent(result) : formatDoctor(result));
   return result.exitCode;
 }
 

@@ -7,6 +7,10 @@
     "node": ">=22.22.3"
   },
   "scripts": {
+    "content": "doq content generate --dir ../.. --config apps/site/doq.content.json",
+    "content:check": "doq content check --dir ../.. --config apps/site/doq.content.json",
+    "api": "doq-api generate --cwd ../.. --entry packages/doq/bin/content.d.mts --content-dir apps/site/src/content/docs --out apps/site/src/content/docs/reference/content-api --base-path /docs --group \"Content tooling API\" --title \"Content tooling API\" --order-start 2000 --strict",
+    "api:check": "doq-api check --cwd ../.. --entry packages/doq/bin/content.d.mts --content-dir apps/site/src/content/docs --out apps/site/src/content/docs/reference/content-api --base-path /docs --group \"Content tooling API\" --title \"Content tooling API\" --order-start 2000 --strict",
     "dev": "vite",
     "build": "vite build && doq-search index dist/analog/public",
     "preview": "node ../../scripts/preview-static.ts dist/analog/public",

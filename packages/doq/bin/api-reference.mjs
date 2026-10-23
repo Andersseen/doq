@@ -5,7 +5,7 @@ import { relative, resolve } from 'node:path';
 import { DoqApiError } from './api-reference/errors.mjs';
 import { extractApi } from './api-reference/extract.mjs';
 import { applyOutput, planOutput, resolveOutput } from './api-reference/output.mjs';
-import { categoryIds, renderReference } from './api-reference/render.mjs';
+import { categoryIds, renderReference, symbolRoutes } from './api-reference/render.mjs';
 import { loadTypeScript } from './api-reference/typescript.mjs';
 
 export { DoqApiError };
@@ -60,6 +60,7 @@ export async function buildApiReference(options) {
   const below = relative(content, outDir).split('\\').join('/');
   const routePrefix = `${settings.basePath === '/' ? '' : settings.basePath}/${below}`;
   const files = renderReference(symbols, { routePrefix, group: settings.group, title: settings.title, sourceUrl: settings.sourceUrl, orderStart: settings.orderStart });
+  const routes = symbolRoutes(symbols, routePrefix);
   const diagnostics = extracted.diagnostics;
   if (settings.strict) {
     for (const symbol of symbols) {
@@ -67,7 +68,7 @@ export async function buildApiReference(options) {
     }
   }
   const problems = settings.strict ? diagnostics.filter((d) => d.severity === 'warning') : [];
-  return { files, outDir, routePrefix, symbols, diagnostics, problems, typescriptVersion: extracted.typescriptVersion };
+  return { files, routes, outDir, routePrefix, symbols, diagnostics, problems, typescriptVersion: extracted.typescriptVersion };
 }
 
 /**
@@ -76,7 +77,7 @@ export async function buildApiReference(options) {
  */
 export async function generateApiReference(options) {
   const built = await buildApiReference(options);
-  const plan = await planOutput(built.outDir, built.files);
+  const plan = await planOutput(built.outDir, built.files, built.routes);
   if (built.problems.length) throw new DoqApiError(strictMessage(built.problems));
   await applyOutput(built.outDir, built.files, plan);
   return { ...summary(built, plan), written: [...plan.added, ...plan.modified], removed: plan.removed };
@@ -88,7 +89,7 @@ export async function generateApiReference(options) {
  */
 export async function checkApiReference(options) {
   const built = await buildApiReference(options);
-  const plan = await planOutput(built.outDir, built.files);
+  const plan = await planOutput(built.outDir, built.files, built.routes);
   const upToDate = !plan.added.length && !plan.modified.length && !plan.removed.length && !plan.conflicts.length && !plan.manifestChanged;
   return { ...summary(built, plan), upToDate, added: plan.added, modified: plan.modified, removed: plan.removed, conflicts: plan.conflicts };
 }

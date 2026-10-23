@@ -49,7 +49,8 @@ export function extractApi(ts, options) {
   const posix = (/** @type {string} */ file) => relative(cwd, file).split('\\').join('/');
   const isExternal = (/** @type {any} */ node) => {
     const file = node.getSourceFile();
-    return file.isDeclarationFile || program.isSourceFileFromExternalLibrary(file) || /[\\/]node_modules[\\/]/.test(file.fileName);
+    // A library that ships only declarations (a `.d.mts` entry) documents its own entry file; every other declaration file is a dependency.
+    return (file.isDeclarationFile && file !== entryFile) || program.isSourceFileFromExternalLibrary(file) || /[\\/]node_modules[\\/]/.test(file.fileName);
   };
   const typeText = (/** @type {any} */ type, /** @type {any} */ at) =>
     collapse(

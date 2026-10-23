@@ -1,6 +1,7 @@
 import type { ForgeConfig } from './config';
 import type { ForgeEntry, ForgeQuery } from './types';
 
+// #region doqs:error-codes
 /** Reasons a Forge request can fail. */
 export enum ForgeErrorCode {
   /** The API key is missing or revoked. */
@@ -10,6 +11,7 @@ export enum ForgeErrorCode {
   /** Too many requests; retry after the delay in the response. */
   RateLimited = 'rate_limited',
 }
+// #endregion doqs:error-codes
 
 /** A page of entries and the cursor of the next one. */
 export interface ForgePage<T> {

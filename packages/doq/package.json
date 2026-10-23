@@ -1,6 +1,6 @@
 {
   "name": "@doqs/analog",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Composable Markdown documentation UI for Analog.js",
   "license": "MIT",
   "author": "Andersseen (https://github.com/Andersseen)",
@@ -33,6 +33,7 @@
     "./search-index": { "types": "./bin/search-index.d.mts", "default": "./bin/search-index.mjs" },
     "./vite": { "types": "./bin/vite.d.mts", "default": "./bin/vite.mjs" },
     "./api-reference": { "types": "./bin/api-reference.d.mts", "default": "./bin/api-reference.mjs" },
+    "./content": { "types": "./bin/content.d.mts", "default": "./bin/content.mjs" },
     "./styles.css": "./styles.css"
   },
   "scripts": {
