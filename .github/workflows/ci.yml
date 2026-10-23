@@ -50,6 +50,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The official site's tests import the built @doqs/analog package, exactly like a consumer.
+      - run: pnpm build:doq
       - run: pnpm test:unit
       - run: pnpm test:components
 
