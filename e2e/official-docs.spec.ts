@@ -101,6 +101,8 @@ test.describe('E2E-100 the official site documents Doqs with Doqs', () => {
     const landingDescription = await page.locator('meta[name="description"]').getAttribute('content');
     await page.goto(`${docs}/cli`);
     await expect(page).toHaveTitle('The doq CLI · Doqs');
+    await expect(page.locator('.doq-root')).toBeVisible();
+    await page.waitForLoadState('networkidle');
     const darkToggle = page.getByRole('button', { name: 'Dark theme' });
     const wasDark = await page.locator('html').evaluate((node) => node.classList.contains('dark'));
     const lightBackground = await bgOf(page, '.doq-root');
@@ -197,6 +199,9 @@ test.describe('E2E-100 the official site documents Doqs with Doqs', () => {
   }) => {
     for (const path of ['/docs/guides/rich-markdown', '/docs/reference/public-api', '/docs']) {
       await page.goto(`${apps.site.url}${path}`);
+      // Reloading while the lazy documentation chunk is still downloading cancels it, which is the test's doing, not the page's.
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await page.waitForLoadState('networkidle');
       await page.reload();
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     }
