@@ -129,9 +129,10 @@ export class SiteHeader {
   protected readonly links = siteLinks;
   protected readonly theme = inject(ThemeController);
   protected readonly sections = [
-    { href: '#features', label: 'Features' },
-    { href: '#getting-started', label: 'Getting started' },
-    { href: '#interactive-markdown', label: 'Interactive Markdown' },
+    { href: '/docs', label: 'Docs' },
+    { href: '/#features', label: 'Features' },
+    { href: '/#getting-started', label: 'Getting started' },
+    { href: '/#interactive-markdown', label: 'Interactive Markdown' },
   ] as const;
 
 }

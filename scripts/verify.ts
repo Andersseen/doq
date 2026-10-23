@@ -1,8 +1,8 @@
 /**
  * One command per gate, deterministic and independent of any AI model.
  *
- *   pnpm verify:change   fast local gate: format, types, specs, Agentyx lock, unit, components, builds, docs:check, perf:check, package, contract, negative controls
- *   pnpm quality:gate    mandatory pre-PR gate: verify:change + tarball consumer, Playwright E2E (Chromium, then Firefox and WebKit), determinism, Angular 21/22 compatibility and the CDP acceptance harness
+ *   pnpm verify:change   fast local gate: format, types, specs, Agentyx lock, unit, components, builds, docs:check, perf:check, package, public API, contract, negative controls
+ *   pnpm quality:gate    mandatory pre-PR gate: verify:change + tarball consumers (showcases and initialized apps), Playwright E2E (Chromium, then Firefox and WebKit), determinism, Angular 21/22 compatibility and the CDP acceptance harness
  *
  * Steps run in order and stop at the first failure. E2E and harness steps need a browser (see CONTRIBUTING.md).
  */
@@ -44,6 +44,7 @@ const steps: Step[] = [
   pnpm('perf:check'),
   pnpm('pack:doq'),
   { name: `pnpm verify:package ${tarball}`, args: ['verify:package', tarball] },
+  pnpm('verify:public-api'),
   pnpm('test:contract'),
   pnpm('verify:negative-controls'),
 ];
@@ -51,6 +52,8 @@ if (mode === 'full') {
   // The unversioned (0.5-style) tarball consumers exist after consumer:build, so the contract suite must require them here.
   steps.push(
     pnpm('consumer:build'),
+    // Bare Analog applications that adopt Doqs through doq doctor / doq init: Angular 21 embedded and docs-first, Angular 22 embedded.
+    pnpm('verify:init'),
     {
       name: 'pnpm test:contract (with unversioned consumers)',
       args: ['test:contract'],

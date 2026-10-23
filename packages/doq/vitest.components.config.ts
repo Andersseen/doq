@@ -9,6 +9,8 @@ export default defineConfig({
     name: 'components',
     environment: 'jsdom',
     globals: false,
+    // The first test of a file pays for the cold jsdom + Angular compile; under a busy machine that exceeded the 5 s default.
+    testTimeout: 20_000,
     setupFiles: ['test/components/setup.ts'],
     include: ['test/components/**/*.spec.ts'],
     server: { deps: { inline: [/@analogjs\//, /@testing-library\/angular/] } },

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@voltui/components/themes/presets/ember-soft.css';
+@import '@doqs/analog/styles.css';
 
 /* Doqs identity: an editorial serif for headings, system sans for text, system mono for code. No font downloads. */
 @theme {
@@ -39,4 +40,19 @@
     linear-gradient(to bottom, var(--border) 1px, transparent 1px);
   background-size: 3rem 3rem;
   mask-image: radial-gradient(ellipse at 70% 30%, black, transparent 70%);
+}
+
+/* Doqs documentation tokens: the docs follow the host's Volt theme (light and dark) instead of a second theme system. */
+:root {
+  --host-docs-background: var(--background);
+  --host-docs-foreground: var(--foreground);
+  --host-docs-primary: var(--primary);
+  --host-docs-secondary: var(--muted-foreground);
+  --host-docs-muted: var(--muted-foreground);
+  --host-docs-border: var(--border);
+  --host-docs-surface: var(--surface);
+  --host-docs-focus: var(--ring);
+  --host-docs-code-background: var(--muted);
+  --host-docs-code-foreground: var(--foreground);
+  --host-docs-scroll-offset: 5rem;
 }

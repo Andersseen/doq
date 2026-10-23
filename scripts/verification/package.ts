@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import ts from 'typescript';
 
 const [tarballArg, consumerArg] = process.argv.slice(2);
 assert.ok(tarballArg, 'Usage: package.ts <tarball> [consumer-directory]');
@@ -73,7 +74,11 @@ try {
   });
   check('the indexer is a Node-only entry point, not part of the browser declarations', () => {
     assert.equal(manifest.exports['./search-index'].default, './bin/search-index.mjs');
-    assert.deepEqual(manifest.bin, { 'doq-search': './bin/doq-search.mjs', 'doq-api': './bin/doq-api.mjs' });
+    assert.deepEqual(manifest.bin, {
+      doq: './bin/doq.mjs',
+      'doq-search': './bin/doq-search.mjs',
+      'doq-api': './bin/doq-api.mjs',
+    });
     assert.ok(!/indexDoqSearch/.test(declarations));
     assert.deepEqual(manifest.peerDependenciesMeta?.pagefind, { optional: true });
     assert.ok(!manifest.dependencies?.pagefind);
@@ -103,6 +108,66 @@ try {
     assert.match(await readFile(join(root, 'bin/vite.mjs'), 'utf8'), /doqDeterministicMarkdown/);
     assert.ok(!/doqDeterministicMarkdown/.test(declarations));
     assert.ok(!manifest.dependencies?.vite && !manifest.peerDependencies?.vite);
+  });
+  check(
+    'the doq CLI is Node-only, dependency-free, runs from the unpacked tarball and loads neither Angular nor TypeScript',
+    async () => {
+      const cli = [
+        'bin/doq.mjs',
+        'bin/cli/args.mjs',
+        'bin/cli/doctor.mjs',
+        'bin/cli/init.mjs',
+        'bin/cli/node-support.mjs',
+        'bin/cli/project.mjs',
+        'bin/cli/semver.mjs',
+        'bin/cli/source.mjs',
+      ];
+      for (const file of cli) {
+        const text = await readFile(join(root, file), 'utf8');
+        assert.ok(text.length > 0, file);
+        const imported = ts.preProcessFile(text, true, true).importedFiles.map((entry) => entry.fileName);
+        assert.deepEqual(
+          imported.filter((name) => !name.startsWith('node:') && !name.startsWith('./')),
+          [],
+          `${file} imports a non-Node, non-local module`,
+        );
+      }
+      assert.ok(!/doq\.mjs|doq-cli/.test(declarations), 'the CLI is not part of the browser declarations');
+      assert.match(
+        execFileSync(process.execPath, [join(root, 'bin/doq.mjs'), '--help'], { encoding: 'utf8' }),
+        /doq init/,
+      );
+      assert.equal(
+        execFileSync(process.execPath, [join(root, 'bin/doq.mjs'), '--version'], { encoding: 'utf8' }).trim(),
+        version,
+      );
+    },
+  );
+  check('the Node-only declaration files compile under strict TypeScript', () => {
+    const files = ['vite', 'api-reference', 'search-index'].map((name) => join(root, 'bin', `${name}.d.mts`));
+    const program = ts.createProgram(files, {
+      strict: true,
+      noEmit: true,
+      skipLibCheck: false,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      target: ts.ScriptTarget.ES2022,
+      types: [],
+    });
+    const diagnostics = ts
+      .getPreEmitDiagnostics(program)
+      .filter((diagnostic) => diagnostic.file && files.includes(diagnostic.file.fileName));
+    assert.deepEqual(
+      diagnostics.map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ')),
+      [],
+    );
+  });
+  check('the tarball ships no tests, sources, maps or fixtures', () => {
+    const listed = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' }).split('\n').filter(Boolean);
+    const stray = listed.filter((file) =>
+      /(^|\/)(test|tests|src|e2e|fixtures)\/|\.(spec|test)\.|\.env/.test(file.replace(/^package\//, '')),
+    );
+    assert.deepEqual(stray, []);
   });
   check('TypeScript is an optional peer, never a dependency, and no browser bundle imports it', async () => {
     assert.deepEqual(manifest.peerDependenciesMeta?.typescript, { optional: true });

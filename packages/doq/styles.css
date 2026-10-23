@@ -103,7 +103,7 @@
 .doq-markdown table:focus-visible { outline: 2px solid var(--doq-focus); outline-offset: 2px; }
 .doq-markdown th,.doq-markdown td { border: 1px solid var(--doq-border); padding: .65rem .8rem; text-align: left; }
 .doq-markdown th { background: var(--doq-surface); }
-.doq-toc { position: absolute; left: calc(100% + 2rem); top: 8rem; display: grid; gap: .7rem; width: 11rem; font-size: .78rem; color: var(--doq-muted); }
+.doq-toc { position: absolute; left: calc(var(--doq-content-width) + 2rem); top: 8rem; display: grid; gap: .7rem; width: 11rem; font-size: .78rem; color: var(--doq-muted); }
 .doq-toc p { margin: 0 0 .2rem; color: var(--doq-foreground); font-weight: 700; }
 .doq-toc a { line-height: 1.35; }
 .doq-toc a.level-three { padding-left: .7rem; }

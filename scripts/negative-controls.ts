@@ -131,6 +131,85 @@ const controls: Control[] = [
       });
     },
   },
+  {
+    name: 'doctor peer check',
+    breaks: 'doq doctor stops classifying an installed Angular outside the declared peer range as a failure',
+    expect: /fails on a missing Angular peer and a wrong Angular version/,
+    run: async (workspace) => {
+      await libraryCopy(workspace);
+      await mutate(
+        resolve(workspace, 'packages/doq/bin/cli/doctor.mjs'),
+        '      else if (ok === false) {',
+        '      else if (ok === undefined && false) {',
+      );
+      return sh(
+        'pnpm',
+        ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit/cli.spec.ts'],
+        workspace,
+      );
+    },
+  },
+  {
+    name: 'init path traversal',
+    breaks: 'doq init accepts ".." segments in --content-dir',
+    expect: /rejects unsafe --content-dir/,
+    run: async (workspace) => {
+      await libraryCopy(workspace);
+      await mutate(
+        resolve(workspace, 'packages/doq/bin/cli/init.mjs'),
+        "part === '.' || part === '..' || !SEGMENT.test(part)",
+        '!SEGMENT.test(part)',
+      );
+      return sh(
+        'pnpm',
+        ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit/cli.spec.ts'],
+        workspace,
+      );
+    },
+  },
+  {
+    name: 'init overwrite protection',
+    breaks: 'doq init overwrites an existing Markdown file that differs from the template',
+    expect: /never overwrites edited files/,
+    run: async (workspace) => {
+      await libraryCopy(workspace);
+      const init = resolve(workspace, 'packages/doq/bin/cli/init.mjs');
+      await mutate(
+        init,
+        "} else Object.assign(entry, { status: 'kept', note: 'exists; not overwritten' });",
+        "} else Object.assign(entry, { status: 'create' });",
+      );
+      await mutate(init, "{ flag: 'wx' }", "{ flag: 'w' }");
+      return sh(
+        'pnpm',
+        ['exec', 'vitest', 'run', '-c', 'vitest.unit.config.ts', 'packages/doq/test/unit/cli.spec.ts'],
+        workspace,
+      );
+    },
+  },
+  {
+    name: 'public API signature',
+    breaks: 'the packed declarations change the signature of defineDoqConfig although the export is still present',
+    expect: /defineDoqConfig/,
+    run: async (workspace) => {
+      const extracted = resolve(workspace, 'extracted');
+      sh('mkdir', ['-p', extracted], workspace);
+      if (
+        sh('tar', ['-xzf', resolve(repo, `artifacts/doqs-analog-${version}.tgz`), '-C', extracted], workspace)
+          .status !== 0
+      )
+        throw new Error('tar extract failed');
+      await mutate(
+        resolve(extracted, 'package/types/doqs-analog.d.ts'),
+        'declare function defineDoqConfig(config: DoqConfig): DoqConfig;',
+        'declare function defineDoqConfig(config: DoqConfig, required: string): DoqConfig;',
+      );
+      const broken = resolve(workspace, 'broken.tgz');
+      if (sh('tar', ['-czf', broken, '-C', extracted, 'package'], workspace, { COPYFILE_DISABLE: '1' }).status !== 0)
+        throw new Error('tar create failed');
+      return sh('node', ['scripts/public-api.ts', 'check', broken], repo);
+    },
+  },
 ];
 
 let escaped = 0;

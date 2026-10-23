@@ -18,6 +18,21 @@ export const apps = {
       'dist/analog/public',
     ),
   },
+  // Bare Analog apps that adopted Doqs with `doq init` (scripts/init-consumer.ts), built from the packed tarball.
+  initEmbedded: {
+    url: 'http://127.0.0.1:4282',
+    root: resolve(
+      process.env.DOQ_INIT_EMBEDDED_DIR ?? resolve(tmpdir(), 'doq-init-consumer-embedded'),
+      'dist/analog/public',
+    ),
+  },
+  initDocsFirst: {
+    url: 'http://127.0.0.1:4283',
+    root: resolve(
+      process.env.DOQ_INIT_DOCS_FIRST_DIR ?? resolve(tmpdir(), 'doq-init-consumer-docs-first'),
+      'dist/analog/public',
+    ),
+  },
   consumer: {
     url: 'http://127.0.0.1:4275',
     root: resolve(process.env.DOQ_CONSUMER_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer'), 'dist/analog/public'),
@@ -51,7 +66,7 @@ const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
 // Specs that run in Firefox and WebKit as well as Chromium: routing, history, fragments, TOC, search, versions, tabs,
 // copy, drawer, focus, themes, overflow and axe. The rest of the suite is engine-independent and stays Chromium-only.
 const crossBrowserSpecs = [
-  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism/,
+  /docs-open|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism|official-docs/,
 ];
 
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
@@ -67,7 +82,7 @@ export default defineConfig({
   testIgnore: [
     // One cell of the Angular compatibility matrix: runs against a dedicated consumer (playwright.compat.config.ts).
     /compat\.spec/,
-    ...(withConsumer ? [] : [/consumer(-rich|-api)?\.spec/, /legacy\.spec/]),
+    ...(withConsumer ? [] : [/consumer(-rich|-api|-init)?\.spec/, /legacy\.spec/]),
     ...(withAdoption ? [] : [/adoption\.spec/]),
   ],
   outputDir: 'test-results',
@@ -105,6 +120,8 @@ export default defineConfig({
           server(apps.consumerA, 4279),
           server(apps.consumerLegacyA, 4280),
           server(apps.consumerLegacyB, 4281),
+          server(apps.initEmbedded, 4282),
+          server(apps.initDocsFirst, 4283),
         ]
       : []),
     ...(withAdoption ? [server(apps.adoption, 4278)] : []),

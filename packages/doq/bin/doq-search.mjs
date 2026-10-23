@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { indexDoqSearch } from './search-index.mjs';
+import { assertSupportedNode } from './cli/node-support.mjs';
+
+assertSupportedNode('doq-search');
 
 const [command, siteDir, ...rest] = process.argv.slice(2);
 const usage = 'Usage: doq-search index <siteDir> [--output <dir>]\n  Run after the static build, e.g. doq-search index dist/analog/public';

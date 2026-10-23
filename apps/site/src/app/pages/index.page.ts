@@ -226,7 +226,7 @@ The text after a demo is still ordinary, searchable Markdown.`;
       </section>
 
       <section id="features" class="mx-auto w-[min(100%-2rem,70rem)] border-t border-border py-14 sm:py-20" aria-labelledby="features-title">
-        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs 0.6 does</h2>
+        <h2 id="features-title" class="text-[clamp(1.8rem,4vw,2.6rem)] leading-tight">What Doqs does</h2>
         <ul class="mt-8 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4" moveStagger moveStaggerStep="60ms">
           @for (feature of features; track feature.title) {
             <li [class]="feature.featured ? 'sm:col-span-2 lg:row-span-2' : ''" moveInView="fade-up">
@@ -236,9 +236,6 @@ The text after a demo is still ordinary, searchable Markdown.`;
                   <volt-card-title class="mt-3">
                     <h3 [class]="feature.featured ? 'text-2xl' : 'text-lg'">{{ feature.title }}</h3>
                   </volt-card-title>
-                  @if (feature.featured) {
-                    <volt-badge variant="solid" class="mt-2 w-fit">New in 0.3</volt-badge>
-                  }
                 </volt-card-header>
                 <volt-card-content>
                   <p class="m-0 text-sm text-muted-foreground" [class.text-base]="feature.featured">{{ feature.text }}</p>
@@ -265,8 +262,9 @@ The text after a demo is still ordinary, searchable Markdown.`;
         </div>
         <p class="mt-6 max-w-3xl text-muted-foreground">
           Import <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">&#64;doqs/analog/styles.css</code> once in your global stylesheet.
-          The complete guide lives in the
-          <a class="text-primary underline underline-offset-4" [href]="links.readme" rel="noopener">package README</a>.
+          Run <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">pnpm exec doq init</code> to scaffold the files and
+          <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em]">pnpm exec doq doctor</code> to check the integration. The complete guide is the
+          <a class="text-primary underline underline-offset-4" href="/docs/getting-started">documentation</a>.
         </p>
       </section>
 

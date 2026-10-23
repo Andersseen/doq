@@ -54,6 +54,52 @@ run(
 const sha = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: outDir, encoding: 'utf8' }).stdout.trim();
 console.log(`adoption: Angular Movement checkout ${sha}`);
 
+// Doqs 0.8 onboarding on the real checkout, before anything is integrated by hand: install the packed tarball, let `doq doctor`
+// report the real gaps, scaffold a SEPARATE documentation region (/handbook; the host's /docs and /demos stay untouched) with
+// `doq init`, and prove that the dry run writes nothing and that nothing outside the region is touched.
+run('pnpm', ['install', '--ignore-scripts', '--no-frozen-lockfile'], outDir);
+run('pnpm', ['add', `file:${tarball}`, 'pagefind@1.5.2', '--ignore-scripts'], outDir);
+const doq = (cliArgs: string[], expected: number) => {
+  const result = spawnSync('pnpm', ['--silent', 'exec', 'doq', ...cliArgs, '--json'], {
+    cwd: outDir,
+    encoding: 'utf8',
+  });
+  if (result.status !== expected)
+    throw new Error(
+      `adoption: doq ${cliArgs.join(' ')} exited ${result.status}, expected ${expected}\n${result.stdout}${result.stderr}`,
+    );
+  return JSON.parse(result.stdout) as any;
+};
+const status = (report: any, id: string) => report.findings.find((item: any) => item.id === id)?.status;
+const before = doq(['doctor'], 1);
+for (const id of ['config.paths', 'setup.providers', 'setup.stylesheet', 'setup.prerender'])
+  if (status(before, id) !== 'FAIL')
+    throw new Error(`adoption: doctor must report ${id} as FAIL before integration, got ${status(before, id)}`);
+if (status(before, 'peer.@angular/core') !== 'PASS')
+  throw new Error('adoption: Angular 22 must satisfy the declared peer range');
+if (before.findings.some((item: any) => item.status === 'FAIL' && !item.fix))
+  throw new Error('adoption: every failing finding needs a fix');
+console.log(`adoption: doctor before integration: ${JSON.stringify(before.summary)}`);
+const hostFilesBefore = spawnSync('git', ['status', '--porcelain'], { cwd: outDir, encoding: 'utf8' }).stdout;
+const initArgs = ['init', '--content-dir', 'handbook', '--base-path', '/handbook'];
+const dry = doq([...initArgs, '--dry-run'], 0);
+if (spawnSync('git', ['status', '--porcelain'], { cwd: outDir, encoding: 'utf8' }).stdout !== hostFilesBefore)
+  throw new Error('adoption: doq init --dry-run changed the working tree');
+if (!dry.files.every((file: any) => file.status === 'create'))
+  throw new Error('adoption: dry run did not plan to create every file');
+const initialized = doq(initArgs, 0);
+if (initialized.scaffold !== 'complete' || initialized.integration !== 'incomplete')
+  throw new Error(
+    `adoption: expected scaffold complete / integration incomplete, got ${initialized.scaffold} / ${initialized.integration}`,
+  );
+const touched = spawnSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: outDir, encoding: 'utf8' })
+  .stdout.split('\n')
+  .filter((line) => line && !/package\.json|pnpm-lock/.test(line));
+if (touched.some((line) => !/^\?\? src\/(doq\.paths\.ts|content\/handbook\/)/.test(line)))
+  throw new Error(`adoption: doq init touched files outside its region:\n${touched.join('\n')}`);
+// The proof's own handbook content replaces the generated starter pages (the paths file is overwritten with the versioned one).
+await rm(resolve(outDir, 'src/content/handbook'), { recursive: true, force: true });
+
 await cp(resolve(overlay, 'src'), resolve(outDir, 'src'), { recursive: true });
 await edit('vite.config.ts', (text) =>
   text
@@ -82,8 +128,34 @@ await edit('package.json', (text) =>
   ),
 );
 
-run('pnpm', ['install', '--ignore-scripts', '--no-frozen-lockfile'], outDir);
-run('pnpm', ['add', `file:${tarball}`, 'pagefind@1.5.2', '--ignore-scripts'], outDir);
+// Doctor after the integration (overlay + patches above): every check it can establish passes, and `doq init` agrees that the
+// integration is complete and changes nothing.
+const afterIntegration = doq(['doctor'], 0);
+if (afterIntegration.summary.FAIL !== 0)
+  throw new Error(
+    `adoption: doctor FAIL after integration:\n${JSON.stringify(
+      afterIntegration.findings.filter((item: any) => item.status === 'FAIL'),
+      null,
+      2,
+    )}`,
+  );
+for (const id of [
+  'setup.providers',
+  'setup.stylesheet',
+  'setup.prerender',
+  'setup.deterministic',
+  'search.pagefind',
+  'search.index-step',
+  'versions.config',
+])
+  if (status(afterIntegration, id) !== 'PASS')
+    throw new Error(`adoption: doctor ${id} is ${status(afterIntegration, id)}, expected PASS`);
+console.log(`adoption: doctor after integration: ${JSON.stringify(afterIntegration.summary)}`);
+const again = doq(initArgs, 0);
+if (again.integration !== 'complete' || again.files.some((file: any) => file.status === 'create'))
+  throw new Error(
+    `adoption: init after integration should be complete and create nothing: ${JSON.stringify(again.files)}`,
+  );
 // API reference (Doqs 0.5): generated from the real public entry point with the checkout's own TypeScript, then
 // proven stale-sensitive. The checkout is disposable; nothing is committed to the Angular Movement repository.
 const apiArgs = [
@@ -191,6 +263,10 @@ run(
   ],
   repo,
 );
+const built = doq(['doctor', '--build'], 0);
+for (const id of ['build.routes', 'build.pagefind'])
+  if (status(built, id) !== 'PASS')
+    throw new Error(`adoption: doctor ${id} is ${status(built, id)} after the build, expected PASS`);
 console.log(`adoption: ready ${resolve(outDir, 'dist/analog/public')} (Angular Movement ${sha})`);
 
 if (process.argv.includes('--test')) {
