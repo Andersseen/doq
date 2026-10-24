@@ -1,21 +1,21 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject } from '@angular/core';
-import { NgComponentOutlet } from '@angular/common';
+import { NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { injectDoqCatalogs, injectDoqDocuments, injectDoqVersion, resolveDoqCopy } from './doq-catalog';
-import { DOQ_CONFIG } from './doq-config';
+import { DOQ_CONFIG } from '@doqs/analog/config';
 import { DoqPageMetadata } from './doq-metadata';
 import { DoqSearchComponent } from './doq-search.component';
 import { DoqVersionSwitcherComponent } from './doq-version-switcher.component';
-import { doqCanonicalUrl, doqVersionLinks } from './doq-versions';
-import { normalizeDoqPaths } from './doq-paths';
+import { doqCanonicalUrl, doqVersionLinks } from '@doqs/analog/config';
+import { normalizeDoqPaths } from '@doqs/analog/config';
 
 @Component({
   selector: 'doq-index',
   standalone: true,
-  imports: [RouterLink, NgComponentOutlet, DoqSearchComponent, DoqVersionSwitcherComponent],
+  imports: [RouterLink, NgComponentOutlet, NgTemplateOutlet, DoqSearchComponent, DoqVersionSwitcherComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="doq-index" [style.--doq-content-width]="config.contentWidth" [attr.data-doq-version]="versioned ? version.id : null">
+    <ng-template #content>
       @if (versionLinks.length > 1 || config.search?.enabled) {
         <div class="doq-topbar">
           @if (versionLinks.length > 1) { <doq-version-switcher [versions]="versionLinks" /> }
@@ -33,7 +33,12 @@ import { normalizeDoqPaths } from './doq-paths';
           <a class="doq-index-card" [routerLink]="item.routePath"><span>{{ item.group }}</span><strong>{{ item.title }}</strong><p>{{ item.description }}</p><span class="doq-index-arrow">Read guide →</span></a>
         }
       </div>
-    </main>
+    </ng-template>
+    @if (config.landmark === 'host') {
+      <div class="doq-index" [style.--doq-content-width]="config.contentWidth" [attr.data-doq-version]="versioned ? version.id : null"><ng-container *ngTemplateOutlet="content" /></div>
+    } @else {
+      <main class="doq-index" [style.--doq-content-width]="config.contentWidth" [attr.data-doq-version]="versioned ? version.id : null"><ng-container *ngTemplateOutlet="content" /></main>
+    }
   `,
 })
 export class DoqIndexComponent {

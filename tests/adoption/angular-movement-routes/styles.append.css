@@ -1,0 +1,14 @@
+/* Doqs handbook: map the host's design tokens onto the documentation tokens. */
+:root {
+  --host-docs-background: var(--color-bg);
+  --host-docs-foreground: var(--color-text);
+  --host-docs-primary: var(--color-accent);
+  --host-docs-secondary: var(--color-text-muted);
+  --host-docs-muted: var(--color-text-muted);
+  --host-docs-border: var(--color-border);
+  --host-docs-surface: var(--color-surface);
+  --host-docs-focus: var(--color-accent);
+  --host-docs-code-background: var(--color-code-bg);
+  --host-docs-code-foreground: var(--color-text);
+  --host-docs-scroll-offset: 5rem;
+}

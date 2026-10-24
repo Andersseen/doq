@@ -138,7 +138,7 @@ const controls: Control[] = [
     run: async (workspace) => {
       await libraryCopy(workspace);
       await mutate(
-        resolve(workspace, 'packages/doq/src/lib/doq-document.ts'),
+        resolve(workspace, 'packages/doq/config/src/lib/doq-document.ts'),
         'const routePath = joinDoqPath(basePath, slug);',
         'const routePath = joinDoqPath(basePath, sourceSlug);',
       );
@@ -170,7 +170,7 @@ const controls: Control[] = [
     run: async (workspace) => {
       await libraryCopy(workspace);
       await mutate(
-        resolve(workspace, 'packages/doq/src/lib/doq-search.ts'),
+        resolve(workspace, 'packages/doq/config/src/lib/doq-search.ts'),
         "if (base !== '/' && path !== base && !path.startsWith(`${base}/`)) return undefined;",
         '',
       );
@@ -284,7 +284,7 @@ const controls: Control[] = [
       )
         throw new Error('tar extract failed');
       await mutate(
-        resolve(extracted, 'package/types/doqs-analog.d.ts'),
+        resolve(extracted, 'package/types/doqs-analog-config.d.ts'),
         'declare function defineDoqConfig(config: DoqConfig): DoqConfig;',
         'declare function defineDoqConfig(config: DoqConfig, required: string): DoqConfig;',
       );

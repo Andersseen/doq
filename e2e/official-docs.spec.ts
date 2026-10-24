@@ -173,8 +173,9 @@ test.describe('E2E-100 the official site documents Doqs with Doqs', () => {
     for (const slug of ['', ...sitemap]) {
       await page.goto(`${docs}/${slug}`);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-      // The index view renders a main landmark, document views an article (see docs/roadmap/1.0-readiness.md).
-      await expect(page.locator('main, article.doq-article')).toHaveCount(1);
+      // LANDMARK-01: Doqs owns the main landmark; every documentation view has exactly one and none nests.
+      await expect(page.getByRole('main')).toHaveCount(1);
+      await expect(page.locator('main main')).toHaveCount(0);
     }
   });
 

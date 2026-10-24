@@ -56,6 +56,25 @@ jobs:
       - run: pnpm test:unit
       - run: pnpm test:components
 
+  tooling-windows:
+    name: Node tooling on Windows (CRLF checkout, junctions, paths)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      # This repository pins LF in .gitattributes; verify:portable converts its copy to CRLF itself, which is what a consumer
+      # repository without that attribute gets on Windows.
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify:portable
+      - run: pnpm api:check
+      - run: pnpm content:check
+      - run: pnpm exec vitest run -c vitest.unit.config.ts packages/doq/test/unit/cli.spec.ts packages/doq/test/unit/content.spec.ts packages/doq/test/unit/api-reference.spec.ts packages/doq/test/unit/portability.spec.ts
+
   build:
     name: Production builds and package
     runs-on: ubuntu-latest

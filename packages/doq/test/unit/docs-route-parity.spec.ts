@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expectedRoute } from '../../../../scripts/docs-check/lib.ts';
-import { doqPrerenderRoute } from '../../src/lib/doq-document';
+import { doqPrerenderRoute } from '../../config/src/lib/doq-document';
 
 describe('UNIT-142 docs:check route expectations (SEO-03)', () => {
   it('maps content files to the same routes as the library prerender helper', () => {

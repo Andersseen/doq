@@ -1,0 +1,14 @@
+/* Doqs: map Volt UI's theme tokens onto the documentation tokens. Light/dark follow Volt's `.dark` class on <html>. */
+:root {
+  --host-docs-background: var(--background);
+  --host-docs-foreground: var(--foreground);
+  --host-docs-primary: var(--primary);
+  --host-docs-secondary: var(--muted-foreground);
+  --host-docs-muted: var(--muted-foreground);
+  --host-docs-border: var(--border);
+  --host-docs-surface: var(--surface);
+  --host-docs-focus: var(--ring);
+  --host-docs-code-background: var(--muted);
+  --host-docs-code-foreground: var(--foreground);
+  --host-docs-scroll-offset: 5rem;
+}

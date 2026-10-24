@@ -9,7 +9,8 @@
     "useDefineForClassFields": false,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": { "@doqs/analog/config": ["./config/src/public-api.ts"] }
   },
   "angularCompilerOptions": { "strictTemplates": true },
   "include": ["src/**/*.ts", "test/**/*.ts"]

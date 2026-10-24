@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { defineDoqConfig, provideDoq } from '../../src/lib/doq-config';
+import { defineDoqConfig, provideDoq } from '../../config/src/lib/doq-config';
 import {
   createLatestGate,
   excerptSegments,
   mapPagefindFragment,
   normalizeDoqSearchConfig,
   normalizeSearchResultUrl,
-} from '../../src/lib/doq-search';
+} from '../../config/src/lib/doq-search';
 
 describe('UNIT-010 normalizeDoqSearchConfig', () => {
   it('is disabled with the default bundle path when omitted or empty', () => {

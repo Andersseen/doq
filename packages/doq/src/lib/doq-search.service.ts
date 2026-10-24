@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { DoqSearchResult, mapPagefindFragment, PagefindFragment } from './doq-search';
-import { DOQ_VERSION_FILTER } from './doq-versions';
+import { DoqSearchResult, mapPagefindFragment, PagefindFragment } from '@doqs/analog/config';
+import { DOQ_VERSION_FILTER } from '@doqs/analog/config';
 
 interface PagefindModule {
   search(query: string, options?: { filters?: Record<string, string> }): Promise<{ results: { data(): Promise<PagefindFragment> }[] }>;

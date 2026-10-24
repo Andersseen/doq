@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, output, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DoqVersionLink } from './doq-versions';
+import { DoqVersionLink } from '@doqs/analog/config';
 
 /**
  * Version selector: a native disclosure whose items are real links, so every destination is a prerendered URL that also works

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeDoc } from './content-state';
 import { renderDocs } from './harness';
 import { DoqSearchService } from '../../src/lib/doq-search.service';
-import { DoqSearchResult } from '../../src/lib/doq-search';
+import { DoqSearchResult } from '../../config/src/lib/doq-search';
 
 const docs: FakeDoc[] = [
   { source: 'intro', body: 'Intro body', attributes: { title: 'Introduction', group: 'Guide', order: 1 }, toc: [{ id: 'why', text: 'Why Doq', level: 2 }, { id: 'details', text: 'Details', level: 2 }] },

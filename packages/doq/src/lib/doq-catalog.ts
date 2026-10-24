@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { injectContentFiles } from '@analogjs/content';
-import { DOQ_CONFIG, DoqConfig } from './doq-config';
-import { DoqDocument, DoqDocumentAttributes, normalizeDoqDocument, sortDoqDocuments } from './doq-document';
-import { normalizeDoqPaths } from './doq-paths';
-import { assertDoqSlugNotReserved, DoqVersion, getDoqVersions } from './doq-versions';
+import { DOQ_CONFIG, DoqConfig } from '@doqs/analog/config';
+import { DoqDocument, DoqDocumentAttributes, normalizeDoqDocument, sortDoqDocuments } from '@doqs/analog/config';
+import { normalizeDoqPaths } from '@doqs/analog/config';
+import { assertDoqSlugNotReserved, DoqVersion, getDoqVersions } from '@doqs/analog/config';
 
 /**
  * Sorted, de-duplicated documents of one version of the configured tree (the current version by default).

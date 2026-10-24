@@ -633,3 +633,27 @@ describe('UNIT-170 symbol index in the manifest', () => {
     expect((await checkApiReference(opts)).upToDate).toBe(false);
   });
 });
+
+describe('UNIT-143 COMPAT-02 sources checked out with CRLF line endings', () => {
+  it('produce byte-identical pages as the LF checkout', async () => {
+    const source = {
+      'src/public-api.ts': `export * from './lib/thing';`,
+      'src/lib/thing.ts': [
+        '/**',
+        ' * First paragraph of the description.',
+        ' *',
+        ' * Second paragraph with a `code` span.',
+        ' */',
+        'export function thing(/** Which one. */ id: string): string {',
+        '  return id;',
+        '}',
+        '',
+      ].join('\n'),
+    };
+    const lf = await pages(source);
+    const windows = await pages(Object.fromEntries(Object.entries(source).map(([name, text]) => [name, text.replace(/\n/g, '\r\n')])));
+    expect([...windows]).toEqual([...lf]);
+    expect([...windows.values()].some((text) => text.includes('Second paragraph'))).toBe(true);
+    expect([...windows.values()].every((text) => !text.includes('\r'))).toBe(true);
+  });
+});

@@ -1,0 +1,66 @@
+# Consumer parity: Doqs against the documentation infrastructure of two real sites
+
+Evidence level in the last column: **E** = executed in a browser against a real checkout built from the packed tarball
+(`pnpm verify:adoption:routes`, `pnpm verify:adoption:volt`); **S** = source inspection only; **—** = not verified.
+Checkouts: Angular Movement `4e71e2f` (Angular 22, zoneless, Tailwind 4, Analog, `SmoothScrollService`), Volt UI `7c76ef3`
+(Angular 22, zoneless, Tailwind 4, Analog, Etyma localization, Cloudflare Pages). Both are disposable clones; nothing was pushed.
+
+Classes: **DOQS REPLACES** (the custom implementation can be removed), **HOST-OWNED** (stays in the application), **PARTIAL**,
+**BLOCKED**, **NOT VERIFIED**.
+
+## Angular Movement
+
+| Capability                                                                            | Class                                                                    | Evidence                                                                                                                                                      |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation sidebar (`docs.page.ts`, `docs-nav.ts`)                                 | DOQS REPLACES, for migrated pages                                        | E — nav built from the Markdown tree; groups, active state, mobile drawer                                                                                     |
+| Quick find / search (hand-written substring filter)                                   | DOQS REPLACES (and improves: full text)                                  | E — Pagefind finds body text and API symbols; the host filter only matched titles and keywords                                                                |
+| Previous/next (`docs-footer-nav`)                                                     | DOQS REPLACES                                                            | E                                                                                                                                                             |
+| Heading anchors, TOC                                                                  | DOQS REPLACES                                                            | E                                                                                                                                                             |
+| Code display (`code-block`)                                                           | DOQS REPLACES for documentation; HOST-OWNED where `/demos` still uses it | E (docs), S (demos)                                                                                                                                           |
+| API reference (`reference.page.ts`, hand-maintained)                                  | DOQS REPLACES                                                            | E — `doq-api` generates `/docs/reference` from the public entry; input names equal those declared in the source                                               |
+| Source-backed usage example                                                           | DOQS REPLACES (the page copied code by hand)                             | E — `::source` shows the real `provideMovement`                                                                                                               |
+| Live animation demonstration                                                          | PARTIAL — the playground needs a small host wrapper                      | E — `moveEnter` has no outputs and plays once in `ngOnInit`; the wrapper re-creates the element per input combination                                         |
+| Full demo gallery (`/demos/*`, `demo-container`)                                      | HOST-OWNED                                                               | E — `/demos/enter` unchanged, reachable from Doqs content, Back/Forward cross the boundary                                                                    |
+| Motion-specific controls                                                              | HOST-OWNED (inside the playground wrapper)                               | E                                                                                                                                                             |
+| Smooth scrolling                                                                      | HOST-OWNED                                                               | E — wheel input is interpolated on a Doqs page; fragments still land under the offset                                                                         |
+| Host layout and theme                                                                 | HOST-OWNED, coexists                                                     | E — host navbar/footer, `--host-docs-*` mapped to its tokens, axe clean in both themes                                                                        |
+| SEO                                                                                   | HOST-OWNED + Doqs per-page title/description                             | E — `Title · Angular Movement`, description from frontmatter; no canonical invented                                                                           |
+| Existing URLs                                                                         | DOQS REPLACES with `unmatched: 'continue'`                               | E — `/docs/get-started`, `/docs/api-selection`, `/docs/accessibility`, `/docs/reference` unchanged; unmigrated `/docs/*` keep the host page; unknown URLs 404 |
+| Landmarks                                                                             | HOST-OWNED (`landmark: 'host'`)                                          | E — the shell's `<main>` is the only one; the host's own `/demos/enter` nests a second `main` (host defect, reported)                                         |
+| Remaining pages (introduction, api, patterns, presets, migration, mcp, choose-a-tool) | NOT VERIFIED as Markdown                                                 | S — content conversion work, no Doqs gap found                                                                                                                |
+| Custom animation tooling for docs                                                     | HOST-OWNED                                                               | S                                                                                                                                                             |
+
+## Volt UI
+
+| Capability                                                                   | Class                                                 | Evidence                                                                                                                              |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Component navigation (`docs-nav-list`, `docs-mobile-nav`, `docs-page-shell`) | DOQS REPLACES for migrated pages                      | E — sidebar, drawer, focus after navigation                                                                                           |
+| TOC, breadcrumbs, pager                                                      | DOQS REPLACES (breadcrumb is a plain trail)           | E                                                                                                                                     |
+| API reference tables (`api-reference.generated.ts`, 1858 lines)              | DOQS REPLACES                                         | E — `doq-api` generated 196 symbol pages from `public-api.ts`; the button page links `VoltButton`                                     |
+| Preview + input controls                                                     | DOQS REPLACES with playgrounds                        | E — button variant/size/label/disabled drive the real `volt-button`, `pressed` recorded                                               |
+| Component outputs                                                            | DOQS REPLACES                                         | E — popover `openChange`, select change, dialog `closed`                                                                              |
+| Copy code                                                                    | DOQS REPLACES (code panel follows controls)           | E — clipboard read-back in Chromium                                                                                                   |
+| Source code panel (copy-and-own source)                                      | DOQS REPLACES with `::source`                         | E — `variants.ts` lines read from the checkout                                                                                        |
+| Recipes                                                                      | DOQS REPLACES the page, HOST-OWNED the component      | E — `/docs/recipes/async-search` keeps its URL, renders the host's `AsyncSearchRecipe` via `::demo`                                   |
+| Blocks and layouts galleries                                                 | HOST-OWNED                                            | E — `/docs/blocks/hero`, `/docs/layouts/login` untouched                                                                              |
+| Theme Studio                                                                 | HOST-OWNED                                            | E — `/create-theme` untouched                                                                                                         |
+| Light/dark                                                                   | DOQS REPLACES the docs chrome; theme stays HOST-OWNED | E — follows Volt's `dark` class; axe clean after the contrast fix in 0.11                                                             |
+| Overlay components in playgrounds                                            | PARTIAL                                               | E — inline: dialog, popover, select work with focus return; inside the **expanded** preview see `docs/adoption/migration-findings.md` |
+| Existing URLs                                                                | DOQS REPLACES with `unmatched: 'continue'`            | E                                                                                                                                     |
+| Localization (`/es`, `/uk`, Etyma catalogs)                                  | **BLOCKED**                                           | E — see below                                                                                                                         |
+| Landmarks                                                                    | HOST-OWNED (`landmark: 'host'`)                       | E                                                                                                                                     |
+| Application SSR on Cloudflare                                                | HOST-OWNED                                            | — the proof prerenders with the Node preset; the Cloudflare worker path was not exercised                                             |
+
+### BLOCKED: localization
+
+1. _What exists now._ Every Volt UI page title, paragraph and nav label is an Etyma key resolved from a remote catalog; each page
+   exists at `/…`, `/es/…` and `/uk/…`.
+2. _What the consumer requires._ Migrated pages keep three languages and the language switcher.
+3. _What is missing._ Doqs has one content tree and one `basePath`; Doqs chrome labels ("Search", "On this page", "Previous", …) are English;
+   Pagefind is indexed once; there is no locale in the route shape. A migrated page loses `/es` and `/uk`: the locale-prefixed URL falls through to
+   Analog's own Markdown route (no Doqs chrome, verified).
+4. _Should Doqs implement it?_ A small, host-owned copy override is cheap; a locale-aware content tree, search index and routes is a separate minor.
+5. _Consumer-owned?_ The language switch and catalogs stay with the host.
+6. _Evidence._ `e2e/adoption-volt.spec.ts` "COMPAT-03".
+
+Verdict: Volt UI cannot migrate its localized pages to Doqs today without losing its translations. It can migrate pages that exist only in English.

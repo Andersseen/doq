@@ -1,10 +1,10 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
-import { DOQ_CONFIG } from './doq-config';
-import { createLatestGate, DoqSearchResult, normalizeDoqSearchConfig } from './doq-search';
+import { DOQ_CONFIG } from '@doqs/analog/config';
+import { createLatestGate, DoqSearchResult, normalizeDoqSearchConfig } from '@doqs/analog/config';
 import { DoqSearchService, DoqVersionNotIndexedError } from './doq-search.service';
-import { DoqVersion } from './doq-versions';
+import { DoqVersion } from '@doqs/analog/config';
 
 type SearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'unavailable' | 'unindexed';
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { doqPrerenderRoute } from '../../src/lib/doq-document';
-import { defineDoqConfig } from '../../src/lib/doq-config';
-import { doqPrerenderRoutes, normalizeDoqPaths } from '../../src/lib/doq-paths';
-import { assertDoqSlugNotReserved, doqCanonicalUrl, doqVersionLinks, getDoqVersions, normalizeDoqVersioning } from '../../src/lib/doq-versions';
+import { doqPrerenderRoute } from '../../config/src/lib/doq-document';
+import { defineDoqConfig } from '../../config/src/lib/doq-config';
+import { doqPrerenderRoutes, normalizeDoqPaths } from '../../config/src/lib/doq-paths';
+import { assertDoqSlugNotReserved, doqCanonicalUrl, doqVersionLinks, getDoqVersions, normalizeDoqVersioning } from '../../config/src/lib/doq-versions';
 
 const versioning = { current: { id: 'latest', label: 'Latest' }, archives: [{ id: '1.3', label: 'v1.3', contentDirectory: 'docs-v1-3' }, { id: '1.2', contentDirectory: 'docs-v1-2' }] } as const;
 
@@ -141,7 +141,7 @@ describe('UNIT-113 prerender routes and reserved prefix (BUILD-01, VER-08, VER-0
 });
 
 describe('UNIT-114 duplicate slugs across versions (VER-07, VER-08)', async () => {
-  const { normalizeDoqDocument, sortDoqDocuments } = await import('../../src/lib/doq-document');
+  const { normalizeDoqDocument, sortDoqDocuments } = await import('../../config/src/lib/doq-document');
   const file = (dir: string, name: string, slug?: string) => ({ filename: `/p/src/content/${dir}/${name}.md`, attributes: slug ? { slug } : {} });
 
   it('allows the same slug and title in separate version catalogs', () => {

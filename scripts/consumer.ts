@@ -4,7 +4,9 @@
  * The consumer is a copy of a showcase's sources with its own manifest and lockfile, installed outside
  * this workspace from the tarball (`file:`), so nothing resolves through `workspace:` links or library sources.
  * Showcase B (docs-first, mounted at the root) is the default; `--app=showcase-a` builds the embedded scenario
- * (documentation under /docs inside a host site). `--no-authoring` removes the 0.10 content authoring (authored pages, the
+ * (documentation under /docs inside a host site). `--zone` (embedded scenario only) turns the copy into a Zone.js application: `zone.js`
+ * is installed and imported on the client and the server and `provideZoneChangeDetection()` replaces the zoneless default of
+ * Angular 21. `--no-authoring` removes the 0.10 content authoring (authored pages, the
  * generated pages, `doq.content.json`, the Vite plugin), which reproduces a 0.9-style consumer that must keep working
  * unchanged. `--unversioned` strips the versioning configuration and the archive
  * fixtures, which reproduces a Doqs 0.5-style consumer that must keep working unchanged on 0.6.
@@ -34,6 +36,8 @@ const unversioned = flags.includes('--unversioned');
 const stress = Number(flags.find((flag) => flag.startsWith('--stress='))?.slice('--stress='.length) ?? 0);
 const skipApi = flags.includes('--skip-api');
 const noAuthoring = flags.includes('--no-authoring');
+const zone = flags.includes('--zone');
+if (zone && app !== 'showcase-a') throw new Error('--zone is only defined for --app=showcase-a');
 // --angular=22: install Angular 22 with TypeScript 6 (the range Angular 22 supports) instead of the workspace's Angular 21.
 // Every other package keeps the version range of the showcase, and peer dependencies are checked strictly, never silenced.
 const angular = flags.find((flag) => flag.startsWith('--angular='))?.slice('--angular='.length);
@@ -45,16 +49,18 @@ const withoutGuard = flags.includes('--without-deterministic-markdown');
 const tarball = resolve(positional[0] ?? `artifacts/doqs-analog-${version}.tgz`);
 const outDir = resolve(
   positional[1] ??
-    (noAuthoring
-      ? (process.env['DOQ_CONSUMER_PLAIN_DIR'] ??
-        resolve(tmpdir(), `doq-e2e-consumer-plain${app === 'showcase-a' ? '-a' : ''}`))
-      : unversioned
-        ? app === 'showcase-a'
-          ? (process.env['DOQ_CONSUMER_LEGACY_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a'))
-          : (process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b'))
-        : app === 'showcase-a'
-          ? (process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a'))
-          : (process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'))),
+    (zone
+      ? (process.env['DOQ_CONSUMER_ZONE_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-zone'))
+      : noAuthoring
+        ? (process.env['DOQ_CONSUMER_PLAIN_DIR'] ??
+          resolve(tmpdir(), `doq-e2e-consumer-plain${app === 'showcase-a' ? '-a' : ''}`))
+        : unversioned
+          ? app === 'showcase-a'
+            ? (process.env['DOQ_CONSUMER_LEGACY_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a'))
+            : (process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b'))
+          : app === 'showcase-a'
+            ? (process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a'))
+            : (process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'))),
 );
 
 if (outDir === repo || outDir.startsWith(`${repo}/`))
@@ -67,6 +73,29 @@ await rm(outDir, { recursive: true, force: true });
 await mkdir(outDir, { recursive: true });
 const skip = new Set(['node_modules', 'dist', '.turbo', '.angular', 'AGENTS.md', 'CLAUDE.md']);
 await cp(source, outDir, { recursive: true, filter: (path) => !skip.has(path.split('/').pop() ?? '') });
+
+if (zone) {
+  const patch = async (file: string, change: (text: string) => string) => {
+    const path = resolve(outDir, file);
+    const before = await readFile(path, 'utf8');
+    const after = change(before);
+    if (after === before) throw new Error(`--zone: patch for ${file} changed nothing`);
+    await writeFile(path, after);
+  };
+  await patch('src/main.ts', (text) => `import 'zone.js';\n${text}`);
+  await patch('src/main.server.ts', (text) => `import 'zone.js/node';\n${text}`);
+  await patch('src/app/app.config.ts', (text) =>
+    text
+      .replace(
+        "import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';",
+        "import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';",
+      )
+      .replace(
+        'provideBrowserGlobalErrorListeners(),',
+        'provideBrowserGlobalErrorListeners(),\n    provideZoneChangeDetection({ eventCoalescing: true }),',
+      ),
+  );
+}
 
 if (unversioned) {
   // A 0.5-style configuration: only contentDirectory and basePath, no archives, no versioned fixtures.
@@ -137,8 +166,9 @@ if (slowMarkdown || withoutGuard) {
 }
 
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
-manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer'}${noAuthoring ? '-plain' : ''}${unversioned ? '-unversioned' : ''}${angular ? `-ng${angular}` : ''}`;
+manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer'}${noAuthoring ? '-plain' : ''}${zone ? '-zone' : ''}${unversioned ? '-unversioned' : ''}${angular ? `-ng${angular}` : ''}`;
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
+if (zone) manifest.dependencies['zone.js'] = '~0.15.1';
 if (angular === '22') {
   for (const group of ['dependencies', 'devDependencies'] as const)
     for (const name of Object.keys(manifest[group] ?? {}))

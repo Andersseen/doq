@@ -61,10 +61,16 @@ const memberName = (member: ts.TypeElement | ts.ClassElement) => {
 };
 
 /** Reads the exported declarations of one declaration file, following local `export { a as b }` lists. */
-export function readDeclarations(fileName: string, source: string): EntryReport {
+export function readDeclarations(
+  fileName: string,
+  source: string,
+  /** Looks a name up in another entry point of the same package (a bundled declaration may re-export from a sibling entry). */
+  resolveExternal: (specifier: string, name: string) => Declaration | undefined = () => undefined,
+): EntryReport {
   const sf = ts.createSourceFile(fileName, source, ts.ScriptTarget.ES2022, true);
   const declared = new Map<string, ts.Node[]>();
   const exported = new Map<string, string>(); // public name → local name
+  const external = new Map<string, Declaration>(); // public name → declaration resolved from a sibling entry point
   const add = (name: string, node: ts.Node) => declared.set(name, [...(declared.get(name) ?? []), node]);
   const isExported = (node: ts.Node) =>
     ts.canHaveModifiers(node) &&
@@ -77,11 +83,18 @@ export function readDeclarations(fileName: string, source: string): EntryReport 
         if (isExported(statement)) exported.set(name, name);
       }
     } else if (ts.isExportDeclaration(statement)) {
-      assert.ok(
-        !statement.moduleSpecifier,
-        `${fileName}: re-exports from other modules are not expected in a bundled declaration`,
-      );
-      if (statement.exportClause && ts.isNamedExports(statement.exportClause))
+      if (statement.moduleSpecifier) {
+        const specifier = (statement.moduleSpecifier as ts.StringLiteral).text;
+        assert.ok(
+          statement.exportClause && ts.isNamedExports(statement.exportClause),
+          `${fileName}: "export * from '${specifier}'" is not expected in a bundled declaration`,
+        );
+        for (const element of statement.exportClause.elements) {
+          const resolved = resolveExternal(specifier, (element.propertyName ?? element.name).text);
+          assert.ok(resolved, `${fileName}: cannot resolve re-export "${element.name.text}" from '${specifier}'`);
+          external.set(element.name.text, resolved);
+        }
+      } else if (statement.exportClause && ts.isNamedExports(statement.exportClause))
         for (const element of statement.exportClause.elements)
           exported.set(element.name.text, (element.propertyName ?? element.name).text);
     } else if (
@@ -96,7 +109,7 @@ export function readDeclarations(fileName: string, source: string): EntryReport 
       if (isExported(statement)) exported.set(statement.name.text, statement.name.text);
     }
   }
-  const report: EntryReport = {};
+  const report: EntryReport = Object.fromEntries(external);
   for (const [publicName, local] of [...exported].sort(([a], [b]) => (a < b ? -1 : 1))) {
     const nodes = declared.get(local);
     assert.ok(nodes, `${fileName}: export "${publicName}" has no declaration in the file`);
@@ -151,7 +164,13 @@ async function readTarball(tarball: string): Promise<ApiReport> {
     const root = join(temp, 'package');
     const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
     const entries: Record<string, EntryReport> = {};
-    for (const [subpath, target] of Object.entries<any>(manifest.exports)) {
+    // Sibling entries first: the browser entry re-exports from `@doqs/analog/config`.
+    const subpaths = Object.entries<any>(manifest.exports).sort(([a], [b]) => Number(a === '.') - Number(b === '.'));
+    const resolveExternal = (specifier: string, name: string) => {
+      const sibling = specifier.replace(/^@doqs\/analog/, '.');
+      return entries[sibling]?.[name];
+    };
+    for (const [subpath, target] of subpaths) {
       if (typeof target === 'string' || subpath === './package.json') {
         if (typeof target === 'string')
           assert.ok(existsSync(join(root, target)), `export ${subpath} points at a missing file ${target}`);
@@ -160,16 +179,25 @@ async function readTarball(tarball: string): Promise<ApiReport> {
       assert.ok(target.types && target.default, `export ${subpath} must declare both "types" and "default"`);
       for (const path of [target.types, target.default])
         assert.ok(existsSync(join(root, path)), `export ${subpath} points at a missing file ${path}`);
-      entries[subpath] = readDeclarations(target.types, await readFile(join(root, target.types), 'utf8'));
+      entries[subpath] = readDeclarations(
+        target.types,
+        await readFile(join(root, target.types), 'utf8'),
+        resolveExternal,
+      );
     }
     const files = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
       .map((file) => file.replace(/^package\//, ''))
       .sort();
+    const ordered = Object.fromEntries(
+      Object.keys(manifest.exports)
+        .filter((key) => key in entries)
+        .map((key) => [key, entries[key]!]),
+    );
     return {
       version: manifest.version,
-      entries,
+      entries: ordered,
       files: files.filter((file) => /\.(d\.mts|d\.ts)$/.test(file)),
       bin: manifest.bin,
     };

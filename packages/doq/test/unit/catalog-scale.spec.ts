@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeDoqDocument, sortDoqDocuments, doqPrerenderRoute } from '../../src/lib/doq-document';
+import { normalizeDoqDocument, sortDoqDocuments, doqPrerenderRoute } from '../../config/src/lib/doq-document';
 
 const file = (index: number, directory: string) => ({
   filename: `/project/src/content/${directory}/group-${Math.floor(index / 25)}/doc-${index}.md`,

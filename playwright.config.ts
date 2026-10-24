@@ -18,6 +18,14 @@ export const apps = {
       'dist/analog/public',
     ),
   },
+  // Angular Movement route-preserving proof (scripts/adoption-routes.ts): migrated pages keep their /docs/* URLs next to host-owned /demos/*.
+  adoptionRoutes: {
+    url: 'http://127.0.0.1:4284',
+    root: resolve(
+      process.env.DOQ_ADOPTION_ROUTES_DIR ?? resolve(tmpdir(), 'doq-adoption-angular-movement-routes'),
+      'dist/analog/public',
+    ),
+  },
   // Bare Analog apps that adopted Doqs with `doq init` (scripts/init-consumer.ts), built from the packed tarball.
   initEmbedded: {
     url: 'http://127.0.0.1:4282',
@@ -42,6 +50,19 @@ export const apps = {
     url: 'http://127.0.0.1:4279',
     root: resolve(process.env.DOQ_CONSUMER_A_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-a'), 'dist/analog/public'),
   },
+  // Volt UI route-preserving proof (scripts/adoption-volt.ts): migrated component pages keep their /docs/* URLs next to host-owned pages.
+  adoptionVolt: {
+    url: 'http://127.0.0.1:4286',
+    root: resolve(process.env.DOQ_ADOPTION_VOLT_DIR ?? resolve(tmpdir(), 'doq-adoption-volt-ui'), 'dist/analog/public'),
+  },
+  // The embedded consumer as a Zone.js application (`scripts/consumer.ts --zone`): zone.js loaded, provideZoneChangeDetection().
+  consumerZone: {
+    url: 'http://127.0.0.1:4285',
+    root: resolve(
+      process.env.DOQ_CONSUMER_ZONE_DIR ?? resolve(tmpdir(), 'doq-e2e-consumer-zone'),
+      'dist/analog/public',
+    ),
+  },
   // Doqs 0.5-style consumers (no `versioning`), built from the same tarball: they must behave exactly as in 0.5.
   consumerLegacyA: {
     url: 'http://127.0.0.1:4280',
@@ -62,11 +83,13 @@ export const apps = {
 // E2E_SKIP_CONSUMER=1 (focused local runs) skips the tarball-installed consumer and its tests.
 const withConsumer = !process.env.E2E_SKIP_CONSUMER;
 const withAdoption = !!process.env.DOQ_ADOPTION_DIR;
+const withAdoptionRoutes = !!process.env.DOQ_ADOPTION_ROUTES_DIR;
+const withAdoptionVolt = !!process.env.DOQ_ADOPTION_VOLT_DIR;
 
 // Specs that run in Firefox and WebKit as well as Chromium: routing, history, fragments, TOC, search, versions, tabs,
 // copy, drawer, focus, themes, overflow and axe. The rest of the suite is engine-independent and stays Chromium-only.
 const crossBrowserSpecs = [
-  /docs-open|playgrounds|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism|official-docs|authoring/,
+  /adoption-routes-browsers|adoption-volt-browsers|docs-open|consumer-zone|playgrounds|slugs|toc|search\.spec|versions\.spec|mobile-navigation|code-copy|rich-content|responsive|theme|accessibility|pagination|hardening|determinism|official-docs|authoring/,
 ];
 
 const server = (app: (typeof apps)[keyof typeof apps], port: number) => ({
@@ -82,8 +105,10 @@ export default defineConfig({
   testIgnore: [
     // One cell of the Angular compatibility matrix: runs against a dedicated consumer (playwright.compat.config.ts).
     /compat\.spec/,
-    ...(withConsumer ? [] : [/consumer(-rich|-api|-init|-playgrounds)?\.spec/, /legacy\.spec/]),
+    ...(withConsumer ? [] : [/consumer(-rich|-api|-init|-playgrounds|-zone)?\.spec/, /legacy\.spec/]),
     ...(withAdoption ? [] : [/adoption\.spec/]),
+    ...(withAdoptionRoutes ? [] : [/adoption-routes/]),
+    ...(withAdoptionVolt ? [] : [/adoption-volt/]),
   ],
   outputDir: 'test-results',
   fullyParallel: true,
@@ -120,10 +145,13 @@ export default defineConfig({
           server(apps.consumerA, 4279),
           server(apps.consumerLegacyA, 4280),
           server(apps.consumerLegacyB, 4281),
+          server(apps.consumerZone, 4285),
           server(apps.initEmbedded, 4282),
           server(apps.initDocsFirst, 4283),
         ]
       : []),
     ...(withAdoption ? [server(apps.adoption, 4278)] : []),
+    ...(withAdoptionRoutes ? [server(apps.adoptionRoutes, 4284)] : []),
+    ...(withAdoptionVolt ? [server(apps.adoptionVolt, 4286)] : []),
   ],
 });

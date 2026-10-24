@@ -6,7 +6,7 @@ import {
   normalizeDoqDocument,
   sortDoqDocuments,
   type DoqDocumentAttributes,
-} from '../../packages/doq/src/lib/doq-document.ts';
+} from '../../packages/doq/config/src/lib/doq-document.ts';
 
 const doc = (filename: string, attributes: DoqDocumentAttributes = {}) =>
   normalizeDoqDocument({ filename, attributes }, 'docs', '/docs');

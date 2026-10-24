@@ -79,7 +79,8 @@ async function readIfFile(/** @type {string} */ path) {
   const stat = await lstat(path).catch(() => undefined);
   if (!stat) return undefined;
   if (!stat.isFile()) throw new DoqApiError(`doq-api: ${path} exists and is not a regular file; refusing to touch it.`);
-  return readFile(path, 'utf8');
+  // Git on Windows (core.autocrlf) checks text files out with CRLF; a generated page that differs only by line endings is unchanged.
+  return (await readFile(path, 'utf8')).replace(/\r\n?/g, '\n');
 }
 
 /**
