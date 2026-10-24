@@ -73,6 +73,7 @@ try {
     '--strict',
   ]);
   assert.equal(api.status, 0, api.out);
+  assert.ok(api.out.includes('src/content/docs/reference/generated'), `doq-api prints paths with "/": ${api.out}`);
   pass('doq-api check --strict passes on CRLF sources');
 
   const manifest = JSON.parse(await readFile(join(project, 'src/authoring/docs/.doq-content.json'), 'utf8')) as {

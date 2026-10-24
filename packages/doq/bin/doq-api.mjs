@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { relative, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 import { DoqApiError, checkApiReference, generateApiReference, strictMessage } from './api-reference.mjs';
 import { conflictMessage } from './api-reference/output.mjs';
@@ -86,7 +86,7 @@ function printDiagnostics(/** @type {{ severity: string, symbol: string, message
 try {
   if (command === 'generate') {
     const result = await generateApiReference(options);
-    const shown = relative(resolve(options.cwd ?? '.'), result.outDir) || '.';
+    const shown = relative(resolve(options.cwd ?? '.'), result.outDir).split(sep).join('/') || '.';
     printDiagnostics(result.diagnostics);
     const changed = result.written.length + result.removed.length;
     console.log(
@@ -94,7 +94,7 @@ try {
     );
   } else {
     const result = await checkApiReference(options);
-    const shown = relative(resolve(options.cwd ?? '.'), result.outDir) || '.';
+    const shown = relative(resolve(options.cwd ?? '.'), result.outDir).split(sep).join('/') || '.';
     printDiagnostics(result.diagnostics);
     if (result.problems.length) fail(strictMessage(result.problems), 1);
     if (result.conflicts.length) fail(conflictMessage(result.conflicts), 1);
