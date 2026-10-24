@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { doqPrerenderRoutes, normalizeDoqPaths } from '../../src/lib/doq-paths';
-import { defineDoqConfig, provideDoq } from '../../src/lib/doq-config';
+import { doqPrerenderRoutes, normalizeDoqPaths } from '../../config/src/lib/doq-paths';
+import { defineDoqConfig, provideDoq } from '../../config/src/lib/doq-config';
 
 describe('UNIT-001 normalizeDoqPaths', () => {
   it.each([

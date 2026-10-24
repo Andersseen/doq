@@ -1,5 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 
+/**
+ * @deprecated Example component of the Doqs pilot that leaked into the public surface; it is not a Doqs feature. Register your own
+ * components with `DoqConfig.demos` instead. It keeps working through 0.x and 1.x and is removed only in a major release.
+ */
 @Component({
   selector: 'doq-button-demo',
   standalone: true,

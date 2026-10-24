@@ -49,13 +49,14 @@ def test_contract_001_manifest_exports_resolve_to_shipped_files(package_files, m
 
 def test_contract_002_declarations_expose_the_public_api(package_files):
     """CONTRACT-002: the shipped .d.ts declares every documented public symbol."""
-    declarations = package_files["types/doqs-analog.d.ts"].decode()
+    # Configuration declarations live in the `@doqs/analog/config` entry since 0.11; the root re-exports them.
+    declarations = package_files["types/doqs-analog.d.ts"].decode() + package_files["types/doqs-analog-config.d.ts"].decode()
     missing = [name for name in PUBLIC_EXPORTS if not re.search(rf"\b{name}\b", declarations)]
     assert not missing, f"not declared: {missing}"
     runtime = package_files["fesm2022/doqs-analog.mjs"].decode()
-    export_clause = re.search(r"export \{([^}]*)\}", runtime)
-    assert export_clause, "bundle has no export clause"
-    exported = {item.split(" as ")[-1].strip() for item in export_clause.group(1).split(",")}
+    clauses = re.findall(r"export \{([^}]*)\}", runtime)
+    assert clauses, "bundle has no export clause"
+    exported = {item.split(" as ")[-1].strip() for clause in clauses for item in clause.split(",") if item.strip()}
     runtime_symbols = [name for name in PUBLIC_EXPORTS if name[0].islower() or name.endswith("Component")]
     assert not [name for name in runtime_symbols if name not in exported]
 

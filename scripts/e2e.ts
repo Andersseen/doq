@@ -50,6 +50,12 @@ const consumers = [
     unversioned: true,
     dir: resolve(process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b')),
   },
+  // The embedded consumer as a Zone.js application (zone.js loaded, provideZoneChangeDetection()).
+  {
+    app: 'showcase-a',
+    zone: true,
+    dir: resolve(process.env['DOQ_CONSUMER_ZONE_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-zone')),
+  },
 ];
 const initConsumers = [
   {
@@ -80,6 +86,7 @@ if (!skipConsumer) {
         consumer.dir,
         `--app=${consumer.app}`,
         ...('unversioned' in consumer ? ['--unversioned'] : []),
+        ...('zone' in consumer ? ['--zone', '--skip-api'] : []),
       ]);
       if (status !== 0) process.exit(status);
     }
@@ -100,6 +107,7 @@ const status = run('pnpm', ['exec', 'playwright', 'test', ...passthrough], {
   DOQ_CONSUMER_A_DIR: consumers[1]!.dir,
   DOQ_CONSUMER_LEGACY_A_DIR: consumers[2]!.dir,
   DOQ_CONSUMER_LEGACY_B_DIR: consumers[3]!.dir,
+  DOQ_CONSUMER_ZONE_DIR: consumers[4]!.dir,
   ...(skipConsumer ? { E2E_SKIP_CONSUMER: '1' } : {}),
 });
 process.exit(status);

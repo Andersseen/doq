@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendDoqEvent, DoqPlaygroundControl, DoqPlaygroundDefinition, formatDoqEventPayload, formatDoqUsage, initialDoqValues, parseDoqControlText, validateDoqPlaygrounds,
-} from '../../src/lib/doq-playground-model';
-import { defineDoqConfig } from '../../src/lib/doq-config';
+} from '../../config/src/lib/doq-playground-model';
+import { defineDoqConfig } from '../../config/src/lib/doq-config';
 import { parseDoqContent, parseDoqDocument } from '../../src/lib/doq-rich-content';
 
 class Fixture {}

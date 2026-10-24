@@ -30,7 +30,7 @@ This README is deliberately short. The guides live in the official documentation
 | `pagefind` (search only, optional) | `^1.5.0` |
 | `typescript` (API generation only, optional) | `^5.5.0 \|\| ^6.0.0` |
 
-Verified: Angular 21.2 with TypeScript 5.9 and Angular 22.2 with TypeScript 6.0, both with Analog 2.9 and zoneless change detection; Chromium, Firefox and WebKit. Not verified: applications that load Zone.js, Vite below 8, screen-reader output and WCAG conformance. Peer ranges are not widened without testing; `doq doctor` checks the versions installed in your project against them.
+Verified: Angular 21.2 with TypeScript 5.9 and Angular 22.2 with TypeScript 6.0, both with Analog 2.9 and zoneless change detection; Chromium, Firefox and WebKit. Zone.js: an Angular 21 application with `zone.js` and `provideZoneChangeDetection()` passes the consumer journey (not tested on Angular 22). Node tooling is smoke-tested on Windows in CI. Not verified: Vite below 8, screen-reader output and WCAG conformance. Peer ranges are not widened without testing; `doq doctor` checks the versions installed in your project against them.
 
 ## Installation
 
@@ -107,6 +107,14 @@ const config = provideButton({ size: 'md' });
 
 Source files are read as text from the configured `sourceRoots` only, never executed, never fetched. Nothing is added to the browser bundle, and projects that do not use it need no configuration. See the guides _Content authoring_ and _Content tooling_ in the [documentation](https://github.com/Andersseen/doqs/tree/main/apps/site/src/authoring/docs).
 
+## Adopting it in an existing site (0.11)
+
+- Import configuration from `@doqs/analog/config` (`defineDoqConfig`, `provideDoq`, `doqPrerenderRoutes`, the types): it imports only `@angular/core`, so it also loads in a `vite.config.ts` or a script, where the main entry does not.
+- `landmark: 'host'` when your shell already has a `<main>`; the default `'document'` makes Doqs render it. Exactly one `main` either way.
+- `unmatched: 'continue'` lets host pages keep their URLs below the Doqs prefix, so pages migrate one at a time.
+
+See the guide _Adopting Doqs in an existing library site_ in the official documentation.
+
 ## Command-line tools
 
 | Binary | Purpose |
@@ -118,7 +126,7 @@ Source files are read as text from the configured `sourceRoots` only, never exec
 
 ## Public package surface
 
-`@doqs/analog` (browser and server), the Node-only `@doqs/analog/vite`, `@doqs/analog/search-index`, `@doqs/analog/api-reference` and `@doqs/analog/content`, and `@doqs/analog/styles.css`. The exports, their intended stability and the compatibility policy are on the [Public API](https://github.com/Andersseen/doqs/blob/main/apps/site/src/content/docs/reference/public-api.md) page and in [docs/roadmap/1.0-readiness.md](https://github.com/Andersseen/doqs/blob/main/docs/roadmap/1.0-readiness.md). CSS tokens are the `--host-docs-*` custom properties.
+`@doqs/analog` (browser and server), `@doqs/analog/config` (configuration only, the preferred import for it), the Node-only `@doqs/analog/vite`, `@doqs/analog/search-index`, `@doqs/analog/api-reference` and `@doqs/analog/content`, and `@doqs/analog/styles.css`. The exports, their intended stability and the compatibility policy are on the [Public API](https://github.com/Andersseen/doqs/blob/main/apps/site/src/content/docs/reference/public-api.md) page and in [docs/roadmap/1.0-readiness.md](https://github.com/Andersseen/doqs/blob/main/docs/roadmap/1.0-readiness.md). CSS tokens are the `--host-docs-*` custom properties.
 
 ## Links
 

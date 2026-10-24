@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { DoqSearchService } from '../../src/lib/doq-search.service';
-import { DoqSearchResult } from '../../src/lib/doq-search';
+import { DoqSearchResult } from '../../config/src/lib/doq-search';
 import { FakeDoc } from './content-state';
 import { renderDocs } from './harness';
 

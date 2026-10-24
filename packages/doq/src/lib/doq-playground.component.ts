@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, Directive, ElementRef, 
 import {
   appendDoqEvent, DOQ_DEFAULT_PREVIEW_SIZES, DoqControlValue, DoqNumberControl, DoqPlaygroundControl, DoqPlaygroundDefinition, DoqPlaygroundEvent,
   DoqPlaygroundValues, DoqSelectControl, DoqStringControl, formatDoqEventPayload, initialDoqValues, parseDoqControlText,
-} from './doq-playground-model';
+} from '@doqs/analog/config';
 
 /**
  * Creates the registered component with Angular's public `createComponent({ bindings })` API. Bindings use the

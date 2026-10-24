@@ -5,7 +5,7 @@ import {
   doqPrerenderRoute,
   normalizeDoqDocument,
   sortDoqDocuments,
-} from '../../src/lib/doq-document';
+} from '../../config/src/lib/doq-document';
 
 const file = (filename: string, attributes: DoqDocumentAttributes = {}) => ({ filename, attributes });
 const root = '/project/src/content/docs/';

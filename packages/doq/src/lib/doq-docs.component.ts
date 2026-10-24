@@ -1,20 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, PendingTasks, signal, untracked, PLATFORM_ID, Type } from '@angular/core';
-import { DOCUMENT, isPlatformBrowser, NgComponentOutlet } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, NgComponentOutlet, NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationCancel, NavigationEnd, NavigationError, NavigationSkipped, NavigationStart, Router, RouterLink } from '@angular/router';
 import { catchError, filter, finalize, from, map, of, startWith, switchMap } from 'rxjs';
 import { ContentRenderer, injectContentFilesMap, MarkdownComponent, parseRawContentFile } from '@analogjs/content';
 import { injectDoqCatalogs, injectDoqDocuments, injectDoqVersion, resolveDoqCopy } from './doq-catalog';
-import { DOQ_CONFIG } from './doq-config';
+import { DOQ_CONFIG } from '@doqs/analog/config';
 import { doqPageTitle, DoqPageMetadata } from './doq-metadata';
 import { DoqButtonDemoComponent } from './doq-demo.component';
 import { DoqNavigationNode, DoqNavigationTreeComponent } from './doq-nav-tree.component';
 import { DoqPlaygroundComponent } from './doq-playground.component';
-import { DoqPlaygroundDefinition } from './doq-playground-model';
+import { DoqPlaygroundDefinition } from '@doqs/analog/config';
 import { DoqSearchComponent } from './doq-search.component';
 import { DoqVersionSwitcherComponent } from './doq-version-switcher.component';
-import { doqCanonicalUrl, doqVersionLinks } from './doq-versions';
-import { normalizeDoqPaths } from './doq-paths';
+import { doqCanonicalUrl, doqVersionLinks } from '@doqs/analog/config';
+import { normalizeDoqPaths } from '@doqs/analog/config';
 import { parseDoqContent, parseDoqDocument } from './doq-rich-content';
 import { DoqTabsComponent } from './doq-tabs.component';
 
@@ -23,12 +23,13 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
 @Component({
   selector: 'doq-docs',
   standalone: true,
-  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqPlaygroundComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, DoqVersionSwitcherComponent, NgComponentOutlet],
+  imports: [RouterLink, MarkdownComponent, DoqButtonDemoComponent, DoqPlaygroundComponent, DoqNavigationTreeComponent, DoqSearchComponent, DoqTabsComponent, DoqVersionSwitcherComponent, NgComponentOutlet, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <ng-template #notFound><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="version.basePath">Browse documentation</a></ng-template>
     @if (document(); as doc) {
       @if (doc.attributes.title) {
-      <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar" [attr.data-doq-version]="versioned ? version.id : null">
+      <ng-template #body>
         @if (config.sidebar !== 'hidden') {
         <button class="doq-mobile-trigger" type="button" aria-controls="doq-mobile-navigation" [attr.aria-expanded]="mobileNavigationOpen()" (click)="toggleMobileNavigation()">{{ copy.label }} menu</button>
         <nav id="doq-mobile-navigation" class="doq-sidebar" [class.is-open]="mobileNavigationOpen()" [attr.aria-label]="copy.label" (keydown.escape)="closeMobileNavigation()">
@@ -79,10 +80,12 @@ interface DocAttributes { title?: string; description?: string; order?: number; 
             @if (next(); as nxt) { <a class="next" [routerLink]="nxt.href"><span>Next</span><strong>{{ nxt.title }} →</strong></a> }
           </nav>
         </article>
-      </div>
-      } @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="version.basePath">Browse documentation</a></main> }
+      </ng-template>
+      @if (config.landmark === 'host') { <div class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar" [attr.data-doq-version]="versioned ? version.id : null"><ng-container *ngTemplateOutlet="body" /></div> }
+      @else { <main class="doq-root" [style.--doq-content-width]="config.contentWidth" [style.--doq-sidebar-width]="config.sidebarWidth" [attr.data-sidebar]="config.sidebar" [attr.data-doq-version]="versioned ? version.id : null"><ng-container *ngTemplateOutlet="body" /></main> }
+      } @else { @if (config.landmark === 'host') { <div class="doq-not-found"><ng-container *ngTemplateOutlet="notFound" /></div> } @else { <main class="doq-not-found"><ng-container *ngTemplateOutlet="notFound" /></main> } }
     } @else if (document() === undefined) { <div class="doq-loading" aria-live="polite">Loading documentation…</div> }
-    @else { <main class="doq-not-found" role="status"><h1>Documentation page not found</h1><p>This page may have moved or does not exist.</p><a [routerLink]="version.basePath">Browse documentation</a></main> }
+    @else { @if (config.landmark === 'host') { <div class="doq-not-found"><ng-container *ngTemplateOutlet="notFound" /></div> } @else { <main class="doq-not-found"><ng-container *ngTemplateOutlet="notFound" /></main> } }
   `,
 })
 export class DoqDocsComponent {

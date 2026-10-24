@@ -66,11 +66,20 @@ try {
   check('exports map points at existing entries', () => {
     assert.deepEqual(
       Object.keys(manifest.exports),
-      ['.', './search-index', './vite', './api-reference', './content', './styles.css', './package.json'].filter(
-        (key) => key in manifest.exports,
-      ),
+      [
+        '.',
+        './search-index',
+        './vite',
+        './api-reference',
+        './content',
+        './styles.css',
+        './package.json',
+        './config',
+      ].filter((key) => key in manifest.exports),
     );
     assert.ok(manifest.exports['.'].types && manifest.exports['.'].default);
+    // The configuration-only entry (0.11) is a real, shipped entry point.
+    assert.ok(manifest.exports['./config']?.types && manifest.exports['./config']?.default);
   });
   check('the indexer is a Node-only entry point, not part of the browser declarations', () => {
     assert.equal(manifest.exports['./search-index'].default, './bin/search-index.mjs');

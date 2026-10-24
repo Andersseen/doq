@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.11.0
+
+Real-world adoption and 1.0 contract hardening. Additive: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token was removed or changed. The release is driven by two real adoption proofs (Angular Movement and Volt UI, built from the packed package) and fixes the generic blockers they exposed.
+
+### Added
+- **`@doqs/analog/config`**: a configuration-only entry point (`defineDoqConfig`, `provideDoq`, `doqPrerenderRoutes`, `DOQ_CONFIG`, the configuration types). Its compiled file imports only `@angular/core`; the main entry re-exports every name it exported before. Importing the main entry in plain Node (a `vite.config.ts`, a script) fails without the Angular compiler; the config entry loads. In a Vite 8 production build of a host that loads the documentation lazily both entries produced identical initial JavaScript (`pnpm bundle:impact`), so the benefit is tooling contexts and builders that do not tree-shake, not a smaller bundle.
+- **`DoqConfig.landmark`** (`'document'` default, `'host'`): who renders the page's `main`. Documentation index, document and not-found views render exactly one `main` by default and none with `'host'`; the decision is configuration, never DOM inspection, so server HTML and hydrated DOM agree.
+- **`DoqShellComponent`** renders a plain container instead of `main` when a Doqs configuration owns the landmark (it used to nest a second `main` around the index view), and has a `mainLandmark` input to override that when `provideDoq` is scoped below the shell.
+- **`DoqConfig.unmatched`** (`'not-found'` default, `'continue'`) and the same option for `doqRoutes()`: with `'continue'` Doqs claims only URLs it has a document for, so host-owned pages below the same prefix keep working and unknown URLs reach the host's 404. The current version's bare base path is then left to the host. This is what lets a site migrate pages one at a time without changing a URL.
+- **`--host-docs-primary-text`** (optional token) and an internal derived default: text in the primary colour on tinted surfaces (active navigation item, links, pressed toggles) is a slightly darker mix of the primary colour and the foreground, which brings medium brand colours (found with Volt UI's `#3467f5`, 3.96:1 to 4.24:1 before) to at least 4.5:1.
+- `public-api.stability.json` classifies every export of the browser entries as stable, advanced, internal or deprecated; a unit test keeps it in step with `public-api.report.json`.
+- Repository: `pnpm verify:adoption:routes` (Angular Movement at its original URLs), `pnpm verify:adoption:volt` (Volt UI), `pnpm verify:portable` (CRLF, junction, path smoke, also run on Windows in CI), `pnpm bundle:impact`, a Zone.js consumer (`scripts/consumer.ts --zone`), `docs/adoption/consumer-parity.md`, `docs/adoption/migration-findings.md` and a guide, _Adopting Doqs in an existing library site_.
+
+### Fixed
+- **Generated pages with Windows line endings.** `doq content check` reported a page checked out with CRLF as "edited after it was generated", and `doq-api` leaked `\r` from CRLF sources into the generated pages. Both generators now compare and render independently of the checkout's line endings.
+- Not-found views no longer replace the `main` role with `role="status"`.
+- The public API report now lists every export of the root entry although the declarations moved to the config entry (`scripts/public-api.ts` follows re-exports between sibling entries).
+
+### Deprecated
+- `DoqButtonDemoComponent`: an example component of the pilot, not a Doqs feature. Register your own with `DoqConfig.demos`. It keeps working and is removed only in a major release.
+
+### Known limitations
+- Localization: one content tree, English chrome, one search index. Pages migrated to Doqs lose their locale-prefixed variants (the prefixed URL falls through to Analog's own Markdown route). See `docs/adoption/consumer-parity.md`.
+- Overlays that components append to `<body>` can render beneath the expanded playground's top-layer `<dialog>`; use the inline preview. See `docs/adoption/migration-findings.md`.
+- Zone.js is verified on Angular 21 only. Windows is verified for the Node tooling in CI, not for browsers. Screen readers were not tested.
+
 ## 0.10.0
 
 Advanced content authoring: source-backed code, reusable Markdown and links to the generated API reference, resolved at build time into ordinary Markdown. Additive and opt-in: no exported type, function, configuration key, frontmatter key, route or `--host-docs-*` token was removed or changed, nothing is added to the browser entry, and every 0.9 (and earlier) project builds and renders as before without any new file or step.

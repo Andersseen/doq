@@ -12,13 +12,17 @@ order: 30
 | Angular 21.2, TypeScript 5.9, Analog 2.9 | Unit, component, contract, end-to-end and tarball-consumer suites |
 | Angular 22.2, TypeScript 6.0, Analog 2.9 | A focused smoke suite against the packed tarball: strict peers, `doq-api check`, `doq-search`, prerender, hydration, navigation, search, versions |
 | Zoneless Angular | Both environments run without Zone.js |
+| Zone.js (Angular 21) | The embedded consumer with `zone.js` and `provideZoneChangeDetection()`: routing, playground inputs and outputs, search, versions, hydration |
+| Real sites | Angular Movement and Volt UI, built with Doqs pages at their original URLs (disposable clones, Angular 22, zoneless) |
+| Windows (Node tooling) | Content generation and API checks on CRLF sources, junctions and paths with spaces, in CI; browsers on Windows are not tested |
 | Chromium, Firefox, WebKit | Engine-dependent journeys; the full suite runs in Chromium |
 
 Node.js `^20.19 || ^22.12 || >=24`.
 
 ## Not verified
 
-- Applications that load Zone.js.
+- Zone.js on Angular 22.
+- Localized documentation: Doqs has one content tree and English interface labels.
 - Vite below version 8, and Analog above 2.9.x.
 - Screen-reader output, Windows high-contrast themes and WCAG certification.
 - Mobile browsers beyond viewport emulation.
@@ -31,7 +35,7 @@ Configuration objects from earlier releases keep working unchanged. Search, vers
 
 ## Migrating an existing documentation area
 
-Mount Doqs under a different `basePath` (for example `/handbook`) while existing `/docs` routes keep working, move pages gradually, then switch the mount path. The repository's migration guide walks through an Angular Movement example.
+Either mount Doqs under a different `basePath` (for example `/handbook`) while existing `/docs` routes keep working and switch later, or mount it on the existing prefix with `unmatched: 'continue'` and replace pages at their own URLs one by one. See _Adopting Doqs in an existing library site_. The repository's migration guide walks through an Angular Movement example.
 
 ## Stability
 

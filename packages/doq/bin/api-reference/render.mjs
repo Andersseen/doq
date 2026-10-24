@@ -193,6 +193,8 @@ export function renderReference(symbols, options) {
     files.set(`${slugs.get(symbol.name)}.md`, renderSymbol(symbol, orderStart + index + 1));
   });
   files.set('index.md', renderIndex());
+  // Sources checked out with CRLF (Git on Windows) carry `\r` into JSDoc text; the generated pages must not depend on the checkout's line endings.
+  for (const [name, text] of files) files.set(name, text.replace(/\r\n?/g, '\n'));
   return files;
 
   function frontmatter(/** @type {string} */ title, /** @type {string} */ description, /** @type {number} */ order, /** @type {string} */ category) {
