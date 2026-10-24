@@ -607,3 +607,29 @@ describe('UNIT-098 doq-api command line', () => {
     expect(await readdir(join(cwd, 'src/content/docs/reference/api'))).toEqual(['one.md']);
   });
 });
+
+describe('UNIT-170 symbol index in the manifest', () => {
+  it('records every public symbol with the route its page is linked at, deterministically, and check validates it', async () => {
+    await write({
+      'src/public-api.ts': `export { Thing } from './a';\nexport interface Thing2 { a: string }\nexport function Thing3(): void {}`,
+      'src/a.ts': `export class Thing {}`,
+    });
+    const opts = options({ basePath: '/docs/v/2' });
+    await generateApiReference(opts);
+    const manifest = JSON.parse(await readFile(join(cwd, 'src/content/docs/reference/api/.doq-api.json'), 'utf8'));
+    expect(manifest.symbols).toEqual({
+      Thing: '/docs/v/2/reference/api/thing',
+      Thing2: '/docs/v/2/reference/api/thing2',
+      Thing3: '/docs/v/2/reference/api/thing3',
+    });
+    expect(Object.keys(manifest.symbols)).toEqual([...Object.keys(manifest.symbols)].sort());
+    expect(JSON.stringify(manifest)).not.toContain(cwd);
+    expect((await checkApiReference(opts)).upToDate).toBe(true);
+    const before = await readFile(join(cwd, 'src/content/docs/reference/api/.doq-api.json'), 'utf8');
+    await generateApiReference(opts);
+    expect(await readFile(join(cwd, 'src/content/docs/reference/api/.doq-api.json'), 'utf8')).toBe(before);
+    // A hand-edited index is detected as stale rather than trusted.
+    await writeFile(join(cwd, 'src/content/docs/reference/api/.doq-api.json'), before.replace('/thing3', '/elsewhere'));
+    expect((await checkApiReference(opts)).upToDate).toBe(false);
+  });
+});

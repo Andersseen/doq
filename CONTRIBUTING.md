@@ -95,6 +95,7 @@ pnpm sdd:new 0002 search-index     # creates docs/specs/0002-search-index/{spec,
 # fill in the TODO(sdd) markers: requirements REQ-001…, acceptance cases AC-001…, tasks, then tests
 pnpm sdd:check                     # structure + traceability only; it does not prove behavior
 pnpm api:check                     # generated API reference pages of both showcases match their fixtures (pnpm api regenerates)
+pnpm content:check                 # pages generated from src/authoring match their sources, fragments and API index (pnpm content regenerates)
 ```
 
 Requirements get stable ids; every requirement needs an acceptance case and a task; every acceptance case needs at least one verification case (`UNIT-`, `COMP-`, `E2E-`, `CONTRACT-`, `SDD-` or `MANUAL-`), and non-manual case ids must appear in a test source. `verification.md` records the commands you actually ran and their results. [docs/specs/0001-oss-sdd-testing-foundation](docs/specs/0001-oss-sdd-testing-foundation/spec.md) is the worked example. Typos and one-line fixes only need a short spec section in the PR description.

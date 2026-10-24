@@ -1,0 +1,22 @@
+{
+  "targets": [
+    {
+      "name": "latest",
+      "authoring": "src/authoring/docs",
+      "out": "src/content/docs",
+      "sourceRoots": ["vanta-ui/src", "src/app/demos"],
+      "api": ["src/content/docs/reference/generated"],
+      "sourceUrl": "https://example.invalid/vanta/blob/{revision}/{path}{lines}",
+      "revision": "v2.0.0"
+    },
+    {
+      "name": "v1",
+      "authoring": "src/authoring/docs-v1",
+      "out": "src/content/docs-v1",
+      "sourceRoots": ["vanta-ui-v1/src"],
+      "api": ["src/content/docs-v1/reference/generated"],
+      "sourceUrl": "https://example.invalid/vanta/blob/{revision}/{path}{lines}",
+      "revision": "v1.9.0"
+    }
+  ]
+}

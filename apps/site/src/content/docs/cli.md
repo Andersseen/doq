@@ -1,6 +1,6 @@
 ---
 title: The doq CLI
-description: doq init scaffolds the documentation files; doq doctor diagnoses the integration.
+description: doq init scaffolds the documentation files; doq doctor diagnoses the integration; doq content resolves authored pages.
 group: Start here
 order: 3
 ---
@@ -93,3 +93,13 @@ pnpm exec doq doctor --json | jq '.findings[] | select(.status == "FAIL")'
 | `0` | Success (`init`), or no failed check (`doctor`) |
 | `1` | A conflict (`init`) or a failed check (`doctor`) |
 | `2` | Invalid usage or an unusable project directory |
+
+## doq content
+
+```bash
+pnpm exec doq content generate [--dir <path>] [--config <file>] [--json]
+pnpm exec doq content check    [--dir <path>] [--config <file>] [--json]
+pnpm exec doq content watch    [--dir <path>] [--config <file>]
+```
+
+Resolves `::source{}`, `::include{}` and `[[api:Name]]` in the pages of your authoring directory into ordinary Markdown (see [Content authoring](/docs/guides/content-authoring)). `check` writes nothing and exits 1 when the generated pages are stale; the other exit codes are 2 (configuration), 3 (an output conflict) and 4 (invalid authoring). Details and troubleshooting: [Content tooling](/docs/operations/content-tooling).

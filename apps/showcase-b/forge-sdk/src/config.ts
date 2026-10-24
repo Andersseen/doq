@@ -1,6 +1,7 @@
 /** Deployment target of a Forge project. */
 export type ForgeEnvironment = 'development' | 'staging' | 'production';
 
+// #region doqs:forge-config
 /** Settings shared by every client created in an application. */
 export interface ForgeConfig {
   /** Project identifier from the Forge dashboard. */
@@ -13,6 +14,7 @@ export interface ForgeConfig {
    */
   onRequest?: (path: string) => void | Promise<void>;
 }
+// #endregion doqs:forge-config
 
 /**
  * Validates and freezes a configuration object so it can be shared safely.

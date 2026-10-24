@@ -10,9 +10,9 @@ const FILE_NAME = /^[a-z0-9][a-z0-9-]*\.md$/;
 const sha256 = (/** @type {string} */ text) => createHash('sha256').update(text).digest('hex');
 
 /** The manifest records which files the generator owns and what it wrote, so edits and strangers are detectable. */
-export function buildManifest(/** @type {Map<string, string>} */ files) {
+export function buildManifest(/** @type {Map<string, string>} */ files, /** @type {Record<string, string>} */ symbols = {}) {
   const entries = Object.fromEntries([...files].sort(([a], [b]) => compare(a, b)).map(([name, content]) => [name, sha256(content)]));
-  return `${JSON.stringify({ generator: 'doq-api', files: entries }, null, 2)}\n`;
+  return `${JSON.stringify({ generator: 'doq-api', files: entries, symbols }, null, 2)}\n`;
 }
 
 /**
@@ -86,7 +86,7 @@ async function readIfFile(/** @type {string} */ path) {
  * Compares the expected output with the directory and decides what generation would do.
  * @returns {Promise<{ added: string[], modified: string[], removed: string[], conflicts: string[], manifestChanged: boolean, expectedManifest: string }>}
  */
-export async function planOutput(/** @type {string} */ outDir, /** @type {Map<string, string>} */ files) {
+export async function planOutput(/** @type {string} */ outDir, /** @type {Map<string, string>} */ files, /** @type {Record<string, string>} */ symbols = {}) {
   for (const name of files.keys()) if (!FILE_NAME.test(name)) throw new DoqApiError(`doq-api: internal error, unsafe generated file name "${name}".`);
   const owned = (await readManifest(outDir)) ?? {};
   const added = [];
@@ -116,7 +116,7 @@ export async function planOutput(/** @type {string} */ outDir, /** @type {Map<st
     else conflicts.push(`${name}: is no longer generated but was edited after it was generated`);
   }
 
-  const expectedManifest = buildManifest(files);
+  const expectedManifest = buildManifest(files, symbols);
   const currentManifest = await readIfFile(join(outDir, MANIFEST_NAME));
   return { added, modified, removed, conflicts, manifestChanged: currentManifest !== expectedManifest, expectedManifest };
 }

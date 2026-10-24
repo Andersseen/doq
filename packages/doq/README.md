@@ -86,17 +86,39 @@ Add Markdown files with `title`, `description`, `group` and `order` frontmatter 
 
 Analog renders Markdown files concurrently while heading ids come from a shared slugger, so with an asynchronous highlighter two files can swap duplicate-heading suffixes (`usage-1`/`usage-2`) and the build differs from run to run. `doqDeterministicMarkdown()` renders the files one at a time through Analog's own hook. It contains the upstream problem; it does not fix it. It is opt-in because Doqs cannot edit your Vite configuration, and `doq init` and `doq doctor` both point at it.
 
+## Content authoring (optional)
+
+Keep examples connected to real source and stop copying text between pages. Author pages in their own directory, describe them in `doq.content.json` and let `doq content generate` write ordinary Markdown below your content directory:
+
+```md
+::include{file="/_partials/prerequisites.md"}
+
+::source{file="projects/lib/src/button.ts" region="usage" title="button.ts"}
+
+See [[api:ButtonDirective]] for every input.
+```
+
+```ts
+// projects/lib/src/button.ts
+// #region doqs:usage
+const config = provideButton({ size: 'md' });
+// #endregion doqs:usage
+```
+
+Source files are read as text from the configured `sourceRoots` only, never executed, never fetched. Nothing is added to the browser bundle, and projects that do not use it need no configuration. See the guides _Content authoring_ and _Content tooling_ in the [documentation](https://github.com/Andersseen/doqs/tree/main/apps/site/src/authoring/docs).
+
 ## Command-line tools
 
 | Binary | Purpose |
 | --- | --- |
 | `doq` | `doq init` scaffolds; `doq doctor` diagnoses the integration (`--json`, `--build`, `--strict`) |
 | `doq-search` | `doq-search index <siteDir>` indexes prerendered output with Pagefind (after the build) |
+| `doq` (content) | `doq content generate`, `check` and `watch` resolve `::source{}`, `::include{}` and `[[api:Name]]` in authored pages into ordinary Markdown |
 | `doq-api` | `doq-api generate` and `doq-api check` write and verify reference pages from a public TypeScript API |
 
 ## Public package surface
 
-`@doqs/analog` (browser and server), the Node-only `@doqs/analog/vite`, `@doqs/analog/search-index` and `@doqs/analog/api-reference`, and `@doqs/analog/styles.css`. The exports, their intended stability and the compatibility policy are on the [Public API](https://github.com/Andersseen/doqs/blob/main/apps/site/src/content/docs/reference/public-api.md) page and in [docs/roadmap/1.0-readiness.md](https://github.com/Andersseen/doqs/blob/main/docs/roadmap/1.0-readiness.md). CSS tokens are the `--host-docs-*` custom properties.
+`@doqs/analog` (browser and server), the Node-only `@doqs/analog/vite`, `@doqs/analog/search-index`, `@doqs/analog/api-reference` and `@doqs/analog/content`, and `@doqs/analog/styles.css`. The exports, their intended stability and the compatibility policy are on the [Public API](https://github.com/Andersseen/doqs/blob/main/apps/site/src/content/docs/reference/public-api.md) page and in [docs/roadmap/1.0-readiness.md](https://github.com/Andersseen/doqs/blob/main/docs/roadmap/1.0-readiness.md). CSS tokens are the `--host-docs-*` custom properties.
 
 ## Links
 

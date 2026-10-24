@@ -1,0 +1,7 @@
+{
+  "generator": "doq content",
+  "files": {
+    "guides/sdk/errors.md": "02d469071fe13a224b3ef8b3e937a30885c9eca5f4bd54f68d9c8ec7d9ac8722",
+    "guides/sdk/quickstart.md": "db6deca077a12dcab52cb3888af583a185c63c1e309dd56a2267a0b3ed0a7735"
+  }
+}

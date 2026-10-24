@@ -190,6 +190,13 @@ const typescriptVersion = spawnSync('pnpm', ['exec', 'tsc', '--version'], {
   encoding: 'utf8',
 }).stdout.trim();
 console.log(`adoption: checkout compiler: ${typescriptVersion}`);
+// Content authoring (Doqs 0.10) needs one region marker in the real source, added in this disposable checkout only. The edit fails
+// loudly if upstream's file layout moves.
+const wrapProvider = (text: string) =>
+  text
+    .replace('export function provideMovement(', '// #region doqs:provide-movement\nexport function provideMovement(')
+    .replace(/(\n {2}\]\);\n\}\n)(?![\s\S]*\n {2}\]\);\n\}\n)/, '$1// #endregion doqs:provide-movement\n');
+await edit('projects/movement/src/lib/providers/provide-movement.ts', wrapProvider);
 expectStatus('generate', doqApi('generate').status, 0);
 expectStatus('check right after generate', doqApi('check').status, 0);
 // Versioned documentation (Doqs 0.6): a GENUINE historical source. The upstream tag below is cloned, its library project is
@@ -222,6 +229,7 @@ const archiveApiArgs = [
 ];
 expectStatus('archive generate', doqApi('generate', archiveApiArgs).status, 0);
 expectStatus('archive check', doqApi('check', archiveApiArgs).status, 0);
+await edit('projects/movement-v0-9/src/lib/providers/provide-movement.ts', wrapProvider);
 const archiveManifest = resolve(outDir, 'src/content/handbook-v0-9/api/.doq-api.json');
 const archiveBefore = await readFile(archiveManifest, 'utf8');
 const provide = resolve(outDir, 'projects/movement/src/lib/providers/provide-movement.ts');
@@ -246,6 +254,64 @@ expectStatus('check after restoring the source', doqApi('check').status, 0);
 if ((await readFile(archiveManifest, 'utf8')) !== archiveBefore)
   throw new Error('adoption: current regeneration changed the archive manifest');
 expectStatus('archive check after current regeneration', doqApi('check', archiveApiArgs).status, 0);
+
+// Content authoring (Doqs 0.10): the authored guide shows the real provider source (current checkout and the v0.9.0 snapshot),
+// links the generated API pages of its own version, includes a shared fragment and sits next to a live playground. Stale-output
+// detection is proven on the real source: changing the region makes `check` fail without writing, `generate` repairs it.
+await writeFile(
+  resolve(outDir, 'doq.content.json'),
+  `${JSON.stringify(
+    {
+      targets: [
+        {
+          name: 'latest',
+          authoring: 'src/authoring/handbook',
+          out: 'src/content/handbook',
+          sourceRoots: ['projects/movement/src'],
+          api: ['src/content/handbook/api'],
+        },
+        {
+          name: 'v0.9',
+          authoring: 'src/authoring/handbook-v0-9',
+          out: 'src/content/handbook-v0-9',
+          sourceRoots: ['projects/movement-v0-9/src'],
+          api: ['src/content/handbook-v0-9/api'],
+        },
+      ],
+    },
+    null,
+    2,
+  )}\n`,
+);
+const content = (command: 'generate' | 'check') => {
+  const started = Date.now();
+  const result = spawnSync('pnpm', ['--silent', 'exec', 'doq', 'content', command], { cwd: outDir, encoding: 'utf8' });
+  console.log(
+    `adoption: doq content ${command} exit ${result.status} in ${Date.now() - started} ms\n${result.stdout}${result.stderr}`,
+  );
+  return result;
+};
+expectStatus('content check before the first generate', content('check').status, 1);
+expectStatus('content generate', content('generate').status, 0);
+expectStatus('content check right after generate', content('check').status, 0);
+const generatedGuide = resolve(outDir, 'src/content/handbook/guides/source-backed.md');
+const guideBefore = await readFile(generatedGuide, 'utf8');
+if (
+  !/\[`provideMovement`\]\(\/handbook\/api\/provide-movement\)/.test(guideBefore) ||
+  !guideBefore.includes('normalizeTime')
+)
+  throw new Error('adoption: the generated guide lacks the API link or the real source');
+const archivedGuide = await readFile(resolve(outDir, 'src/content/handbook-v0-9/guides/source-backed.md'), 'utf8');
+if (!archivedGuide.includes('(/handbook/v/0.9/api/provide-movement)') || archivedGuide.includes('normalizeTime'))
+  throw new Error('adoption: the archived guide must link the archived reference and show the historical source');
+await writeFile(provide, changed);
+const staleContent = content('check');
+expectStatus('content check after a source change', staleContent.status, 1);
+if (!/modified\s+guides\/source-backed\.md/.test(staleContent.stdout))
+  throw new Error('adoption: content check did not name guides/source-backed.md');
+if ((await readFile(generatedGuide, 'utf8')) !== guideBefore) throw new Error('adoption: content check wrote a file');
+await writeFile(provide, original);
+expectStatus('content check after restoring the source', content('check').status, 0);
 
 // Heading ids: the upstream race (concurrent Markdown renders share marked-gfm-heading-id's slugger, see docs/repro) is contained
 // by doqDeterministicMarkdown() in the patched vite.config.ts, so ONE build must already be canonical. `docs:check` compares every

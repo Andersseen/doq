@@ -4,7 +4,9 @@
  * The consumer is a copy of a showcase's sources with its own manifest and lockfile, installed outside
  * this workspace from the tarball (`file:`), so nothing resolves through `workspace:` links or library sources.
  * Showcase B (docs-first, mounted at the root) is the default; `--app=showcase-a` builds the embedded scenario
- * (documentation under /docs inside a host site). `--unversioned` strips the versioning configuration and the archive
+ * (documentation under /docs inside a host site). `--no-authoring` removes the 0.10 content authoring (authored pages, the
+ * generated pages, `doq.content.json`, the Vite plugin), which reproduces a 0.9-style consumer that must keep working
+ * unchanged. `--unversioned` strips the versioning configuration and the archive
  * fixtures, which reproduces a Doqs 0.5-style consumer that must keep working unchanged on 0.6.
  *
  *   node scripts/consumer.ts [tarball] [outDir] [--app=showcase-a|showcase-b] [--unversioned]
@@ -31,6 +33,7 @@ const unversioned = flags.includes('--unversioned');
 // --stress=<n>: add n generated documents (with duplicate headings and rich Markdown) to the current docs and to each archive.
 const stress = Number(flags.find((flag) => flag.startsWith('--stress='))?.slice('--stress='.length) ?? 0);
 const skipApi = flags.includes('--skip-api');
+const noAuthoring = flags.includes('--no-authoring');
 // --angular=22: install Angular 22 with TypeScript 6 (the range Angular 22 supports) instead of the workspace's Angular 21.
 // Every other package keeps the version range of the showcase, and peer dependencies are checked strictly, never silenced.
 const angular = flags.find((flag) => flag.startsWith('--angular='))?.slice('--angular='.length);
@@ -42,13 +45,16 @@ const withoutGuard = flags.includes('--without-deterministic-markdown');
 const tarball = resolve(positional[0] ?? `artifacts/doqs-analog-${version}.tgz`);
 const outDir = resolve(
   positional[1] ??
-    (unversioned
-      ? app === 'showcase-a'
-        ? (process.env['DOQ_CONSUMER_LEGACY_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a'))
-        : (process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b'))
-      : app === 'showcase-a'
-        ? (process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a'))
-        : (process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'))),
+    (noAuthoring
+      ? (process.env['DOQ_CONSUMER_PLAIN_DIR'] ??
+        resolve(tmpdir(), `doq-e2e-consumer-plain${app === 'showcase-a' ? '-a' : ''}`))
+      : unversioned
+        ? app === 'showcase-a'
+          ? (process.env['DOQ_CONSUMER_LEGACY_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-a'))
+          : (process.env['DOQ_CONSUMER_LEGACY_B_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-legacy-b'))
+        : app === 'showcase-a'
+          ? (process.env['DOQ_CONSUMER_A_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer-a'))
+          : (process.env['DOQ_CONSUMER_DIR'] ?? resolve(tmpdir(), 'doq-e2e-consumer'))),
 );
 
 if (outDir === repo || outDir.startsWith(`${repo}/`))
@@ -71,6 +77,35 @@ if (unversioned) {
   );
   for (const archive of ['src/content/docs-v1', 'vanta-ui-v1', 'forge-sdk-v1'])
     await rm(resolve(outDir, archive), { recursive: true, force: true });
+}
+
+if (noAuthoring || unversioned) {
+  // Content authoring is opt-in: a project without it has no configuration, no authored pages and no generated pages.
+  const configFile = resolve(outDir, 'doq.content.json');
+  const config = JSON.parse(await readFile(configFile, 'utf8')) as {
+    targets: { name: string; authoring: string; out: string }[];
+  };
+  for (const target of config.targets) {
+    if (!noAuthoring && !target.out.endsWith('docs-v1')) continue;
+    const manifestFile = resolve(outDir, target.authoring, '.doq-content.json');
+    const owned = Object.keys(JSON.parse(await readFile(manifestFile, 'utf8')).files as Record<string, string>);
+    for (const file of owned) await rm(resolve(outDir, target.out, file), { force: true });
+    await rm(resolve(outDir, target.authoring), { recursive: true, force: true });
+  }
+  if (noAuthoring) {
+    await rm(configFile);
+    await rm(resolve(outDir, 'src/authoring'), { recursive: true, force: true });
+    const viteFile = resolve(outDir, 'vite.config.ts');
+    await writeFile(
+      viteFile,
+      (await readFile(viteFile, 'utf8'))
+        .replace(/import \{ doqContent \}[^\n]*\n/, '')
+        .replace(/\s*\/\/ Resolves ::source[^\n]*\n\s*doqContent\(\),/, ''),
+    );
+  } else {
+    config.targets = config.targets.filter((target) => !target.out.endsWith('docs-v1'));
+    await writeFile(configFile, `${JSON.stringify(config, null, 2)}\n`);
+  }
 }
 
 if (stress > 0) {
@@ -102,7 +137,7 @@ if (slowMarkdown || withoutGuard) {
 }
 
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
-manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer'}${unversioned ? '-unversioned' : ''}${angular ? `-ng${angular}` : ''}`;
+manifest.name = `${app === 'showcase-a' ? 'doq-external-consumer-embedded' : 'doq-external-consumer'}${noAuthoring ? '-plain' : ''}${unversioned ? '-unversioned' : ''}${angular ? `-ng${angular}` : ''}`;
 manifest.dependencies['@doqs/analog'] = `file:${tarball}`;
 if (angular === '22') {
   for (const group of ['dependencies', 'devDependencies'] as const)
@@ -114,7 +149,11 @@ if (angular === '22') {
   if (manifest.dependencies['typescript']) manifest.dependencies['typescript'] = '~6.0.0';
 }
 manifest.scripts = {
-  ...Object.fromEntries(Object.entries(manifest.scripts).filter(([name]) => name.startsWith('api'))),
+  ...Object.fromEntries(
+    Object.entries(manifest.scripts).filter(
+      ([name]) => name.startsWith('api') || (!noAuthoring && name.startsWith('content')),
+    ),
+  ),
   build: 'vite build && doq-search index dist/analog/public',
 };
 if (unversioned) {
@@ -151,6 +190,27 @@ pnpm(['run', 'api:check']);
 await writeFile(entry, original);
 pnpm(['run', 'api']);
 pnpm(['run', 'api:check']);
+
+if (!noAuthoring) {
+  // Content authoring through the installed `doq` binary: committed pages are current, a source change makes `check`
+  // fail without writing, `generate` restores them, and an edited generated page is a conflict that is never overwritten.
+  const region = resolve(
+    outDir,
+    app === 'showcase-a' ? 'vanta-ui/src/vanta-alert.component.ts' : 'forge-sdk/src/config.ts',
+  );
+  const regionOriginal = await readFile(region, 'utf8');
+  pnpm(['run', 'content:check']);
+  await writeFile(
+    region,
+    regionOriginal.replace(/(\/\/ #region doqs:[a-z-]+\n)/, '$1  // Changed by the consumer proof.\n'),
+  );
+  pnpm(['run', 'content:check'], 1);
+  pnpm(['run', 'content']);
+  pnpm(['run', 'content:check']);
+  await writeFile(region, regionOriginal);
+  pnpm(['run', 'content']);
+  pnpm(['run', 'content:check']);
+}
 
 pnpm(['build']);
 console.log(`consumer ready: ${resolve(outDir, 'dist/analog/public')}`);

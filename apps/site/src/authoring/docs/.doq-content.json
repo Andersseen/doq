@@ -1,0 +1,7 @@
+{
+  "generator": "doq content",
+  "files": {
+    "guides/content-authoring.md": "7592d6c15e39e573e3ccfd98edb31c12a660a1c405ceb7104a4e492bebda2f07",
+    "operations/content-tooling.md": "92debaf86ce5b4084882e16c0339141ca5f23290eb1586d937d819495bf7938d"
+  }
+}

@@ -41,7 +41,7 @@ def test_contract_090_the_tarball_declares_and_ships_all_three_binaries(tarball,
         assert path in package_files, f"{name} -> {path} missing"
         assert package_files[path].startswith(b"#!/usr/bin/env node"), name
         assert modes[path] & 0o111, f"{path} is not executable"
-    for module in ("args", "doctor", "init", "node-support", "project", "semver", "source"):
+    for module in ("args", "content", "doctor", "init", "node-support", "project", "semver", "source"):
         assert f"bin/cli/{module}.mjs" in package_files
 
 
@@ -59,7 +59,7 @@ def test_contract_091_cli_runs_from_the_unpacked_tarball_without_dependencies(un
             else:
                 break
         for specifier in re.findall(r"from '([^']+)'", "\n".join(header)):
-            assert specifier.startswith(("node:", "./")), f"{file.name} imports {specifier}"
+            assert specifier.startswith(("node:", "./", "../")), f"{file.name} imports {specifier}"
 
 
 def test_contract_092_init_generates_valid_onboarding_files_and_is_repeatable(unpacked, tmp_path):

@@ -5,5 +5,10 @@
     "forge-client-options.md": "e3af489a60dc5adbaf96ba364067479699b0fea347e813abe2fb519f1776ec89",
     "forge-client.md": "3e87e71ff7fe7237c599faef62bb5ffb3aeb1cbf4c24bcb9e09f9e1b6a3a40eb",
     "index.md": "2815987431d8a2cb06cfbefd054b8b431a64d916054f7292d837d9c06fd05dca"
+  },
+  "symbols": {
+    "ForgeClient": "/v/1/reference/generated/forge-client",
+    "ForgeClientOptions": "/v/1/reference/generated/forge-client-options",
+    "createForgeClient": "/v/1/reference/generated/create-forge-client"
   }
 }

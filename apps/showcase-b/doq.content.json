@@ -1,0 +1,18 @@
+{
+  "targets": [
+    {
+      "name": "latest",
+      "authoring": "src/authoring/docs",
+      "out": "src/content/docs",
+      "sourceRoots": ["forge-sdk/src"],
+      "api": ["src/content/docs/reference/generated"]
+    },
+    {
+      "name": "v1",
+      "authoring": "src/authoring/docs-v1",
+      "out": "src/content/docs-v1",
+      "sourceRoots": ["forge-sdk-v1/src"],
+      "api": ["src/content/docs-v1/reference/generated"]
+    }
+  ]
+}

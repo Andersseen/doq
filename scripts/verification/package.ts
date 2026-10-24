@@ -66,7 +66,7 @@ try {
   check('exports map points at existing entries', () => {
     assert.deepEqual(
       Object.keys(manifest.exports),
-      ['.', './search-index', './vite', './api-reference', './styles.css', './package.json'].filter(
+      ['.', './search-index', './vite', './api-reference', './content', './styles.css', './package.json'].filter(
         (key) => key in manifest.exports,
       ),
     );
@@ -102,6 +102,41 @@ try {
     assert.match(await readFile(join(root, 'bin/api-reference.d.mts'), 'utf8'), /generateApiReference/);
     assert.ok(!/generateApiReference|buildApiReference|checkApiReference/.test(declarations));
   });
+  check(
+    'the content authoring tooling is a Node-only entry point with declarations and no browser exposure',
+    async () => {
+      assert.deepEqual(manifest.exports['./content'], { types: './bin/content.d.mts', default: './bin/content.mjs' });
+      for (const file of [
+        'bin/content.mjs',
+        'bin/content.d.mts',
+        'bin/cli/content.mjs',
+        'bin/content/compose.mjs',
+        'bin/content/errors.mjs',
+        'bin/content/markdown.mjs',
+        'bin/content/output.mjs',
+        'bin/content/paths.mjs',
+        'bin/content/regions.mjs',
+      ])
+        assert.ok((await readFile(join(root, file), 'utf8')).length > 0, file);
+      assert.match(await readFile(join(root, 'bin/content.d.mts'), 'utf8'), /generateContent/);
+      assert.ok(!/generateContent|checkContent|buildContent|doqContent\b|DoqContentTarget/.test(declarations));
+      // Only Node built-ins and the package's own modules: no TypeScript, Angular or Vite.
+      for (const file of [
+        'bin/content.mjs',
+        'bin/cli/content.mjs',
+        ...(await readdir(join(root, 'bin/content'))).map((f) => `bin/content/${f}`),
+      ]) {
+        const imports = [...(await readFile(join(root, file), 'utf8')).matchAll(/^import [^;]*? from '([^']+)'/gm)].map(
+          (m) => m[1]!,
+        );
+        assert.deepEqual(
+          imports.filter((specifier) => !/^(node:|\.\.?\/)/.test(specifier)),
+          [],
+          `${file} imports a dependency`,
+        );
+      }
+    },
+  );
   check('the deterministic-Markdown Vite helper is a Node-only entry point with declarations', async () => {
     assert.deepEqual(manifest.exports['./vite'], { types: './bin/vite.d.mts', default: './bin/vite.mjs' });
     assert.match(await readFile(join(root, 'bin/vite.d.mts'), 'utf8'), /doqDeterministicMarkdown/);
@@ -144,7 +179,9 @@ try {
     },
   );
   check('the Node-only declaration files compile under strict TypeScript', () => {
-    const files = ['vite', 'api-reference', 'search-index'].map((name) => join(root, 'bin', `${name}.d.mts`));
+    const files = ['vite', 'api-reference', 'search-index', 'content'].map((name) =>
+      join(root, 'bin', `${name}.d.mts`),
+    );
     const program = ts.createProgram(files, {
       strict: true,
       noEmit: true,

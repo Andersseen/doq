@@ -25,9 +25,9 @@
     {
       "target": "showcase-a",
       "metric": "allJsGzip",
-      "baseline": 218346,
-      "max": 229300,
-      "reason": "All JavaScript of the embedded showcase including lazy per-document chunks; grows with content, so a jump without new content is a regression."
+      "baseline": 229540,
+      "max": 234200,
+      "reason": "All JavaScript of the embedded showcase including lazy per-document chunks; grows with content, so a jump without new content is a regression. 0.10 adds two authored guides (current and archive) with source blocks and a playground; lazy per-document chunks only, initial JavaScript is unchanged within its budget."
     },
     {
       "target": "showcase-a",
@@ -39,16 +39,16 @@
     {
       "target": "showcase-a",
       "metric": "searchIndexBytes",
-      "baseline": 22203,
-      "max": 24500,
-      "reason": "Pagefind index, fragments and filters for the committed documents; scales with content and versions, not with library code."
+      "baseline": 26371,
+      "max": 26900,
+      "reason": "Pagefind index, fragments and filters for the committed documents; scales with content and versions, not with library code. 0.10 adds two guides (current and the 1.x archive) to the index."
     },
     {
       "target": "showcase-a",
       "metric": "staticPages",
-      "baseline": 21,
-      "max": 21,
-      "reason": "Pages prerendered for the committed content and its archive; an unexpected extra page means a duplicate route."
+      "baseline": 23,
+      "max": 23,
+      "reason": "Pages prerendered for the committed content and its archive; an unexpected extra page means a duplicate route. 0.10 adds the generated Source-backed examples guide and its 1.x archive counterpart (21 + 2)."
     },
     {
       "target": "showcase-b",
@@ -60,9 +60,9 @@
     {
       "target": "showcase-b",
       "metric": "allJsGzip",
-      "baseline": 199073,
-      "max": 209100,
-      "reason": "All JavaScript of the docs-first showcase including lazy per-document chunks."
+      "baseline": 210620,
+      "max": 214900,
+      "reason": "All JavaScript of the docs-first showcase including lazy per-document chunks. 0.10 adds three authored guides (two current, one archive); lazy per-document chunks only."
     },
     {
       "target": "showcase-b",
@@ -74,16 +74,16 @@
     {
       "target": "showcase-b",
       "metric": "searchIndexBytes",
-      "baseline": 18911,
-      "max": 20900,
-      "reason": "Pagefind index, fragments and filters for the committed documents."
+      "baseline": 22248,
+      "max": 22700,
+      "reason": "Pagefind index, fragments and filters for the committed documents. 0.10 adds three guides (two current, one in the 1.x archive) to the index."
     },
     {
       "target": "showcase-b",
       "metric": "staticPages",
-      "baseline": 25,
-      "max": 25,
-      "reason": "Pages prerendered for the committed content, its archive and the not-found view."
+      "baseline": 28,
+      "max": 28,
+      "reason": "Pages prerendered for the committed content, its archive and the not-found view. 0.10 adds three generated guides (25 + 3)."
     },
     {
       "target": "site",
@@ -95,9 +95,9 @@
     {
       "target": "site",
       "metric": "allJsGzip",
-      "baseline": 291734,
-      "max": 306400,
-      "reason": "All JavaScript of the official site including the lazy documentation chunks; grows with documentation content."
+      "baseline": 326335,
+      "max": 332900,
+      "reason": "All JavaScript of the official site including the lazy documentation chunks; grows with documentation content. 0.10 adds the Content authoring and Content tooling guides and 20 generated pages of the Content tooling API reference (the real reference of @doqs/analog/content, produced by doq-api from its declarations); lazy documentation chunks only, the landing's initial JavaScript is unchanged within its budget."
     },
     {
       "target": "site",
@@ -109,16 +109,16 @@
     {
       "target": "site",
       "metric": "searchIndexBytes",
-      "baseline": 46978,
-      "max": 49500,
-      "reason": "Pagefind index of the official documentation (19 pages: 0.9 adds the Interactive playgrounds guide)."
+      "baseline": 73013,
+      "max": 74500,
+      "reason": "Pagefind index of the official documentation (19 pages: 0.9 adds the Interactive playgrounds guide). 0.10 adds 22 documentation pages: two guides and the 20-page Content tooling API reference."
     },
     {
       "target": "site",
       "metric": "staticPages",
-      "baseline": 21,
-      "max": 21,
-      "reason": "The landing, the documentation index and 19 documents (0.9 adds the Interactive playgrounds guide); an unexpected extra page means a duplicate route."
+      "baseline": 43,
+      "max": 43,
+      "reason": "The landing, the documentation index and 19 documents (0.9 adds the Interactive playgrounds guide); an unexpected extra page means a duplicate route. The landing, the documentation index and 41 documents: 0.10 adds two guides and the 20-page Content tooling API reference (21 + 22)."
     },
     {
       "target": "scale",

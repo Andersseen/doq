@@ -445,3 +445,98 @@ test.describe('E2E-115 Angular Movement adoption: interactive playground', () =>
       expect(found.content).not.toContain(chrome);
   });
 });
+
+// AUTHOR-021: Doqs 0.10 content authoring on the real Angular Movement checkout and its genuine v0.9.0 snapshot.
+test.describe('E2E-117 Angular Movement adoption: source-backed authoring', () => {
+  const guide = `${base}/handbook/guides/source-backed`;
+  const archived = `${base}/handbook/v/0.9/guides/source-backed`;
+  /** The `doqs:provide-movement` region of a provider file as the author sees it. */
+  const region = (file: string) => {
+    const lines = readFileSync(resolve(checkout, file), 'utf8').split('\n');
+    const from = lines.findIndex((line) => line.includes('#region doqs:provide-movement'));
+    const to = lines.findIndex((line) => line.includes('#endregion doqs:provide-movement'));
+    expect(from, file).toBeGreaterThanOrEqual(0);
+    return lines.slice(from + 1, to).join('\n');
+  };
+
+  test('AUTHOR-021: the guide shows the real provideMovement source and links the generated API pages', async ({
+    page,
+  }) => {
+    await page.goto(guide);
+    await expect(page.getByRole('heading', { level: 1, name: 'Source-backed guide' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: 'Prerequisites' })).toHaveAttribute('id', 'prerequisites');
+    const figure = page.locator('figure.doq-code', { hasText: 'provide-movement.ts' });
+    const shown = (await figure.locator('pre code').innerText()).trimEnd();
+    expect(shown).toBe(region('projects/movement/src/lib/providers/provide-movement.ts'));
+    expect(shown).toContain('normalizeTime');
+    const links = page.locator('.doq-markdown p a');
+    await expect(links.filter({ hasText: 'provideMovement' }).first()).toHaveAttribute(
+      'href',
+      '/handbook/api/provide-movement',
+    );
+    await expect(links.filter({ hasText: 'the input type' })).toHaveAttribute(
+      'href',
+      '/handbook/api/movement-config-input',
+    );
+    await expect(links.filter({ hasText: 'MoveEnterDirective' })).toHaveAttribute(
+      'href',
+      '/handbook/api/move-enter-directive',
+    );
+    await links.filter({ hasText: 'MoveEnterDirective' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'MoveEnterDirective' })).toBeVisible();
+  });
+
+  test('AUTHOR-021: the real moveEnter playground works next to the source-backed example and survives navigation', async ({
+    page,
+  }) => {
+    await page.goto(guide);
+    const pg = page.getByRole('group', { name: 'moveEnter', exact: true });
+    await pg.getByLabel('Duration (ms)').fill('1300');
+    await expect
+      .poll(() =>
+        page.getByTestId('am-target').evaluate((el) => Number(el.getAnimations()[0]?.effect?.getTiming().duration)),
+      )
+      .toBe(1300);
+    await page.getByRole('link', { name: 'Introduction' }).first().click();
+    await page.goBack();
+    await expect(page.getByRole('group', { name: 'moveEnter', exact: true }).getByLabel('Duration (ms)')).toHaveValue(
+      '500',
+    );
+  });
+
+  test('AUTHOR-021: the archive shows the genuine v0.9.0 source and links only the archived reference', async ({
+    page,
+  }) => {
+    await page.goto(archived);
+    const figure = page.locator('figure.doq-code', { hasText: 'provide-movement.ts (v0.9.0)' });
+    const shown = (await figure.locator('pre code').innerText()).trimEnd();
+    expect(shown).toBe(region('projects/movement-v0-9/src/lib/providers/provide-movement.ts'));
+    expect(shown).not.toContain('normalizeTime');
+    const link = page.locator('.doq-markdown p a', { hasText: 'provideMovement' }).first();
+    await expect(link).toHaveAttribute('href', '/handbook/v/0.9/api/provide-movement');
+    await link.click();
+    await expect(page).toHaveURL(`${base}/handbook/v/0.9/api/provide-movement`);
+    const html = await (await page.request.get(archived)).text();
+    expect(html).not.toMatch(/::source|::include|\[\[api:|href="\/handbook\/api\//);
+  });
+
+  test('AUTHOR-021: search finds the guide at its canonical route and the archived guide only in the archive', async ({
+    page,
+  }) => {
+    await page.goto(guide);
+    const urls = await page.evaluate(async () => {
+      const url = '/pagefind/pagefind.js';
+      const pagefind = await import(/* @vite-ignore */ url);
+      await pagefind.init();
+      const find = async (term: string) =>
+        Promise.all((await pagefind.search(term)).results.map(async (hit: any) => (await hit.data()).url as string));
+      return { current: await find('quince-basalt-lantern'), archived: await find('tangerine-slate-orchard') };
+    });
+    expect(urls.current.map((url) => url.replace(/\.html$/, '').replace(/\/$/, ''))).toContain(
+      '/handbook/guides/source-backed',
+    );
+    expect(urls.archived.map((url) => url.replace(/\.html$/, '').replace(/\/$/, ''))).toContain(
+      '/handbook/v/0.9/guides/source-backed',
+    );
+  });
+});

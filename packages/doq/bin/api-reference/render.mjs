@@ -131,13 +131,30 @@ export function summarize(/** @type {string} */ text, /** @type {number} */ limi
   return sentence.length <= limit ? sentence : `${sentence.slice(0, limit - 1).trimEnd()}…`;
 }
 
+function orderSymbols(/** @type {any[]} */ symbols) {
+  return [...symbols].sort((a, b) => (RANK.get(a.category) ?? 99) - (RANK.get(b.category) ?? 99) || compare(a.name, b.name));
+}
+
+/**
+ * Public export name → route of its generated page, exactly as `renderReference` links it (same ordering, same slugs).
+ * Stored in the manifest so the content tooling never re-derives a URL.
+ * @param {any[]} symbols
+ * @param {string} routePrefix
+ * @returns {Record<string, string>}
+ */
+export function symbolRoutes(symbols, routePrefix) {
+  const ordered = orderSymbols(symbols);
+  const slugs = assignSlugs(ordered);
+  return Object.fromEntries(ordered.map((symbol) => [symbol.name, `${routePrefix}/${slugs.get(symbol.name)}`]).sort(([a], [b]) => compare(a, b)));
+}
+
 /**
  * @param {any[]} symbols extracted, filtered symbols
  * @param {{ routePrefix: string, group: string, title: string, sourceUrl?: string }} options
  * @returns {Map<string, string>} file name → Markdown
  */
 export function renderReference(symbols, options) {
-  const ordered = [...symbols].sort((a, b) => (RANK.get(a.category) ?? 99) - (RANK.get(b.category) ?? 99) || compare(a.name, b.name));
+  const ordered = orderSymbols(symbols);
   const slugs = assignSlugs(ordered);
   const orderStart = options.orderStart ?? 1000;
   const routeOf = (/** @type {string} */ name) => `${options.routePrefix}/${slugs.get(name)}`;
