@@ -39,7 +39,7 @@ Separately executed: `e2e/consumer-zone.spec.ts` (5 tests, Chromium, Firefox, We
 
 ## Remaining limitations
 
-- **Windows is not executed here.** `verify:portable` passes on macOS and the `tooling-windows` job is added to CI, but it has not run; COMPAT-02 stays UNVERIFIED until the pull request's CI result is read. Browsers on Windows are untested.
+- **Windows:** the `tooling-windows` CI job ran on `windows-latest` (win32, Node 22): `verify:portable` (6 checks), `api:check` and `content:check` passed on its first run, and its unit subset found one defect (`doq-api` printed `src\content\…`), fixed in the next commit; the job then passed. Browsers on Windows are untested.
 - **Screen readers were not tested**; no assistive-technology environment was available. WCAG conformance is not claimed.
 - Zone.js is verified on Angular 21 only.
 - Localization is a verified blocker for localized sites (Volt UI), not solved.
